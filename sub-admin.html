@@ -1890,6 +1890,9 @@
         document.getElementById("sa-pass").value = "";
         document.getElementById("sa-new-pass").value = "";
         document.getElementById("sa-confirm-pass").value = "";
+        if (document.getElementById("sa-user")) {
+          document.getElementById("sa-user").value = "";
+        }
         setSaLoginBusy(false);
       }
 
@@ -1941,7 +1944,7 @@
         try {
           const { user, profile } = await DB.setupSubAdminPassword(email, password);
           await saFlushRemoteSync?.();
-          const entered = await completeSaSession(user, profile);
+          const entered = await completeSaSession(user, profile, password);
           if (entered !== false) {
             saToast("Password saved! Welcome to your dashboard.");
           }
@@ -2208,22 +2211,32 @@
         if (googleBtn) googleBtn.disabled = busy;
       }
 
-      async function completeSaSession(user, profile) {
+      async function completeSaSession(user, profile, password) {
         CURRENT_AUTH_EMAIL = String(user?.email || "").trim().toLowerCase();
+        if (!CURRENT_AUTH_EMAIL) {
+          saToast("Unable to determine your authenticated email.");
+          return false;
+        }
         const isGoogle =
           user?.app_metadata?.provider === "google" ||
           (Array.isArray(user?.identities) &&
             user.identities.some((item) => item?.provider === "google"));
         let nextProfile = DB.findSubAdminByEmail?.(CURRENT_AUTH_EMAIL) || profile;
-        if (nextProfile?.id && DB.subAdminNeedsPasswordSetup?.(nextProfile, user)) {
+        if (!nextProfile?.id) {
+          saToast("This email is not assigned to the sub-admin dashboard.");
+          return false;
+        }
+        if (DB.subAdminNeedsPasswordSetup?.(nextProfile, user)) {
           saToast("Create your password before entering the sub-admin portal.");
           revealSubAdminPasswordStep(CURRENT_AUTH_EMAIL);
           return false;
         }
-        if (nextProfile?.id && !nextProfile.passwordSet && !nextProfile.staffPassword) {
+        if (!nextProfile.passwordSet && !nextProfile.staffPassword) {
+          const passwordLabel =
+            password && !isGoogle ? password : isGoogle ? "— Google Sign-In —" : "Set";
           nextProfile = await DB.markSubAdminPasswordReady?.(
             nextProfile,
-            isGoogle ? "— Google Sign-In —" : "Set",
+            passwordLabel,
           );
         }
         CURRENT_SA = normalizeSaAdmin(nextProfile);
@@ -2308,6 +2321,7 @@
             return false;
           }
           saveSaSession(CURRENT_SA.id, CURRENT_AUTH_EMAIL);
+          DB.savePortalSession?.("subadmin", CURRENT_AUTH_EMAIL);
           if (DB?.syncRemoteAll) await DB.syncRemoteAll();
           showDashboard();
           return true;
@@ -2318,6 +2332,7 @@
         if (portalMatch && portalMatch.email !== DB._email(user.email)) return false;
         if (!portalMatch) return false;
         const profile = await DB.getSubAdminProfileForUser(user);
+        if (!profile) return false;
         const entered = await completeSaSession(user, profile);
         if (entered === false) {
           return false;

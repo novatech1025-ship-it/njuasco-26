@@ -446,8 +446,7 @@ const DB = {
         await this.signOut();
         throw new Error("This email is not allowed to access the main admin dashboard.");
       }
-      this._clearLocalFullAdminSession();
-      this.savePortalSession("admin", user.email);
+      this._saveLocalFullAdminSession(normalized);
       return user;
     } catch (error) {
       const msg = String(error?.message || "");
@@ -569,9 +568,10 @@ const DB = {
       );
     }
 
-    await this.markSubAdminPasswordReady(profile, "Set");
+    await this.markSubAdminPasswordReady(profile, password);
     await this._flushPendingRemoteWrites();
-    return { user, profile: this.findSubAdminByEmail(normalized) };
+    const updatedProfile = this.findSubAdminByEmail(normalized);
+    return { user, profile: updatedProfile || profile };
   },
   async signInSubAdmin(email, password) {
     const user = await this.signInWithEmail(email, password);
