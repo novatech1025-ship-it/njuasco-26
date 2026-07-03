@@ -1941,8 +1941,10 @@
         try {
           const { user, profile } = await DB.setupSubAdminPassword(email, password);
           await saFlushRemoteSync?.();
-          await completeSaSession(user, profile);
-          saToast("Password saved! Welcome to your dashboard.");
+          const entered = await completeSaSession(user, profile);
+          if (entered !== false) {
+            saToast("Password saved! Welcome to your dashboard.");
+          }
         } catch (error) {
           saToast(error?.message || "Could not save password");
         } finally {
@@ -2238,6 +2240,7 @@
         saLog("Login", "Sub-admin", CURRENT_SA.email);
         if (DB?.syncRemoteAll) await DB.syncRemoteAll();
         showDashboard();
+        return true;
       }
 
       async function saLogin() {
@@ -3503,10 +3506,10 @@
         const saSetupBtn = document.getElementById("sa-setup-btn");
         const saBackBtn = document.getElementById("sa-back-btn");
         if (saEmailWrap) saEmailWrap.style.display = "flex";
-        if (saPassWrap) saPassWrap.style.display = "flex";
+        if (saPassWrap) saPassWrap.style.display = "none";
         if (saDivider) saDivider.style.display = "none";
-        if (saContinueBtn) saContinueBtn.style.display = "none";
-        if (saLoginBtn) saLoginBtn.style.display = "block";
+        if (saContinueBtn) saContinueBtn.style.display = "block";
+        if (saLoginBtn) saLoginBtn.style.display = "none";
         if (saSetupWrap) saSetupWrap.style.display = "none";
         if (saSetupBtn) saSetupBtn.style.display = "none";
         if (saBackBtn) saBackBtn.style.display = "none";
