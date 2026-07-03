@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <title>Checkout | NJUASCO</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="shared.js"></script>
+    <div id="ldr"></div>
+    <div id="toast" role="alert" aria-live="polite"></div>
+    <div id="atrig" onclick="atclick()"></div>
+    <div id="admin-ov" role="dialog" aria-modal="true">
+      <div class="abox">
+        <div class="alo">
+          <span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span>
+        </div>
+        <div class="at">Admin Access</div>
+        <div class="as2">NJUASCO Management System</div>
+        <div class="afw">
+          <span class="afic"
+            ><span
+              class="ico ico-user"
+              data-ico="user"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="ainp"
+            type="text"
+            id="auser"
+            placeholder="Username"
+            autocomplete="username"
+          />
+        </div>
+        <div class="afw">
+          <span class="afic"
+            ><span
+              class="ico ico-key"
+              data-ico="key"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="ainp"
+            type="password"
+            id="apass"
+            placeholder="Password"
+            autocomplete="current-password"
+          /><button class="aeye" onclick="tpw()" type="button">
+            <span class="ico ico-eye" data-ico="eye" aria-hidden="true"></span>
+          </button>
+        </div>
+        <button class="asub" type="button" onclick="alogin()">
+          Sign In to Dashboard →</button
+        ><button
+          class="abk"
+          type="button"
+          onclick="document.getElementById('admin-ov').classList.remove('show')"
+        >
+          ← Back to Website
+        </button>
+      </div>
+    </div>
+    <div id="festive">
+      <span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>
+      Welcome to New Juaben Senior High School &nbsp;|&nbsp; Academic Excellence
+      Since 1953 &nbsp;|&nbsp; War Cry: DAASEBRE MMA! &nbsp;|&nbsp; Admissions
+      Open 2025/2026
+      <span class="ico ico-trophy" data-ico="trophy" aria-hidden="true"></span>
+    </div>
+    <header id="hdr">
+      <div class="hi">
+        <div class="brand" onclick="go('home')">
+          <div class="logo">
+            <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+          </div>
+          <div>
+            <div class="sn">New Juaben Senior High</div>
+            <div class="sc">NJUASCO · Est. 1953</div>
+          </div>
+        </div>
+        <nav class="hnav">
+          <div class="ni">
+            <button class="nl" onclick="go('home')">Home</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('about')">About</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('academics')">Academics</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('admissions')">Admissions</button>
+          </div>
+          <div class="ni">
+            <button class="nl">
+              News & More
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div class="ndrop">
+              <div class="dl" onclick="go('news')">
+                <div class="dlic" style="background: rgba(37, 99, 235, 0.1)">
+                  <span
+                    class="ico ico-news"
+                    data-ico="news"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                News & Events
+              </div>
+              <div class="dl" onclick="go('gallery')">
+                <div class="dlic" style="background: rgba(147, 51, 234, 0.1)">
+                  <span
+                    class="ico ico-image"
+                    data-ico="image"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Gallery
+              </div>
+              <div class="dl" onclick="go('facilities')">
+                <div class="dlic" style="background: rgba(16, 185, 129, 0.1)">
+                  <span
+                    class="ico ico-landmark"
+                    data-ico="landmark"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Facilities
+              </div>
+              <div class="dl" onclick="go('clubs')">
+                <div class="dlic" style="background: rgba(245, 158, 11, 0.1)">
+                  <span
+                    class="ico ico-masks"
+                    data-ico="masks"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Clubs
+              </div>
+            </div>
+          </div>
+          <div class="ni">
+            <button class="nl active">
+              Community
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div class="ndrop">
+              <div class="dl" onclick="go('njosa')">
+                <div class="dlic" style="background: rgba(245, 158, 11, 0.1)">
+                  <span
+                    class="ico ico-cap"
+                    data-ico="cap"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                NJOSA
+              </div>
+              <div class="dl" onclick="go('shop')">
+                <div class="dlic" style="background: rgba(16, 185, 129, 0.1)">
+                  <span
+                    class="ico ico-shop"
+                    data-ico="shop"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                School Shop
+              </div>
+              <div class="dl" onclick="go('donate')">
+                <div class="dlic" style="background: rgba(220, 38, 38, 0.1)">
+                  <span
+                    class="ico ico-heart"
+                    data-ico="heart"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Donate
+              </div>
+            </div>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('portal-hub')">Portal</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('contact')">Contact</button>
+          </div>
+        </nav>
+        <div class="ha">
+          <button class="hb" onclick="osearch()">
+            <span
+              class="ico ico-search"
+              data-ico="search"
+              aria-hidden="true"
+            ></span>
+          </button>
+          <button class="hb" onclick="tnotif()" id="nbtn">
+            <span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span
+            ><span class="nbadge" id="notif-count">3</span>
+          </button>
+          <div
+            style="position: relative; display: inline-flex; cursor: pointer"
+            onclick="go('cart')"
+          >
+            <button class="hb">
+              <span
+                class="ico ico-cart"
+                data-ico="cart"
+                aria-hidden="true"
+              ></span></button
+            ><span
+              class="cart-badge"
+              id="cart-badge"
+              style="
+                display: none;
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                width: 18px;
+                height: 18px;
+                background: var(--r6);
+                border-radius: 50%;
+                font-size: 9px;
+                font-weight: 700;
+                color: #fff;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #fff;
+              "
+              >0</span
+            >
+          </div>
+          <button class="dbtn" onclick="go('donate')">
+            <span
+              class="ico ico-heart"
+              data-ico="heart"
+              aria-hidden="true"
+            ></span>
+            Donate
+          </button>
+          <button
+            class="ham"
+            onclick="omob()"
+            id="hambtn"
+            aria-expanded="false"
+          >
+            <span class="hl2"></span><span class="hl2"></span
+            ><span class="hl2"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div id="npanel">
+      <div class="nph">
+        <span class="npt">Notifications</span
+        ><button class="npm" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div id="notif-list"></div>
+    </div>
+    <div id="mob">
+      <div class="mp">
+        <div class="mh">
+          <div>
+            <div class="msn">New Juaben Senior High</div>
+            <div class="msc">NJUASCO · Est. 1953</div>
+          </div>
+          <button class="mx" onclick="cmob()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="mnav">
+          <div
+            class="ml"
+            onclick="
+              go('home');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-home"
+                data-ico="home"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Home
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('about');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(147, 51, 234, 0.1)">
+              <span
+                class="ico ico-info"
+                data-ico="info"
+                aria-hidden="true"
+              ></span>
+            </div>
+            About NJUASCO
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('academics');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-book"
+                data-ico="book"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Academics
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('admissions');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(245, 158, 11, 0.1)">
+              <span
+                class="ico ico-clipboard"
+                data-ico="clipboard"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Admissions
+          </div>
+          <div class="msl">News & Community</div>
+          <div
+            class="ml"
+            onclick="
+              go('news');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-news"
+                data-ico="news"
+                aria-hidden="true"
+              ></span>
+            </div>
+            News
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('gallery');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(147, 51, 234, 0.1)">
+              <span
+                class="ico ico-image"
+                data-ico="image"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Gallery
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('facilities');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-landmark"
+                data-ico="landmark"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Facilities
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('clubs');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(245, 158, 11, 0.1)">
+              <span
+                class="ico ico-masks"
+                data-ico="masks"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Clubs
+          </div>
+          <div class="msl">Portals & Shop</div>
+          <div
+            class="ml"
+            onclick="
+              go('portal-hub');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-monitor"
+                data-ico="monitor"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Portal Hub
+          </div>
+          <div
+            class="ml active"
+            onclick="
+              go('shop');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-shop"
+                data-ico="shop"
+                aria-hidden="true"
+              ></span>
+            </div>
+            School Shop
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('cart');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(220, 38, 38, 0.1)">
+              <span
+                class="ico ico-cart"
+                data-ico="cart"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Cart
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('contact');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(6, 182, 212, 0.1)">
+              <span
+                class="ico ico-phone"
+                data-ico="phone"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Contact
+          </div>
+        </div>
+        <div class="mft">
+          <button
+            class="mdb"
+            onclick="
+              go('donate');
+              cmob();
+            "
+          >
+            <span
+              class="ico ico-heart"
+              data-ico="heart"
+              aria-hidden="true"
+            ></span>
+            Donate
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="smod">
+      <div class="sbox">
+        <div class="sipw">
+          <span style="font-size: 18px; color: var(--g400)"
+            ><span
+              class="ico ico-search"
+              data-ico="search"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="smi"
+            id="sinp"
+            placeholder="Search NJUASCO…"
+            oninput="dosearch(this.value)"
+          /><button class="scl" onclick="csearch()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="sres" id="sres"></div>
+      </div>
+    </div>
+    <div id="lb">
+      <button class="lbcl" onclick="clb()">
+        <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+      </button>
+      <div class="lbc">
+        <div class="lbi" id="lbimg"></div>
+        <div style="padding: 16px 20px">
+          <div
+            id="lbtit"
+            style="font-size: 16px; font-weight: 700; color: var(--g900)"
+          ></div>
+          <div
+            id="lbdesc"
+            style="font-size: 13px; color: var(--g500); margin-top: 4px"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <button id="fab" onclick="tchat()">
+      <span class="ico ico-message" data-ico="message" aria-hidden="true"></span
+      ><span class="fping"></span>
+    </button>
+    <div id="cwin">
+      <div class="chdr">
+        <div class="cav">
+          <span class="ico ico-message" data-ico="message" aria-hidden="true"></span>
+        </div>
+        <div>
+          <div class="cn">NJB City AI</div>
+          <div class="cst" id="ai-status">AI Powered</div>
+        </div>
+        <button class="cx" onclick="tchat()">
+          <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="cbody" id="cbody">
+        <div class="cmsg bot">
+          <div class="cbb">
+            <span
+              class="ico ico-wave"
+              data-ico="wave"
+              aria-hidden="true"
+            ></span>
+            Hi! I'm the NJB City AI. Ask me anything about the school!
+          </div>
+        </div>
+      </div>
+      <div class="cchips">
+        <span class="cchip" onclick="scmsg('What programmes do you offer?')"
+          >Programmes</span
+        ><span class="cchip" onclick="scmsg('How do I apply?')">Admissions</span
+        ><span class="cchip" onclick="scmsg('Tell me about NJOSA')">NJOSA</span
+        ><span class="cchip" onclick="scmsg('What facilities are there?')"
+          >Facilities</span
+        >
+      </div>
+      <div class="cinp">
+        <input
+          class="cinput"
+          id="cinput"
+          placeholder="Ask about NJUASCO…"
+          onkeydown="if (event.key === 'Enter') schat();"
+        /><button class="csend" onclick="schat()">→</button>
+      </div>
+    </div>
+    <main>
+      <div class="ph">
+        <div class="container phc">
+          <div class="bc">
+            <span onclick="go('home')">Home</span><span class="bcs">›</span
+            ><span onclick="go('shop')">Shop</span><span class="bcs">›</span
+            ><span onclick="go('cart')">Cart</span><span class="bcs">›</span
+            ><span class="bcc">Checkout</span>
+          </div>
+          <h1 class="pht">Secure <span class="hl">Checkout</span></h1>
+        </div>
+      </div>
+      <section class="sec">
+        <div class="checkout-grid">
+          <div>
+            <div class="checkout-step rv" id="co-step-info">
+              <div class="cs-header">
+                <div class="cs-num">1</div>
+                <div class="cs-title">Your Information</div>
+              </div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">First Name *</label
+                  ><input
+                    class="finp"
+                    id="co-fname"
+                    placeholder="First name"
+                    autocomplete="given-name"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Last Name *</label
+                  ><input
+                    class="finp"
+                    id="co-lname"
+                    placeholder="Last name"
+                    autocomplete="family-name"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Email *</label
+                  ><input
+                    class="finp"
+                    id="co-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    autocomplete="email"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Phone *</label
+                  ><input
+                    class="finp"
+                    id="co-phone"
+                    type="tel"
+                    placeholder="+233 XX XXX XXXX"
+                    autocomplete="tel"
+                  />
+                </div>
+                <div class="fg" style="grid-column: 1/-1">
+                  <label class="flbl">Ward / Child Name *</label
+                  ><input
+                    class="finp"
+                    id="co-ward-name"
+                    placeholder="Full name of student receiving items"
+                    autocomplete="name"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Class / Form *</label
+                  ><input
+                    class="finp"
+                    id="co-ward-class"
+                    placeholder="e.g. Form 2A"
+                  />
+                </div>
+                <div class="fg" style="grid-column: 1/-1">
+                  <div style="padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r);font-size:13px;color:#1e40af;line-height:1.6">
+                    Items are collected at school by your ward from the form teacher in charge. No home delivery.
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-p btn-full" style="margin-top:16px" type="button" onclick="continueToVerification()">
+                Continue to secure sign-in
+              </button>
+            </div>
+            <div class="checkout-step rv" id="co-step-verify" style="display:none">
+              <div class="cs-header">
+                <div class="cs-num">2</div>
+                <div class="cs-title">Verify Your Identity</div>
+              </div>
+              <p style="font-size:14px;color:var(--g500);line-height:1.7;margin-bottom:16px">
+                Order and payment details are confidential. Confirm your mobile number and we will send a one-time verification code by SMS before checkout.
+              </p>
+              <div class="fg">
+                <label class="flbl">Mobile Number for Verification *</label>
+                <input class="finp" id="co-verify-phone" type="tel" placeholder="+233 XX XXX XXXX" autocomplete="tel" />
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+                <button class="btn btn-p" type="button" id="co-send-otp-btn" onclick="sendCheckoutOtp()">Send verification code</button>
+                <button class="btn btn-g" type="button" onclick="showCheckoutStep('info')">Back</button>
+              </div>
+              <div id="co-otp-panel" style="display:none;margin-top:18px">
+                <div class="fg">
+                  <label class="flbl">6-digit SMS Code *</label>
+                  <input class="finp" id="co-otp-code" inputmode="numeric" maxlength="6" placeholder="Enter code" autocomplete="one-time-code" />
+                </div>
+                <button class="btn btn-p btn-full" style="margin-top:12px" type="button" id="co-verify-otp-btn" onclick="verifyCheckoutOtp()">
+                  Verify and continue
+                </button>
+              </div>
+              <div id="co-verify-status" style="display:none;margin-top:14px;padding:12px 14px;border-radius:var(--r);background:rgba(16,185,129,.08);color:#047857;font-size:13px;font-weight:600">
+                Phone verified. You can now choose payment and place your order.
+              </div>
+            </div>
+            <div class="checkout-step rv" id="co-step-payment" style="display:none;opacity:.55;pointer-events:none">
+              <div class="cs-header">
+                <div class="cs-num">3</div>
+                <div class="cs-title">Payment Method</div>
+              </div>
+              <div
+                style="display: flex; flex-direction: column; gap: 12px"
+                id="payment-methods"
+              >
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding: 16px;
+                    background: var(--g50);
+                    border-radius: var(--r);
+                    cursor: pointer;
+                    border: 2px solid var(--b6);
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="pay"
+                    value="stripe"
+                    checked
+                    style="accent-color: var(--b6); width: 18px; height: 18px"
+                  />
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700">
+                      Secure Card / Wallet Checkout
+                    </div>
+                    <div style="font-size: 12px; color: var(--g500)">
+                      Pay online through Stripe
+                    </div>
+                  </div>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding: 16px;
+                    background: var(--g50);
+                    border-radius: var(--r);
+                    cursor: pointer;
+                    border: 2px solid var(--g200);
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="pay"
+                    value="momo"
+                    style="accent-color: var(--b6); width: 18px; height: 18px"
+                  />
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700">
+                      📱 Mobile Money
+                    </div>
+                    <div style="font-size: 12px; color: var(--g500)">
+                      MTN, Vodafone, AirtelTigo
+                    </div>
+                  </div>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding: 16px;
+                    background: var(--g50);
+                    border-radius: var(--r);
+                    cursor: pointer;
+                    border: 2px solid var(--g200);
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="pay"
+                    value="bank"
+                    style="accent-color: var(--b6); width: 18px; height: 18px"
+                  />
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700">
+                      🏦 Bank Transfer
+                    </div>
+                    <div style="font-size: 12px; color: var(--g500)">
+                      Direct bank transfer
+                    </div>
+                  </div>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding: 16px;
+                    background: var(--g50);
+                    border-radius: var(--r);
+                    cursor: pointer;
+                    border: 2px solid var(--g200);
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="pay"
+                    value="cash"
+                    style="accent-color: var(--b6); width: 18px; height: 18px"
+                  />
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700">
+                      💵 Pay on Delivery
+                    </div>
+                    <div style="font-size: 12px; color: var(--g500)">
+                      Cash on delivery / pickup
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div id="momo-fields" style="margin-top: 16px; display: none">
+                <div class="fg">
+                  <label class="flbl">Mobile Money Number</label
+                  ><input
+                    class="finp"
+                    id="co-momo"
+                    type="tel"
+                    placeholder="+233 XX XXX XXXX"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Network</label
+                  ><select class="finp" id="co-network">
+                    <option>MTN Mobile Money</option>
+                    <option>Vodafone Cash</option>
+                    <option>AirtelTigo Money</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="checkout-step rv" id="co-step-review" style="display:none;opacity:.55;pointer-events:none">
+              <div class="cs-header">
+                <div class="cs-num">4</div>
+                <div class="cs-title">Order Review</div>
+              </div>
+              <div
+                id="co-items"
+                style="display: flex; flex-direction: column; gap: 10px"
+              ></div>
+            </div>
+            <button
+              class="btn btn-p btn-full"
+              style="margin-top: 0; font-size: 16px; padding: 16px; opacity: 0.55; pointer-events: none"
+              id="co-place-order-btn"
+              onclick="placeOrder()"
+              disabled
+            >
+              Place Order & Pay
+            </button>
+          </div>
+          <div>
+            <div class="order-summary rv" style="position: sticky; top: 90px">
+              <div class="os-title">Order Summary</div>
+              <div id="co-summary-items"></div>
+              <div class="os-row" style="margin-top: 14px">
+                <span>Subtotal</span><span id="co-sub">GHS 0</span>
+              </div>
+              <div class="os-row">
+                <span>Collection</span><span style="color: var(--gn)">School pickup</span>
+              </div>
+              <div class="os-row total">
+                <span>Total</span
+                ><span id="co-total" style="color: var(--b6)">GHS 0</span>
+              </div>
+              <div
+                style="
+                  margin-top: 18px;
+                  padding: 14px;
+                  background: var(--g50);
+                  border-radius: var(--r);
+                  font-size: 13px;
+                  color: var(--g600);
+                "
+              >
+                Your payment information is handled securely through Stripe. Phone verification protects confidential order details.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Order Success -->
+      <div
+        id="order-success"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        "
+      >
+        <div
+          style="
+            background: #fff;
+            border-radius: var(--rx);
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: var(--sh4);
+          "
+        >
+          <div style="font-size: 72px; margin-bottom: 16px">
+            <span
+              class="ico ico-trophy"
+              data-ico="trophy"
+              aria-hidden="true"
+            ></span>
+          </div>
+          <h2
+            style="
+              font-family: &quot;Playfair Display&quot;, serif;
+              font-size: 28px;
+              font-weight: 700;
+              color: var(--g900);
+              margin-bottom: 10px;
+            "
+          >
+            Order Placed!
+          </h2>
+          <p style="color: var(--g500); margin-bottom: 8px; line-height: 1.6">
+            Your order has been received and is being processed. You will
+            receive a confirmation SMS/email shortly.
+          </p>
+          <p
+            style="
+              font-family: &quot;DM Mono&quot;, monospace;
+              font-size: 14px;
+              color: var(--b6);
+              margin-bottom: 24px;
+              font-weight: 700;
+            "
+            id="order-ref"
+          >
+            Order #NJ-ORD-000000
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: center;
+              flex-wrap: wrap;
+            "
+          >
+            <button class="btn btn-p" onclick="go('home')">Back to Home</button>
+            <button class="btn btn-g" onclick="go('shop')">
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- FOOTER -->
+    <footer id="footer">
+      <div class="container">
+        <div class="fgrid">
+          <div>
+            <div class="flogo">
+              <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+            </div>
+            <div class="fbn">New Juaben Senior High School</div>
+            <p class="fbd">
+              Providing quality secondary education in Koforidua, Eastern
+              Region, Ghana since 1953. HARDWORK.
+            </p>
+            <div class="fcode">
+              <span
+                class="ico ico-clipboard"
+                data-ico="clipboard"
+                aria-hidden="true"
+              ></span>
+              Code: 0020103
+            </div>
+            <div class="srow" style="margin-top: 16px">
+              <a class="sl" href="#" title="Facebook">f</a>
+              <a class="sl" href="#" title="X/Twitter">𝕏</a>
+              <a class="sl" href="#" title="LinkedIn">in</a>
+              <a class="sl" href="#" title="Instagram"
+                ><span
+                  class="ico ico-camera"
+                  data-ico="camera"
+                  aria-hidden="true"
+                ></span
+              ></a>
+            </div>
+          </div>
+          <div>
+            <div class="fh">Quick Links</div>
+            <ul class="flinks">
+              <li><a onclick="go('home')">Home</a></li>
+              <li><a onclick="go('about')">About NJUASCO</a></li>
+              <li><a onclick="go('academics')">Programmes</a></li>
+              <li><a onclick="go('admissions')">Admissions</a></li>
+              <li><a onclick="go('news')">News & Events</a></li>
+              <li><a onclick="go('portal-hub')">Portal Hub</a></li>
+              <li><a onclick="go('contact')">Contact Us</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="fh">Contact</div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-pin"
+                  data-ico="pin"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-address"
+                >New Juaben, Koforidua, Eastern Region, Ghana</span
+              >
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-phone"
+                  data-ico="phone"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-phone">+233 XX XXX XXXX</span>
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-mail"
+                  data-ico="mail"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-email">info@njuasco.edu.gh</span>
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-clock"
+                  data-ico="clock"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-hours">Mon–Fri: 8:00 AM – 4:00 PM</span>
+            </div>
+          </div>
+          <div>
+            <div class="fh">Community</div>
+            <ul class="flinks">
+              <li><a onclick="go('njosa')">NJOSA Alumni</a></li>
+              <li><a onclick="go('shop')">School Shop</a></li>
+              <li><a onclick="go('donate')">Donate</a></li>
+              <li><a onclick="go('gallery')">Photo Gallery</a></li>
+              <li><a onclick="go('clubs')">Clubs & Societies</a></li>
+              <li><a onclick="go('facilities')">Facilities</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="fbot">
+          <span
+            >© 2025 New Juaben Senior High School. All rights reserved.</span
+          >
+          <span style="color: rgba(255, 255, 255, 0.25)"
+            >Created by <span style="color: #3b82f6">NOVATech</span> &
+            <span style="color: #9333ea">Galaxy Design Studio</span></span
+          >
+        </div>
+      </div>
+    </footer>
+    <script src="page-common.js"></script>
+
+    <script>
+      let checkoutVerification = null;
+      let checkoutLocalOtp = null;
+
+      document.querySelectorAll('[name="pay"]').forEach(r=>{r.addEventListener('change',()=>{document.getElementById('momo-fields').style.display=r.value==='momo'?'block':'none';document.querySelectorAll('[name="pay"]').forEach(x=>x.closest('label').style.borderColor=x.checked?'var(--b6)':'var(--g200)');});});
+
+      function showCheckoutStep(step){
+        const map={info:'co-step-info',verify:'co-step-verify',payment:'co-step-payment',review:'co-step-review'};
+        Object.entries(map).forEach(([key,id])=>{
+          const el=document.getElementById(id);
+          if(!el) return;
+          el.style.display=key===step?'block':'none';
+        });
+      }
+
+      function unlockCheckoutPayment(){
+        ['co-step-payment','co-step-review'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el){el.style.display='block';el.style.opacity='1';el.style.pointerEvents='auto';}
+        });
+        const btn=document.getElementById('co-place-order-btn');
+        if(btn){btn.disabled=false;btn.style.opacity='1';btn.style.pointerEvents='auto';}
+        document.getElementById('co-verify-status').style.display='block';
+      }
+
+      function getCheckoutCustomerFields(){
+        return {
+          fname:document.getElementById('co-fname').value.trim(),
+          lname:document.getElementById('co-lname').value.trim(),
+          email:document.getElementById('co-email').value.trim(),
+          phone:document.getElementById('co-phone').value.trim(),
+          wardName:document.getElementById('co-ward-name').value.trim(),
+          wardClass:document.getElementById('co-ward-class').value.trim(),
+        };
+      }
+
+      function continueToVerification(){
+        const {fname,phone,wardName,wardClass}=getCheckoutCustomerFields();
+        if(!fname||!phone||!wardName||!wardClass){toast('Please fill in all required fields');return;}
+        const verifyPhone=document.getElementById('co-verify-phone');
+        if(verifyPhone && !verifyPhone.value.trim()) verifyPhone.value=phone;
+        showCheckoutStep('verify');
+      }
+
+      async function readCheckoutApiJson(res){
+        const text=await res.text();
+        if(!text.trim()){
+          if(!res.ok) throw new Error(`Verification service unavailable (${res.status})`);
+          return {};
+        }
+        try{return JSON.parse(text);}catch{
+          throw new Error('Checkout verification service returned an invalid response.');
+        }
+      }
+
+      async function checkoutOtpRequest(body){
+        const phone=DB._normalizeCheckoutPhone(body.phone);
+        if(phone.length<9) throw new Error('Enter a valid Ghana mobile number');
+        const payload={...body,phone};
+        let lastError=null;
+        try{
+          const localRes=await fetch('/api/checkout-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          const localData=await readCheckoutApiJson(localRes);
+          if(localRes.ok) return localData;
+          if(localData?.error) lastError=new Error(localData.error);
+        }catch(error){
+          if(error.message && !/fetch|network|failed to fetch/i.test(error.message)) lastError=error;
+        }
+        const cfg=window.NJUASCO_SUPABASE||{};
+        if(cfg.checkoutOtpFunctionUrl){
+          try{
+            const res=await fetch(cfg.checkoutOtpFunctionUrl,{
+              method:'POST',
+              headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:`Bearer ${cfg.anonKey}`},
+              body:JSON.stringify(payload),
+            });
+            const data=await readCheckoutApiJson(res);
+            if(res.ok) return data;
+            if(data?.error) lastError=new Error(data.error);
+          }catch(error){
+            if(error.message && !/fetch|network|failed to fetch/i.test(error.message)) lastError=error;
+          }
+        }
+        throw lastError||new Error('SMS verification is unavailable. Run node server.js locally or configure Twilio on Supabase.');
+      }
+
+      async function sendCheckoutOtp(){
+        const phone=(document.getElementById('co-verify-phone')?.value||document.getElementById('co-phone')?.value||'').trim();
+        if(!phone){toast('Enter your mobile number');return;}
+        const btn=document.getElementById('co-send-otp-btn');
+        if(btn){btn.disabled=true;btn.textContent='Sending code...';}
+        try{
+          const data=await checkoutOtpRequest({action:'send',phone});
+          document.getElementById('co-otp-panel').style.display='block';
+          toast(data.message||'Verification code sent');
+        }catch(error){
+          const code=String(Math.floor(100000+Math.random()*900000));
+          checkoutLocalOtp={phone:DB._normalizeCheckoutPhone(phone),code,expiresAt:Date.now()+10*60*1000};
+          document.getElementById('co-otp-panel').style.display='block';
+          toast('SMS service is unavailable. Use verification code '+code+' to continue.');
+        }finally{
+          if(btn){btn.disabled=false;btn.textContent='Send verification code';}
+        }
+      }
+
+      async function verifyCheckoutOtp(){
+        const phone=(document.getElementById('co-verify-phone')?.value||'').trim();
+        const code=(document.getElementById('co-otp-code')?.value||'').trim();
+        if(!phone||!code){toast('Enter your phone number and verification code');return;}
+        const btn=document.getElementById('co-verify-otp-btn');
+        if(btn){btn.disabled=true;btn.textContent='Verifying...';}
+        try{
+          const normalizedPhone=DB._normalizeCheckoutPhone(phone);
+          if(checkoutLocalOtp&&checkoutLocalOtp.phone===normalizedPhone&&checkoutLocalOtp.code===code&&checkoutLocalOtp.expiresAt>Date.now()){
+            const fields=getCheckoutCustomerFields();
+            const customer=DB.findOrCreateShopCustomer({
+              name:[fields.fname,fields.lname].filter(Boolean).join(' '),
+              email:fields.email,
+              phone,
+            });
+            checkoutVerification={
+              verificationToken:'local-'+crypto.randomUUID(),
+              customerId:customer.id,
+              phone,
+              verifiedAt:new Date().toISOString(),
+            };
+            DB.saveCheckoutSession(checkoutVerification);
+            unlockCheckoutPayment();
+            toast('Phone verified successfully');
+            return;
+          }
+          const data=await checkoutOtpRequest({action:'verify',phone,code});
+          const fields=getCheckoutCustomerFields();
+          const customer=DB.findOrCreateShopCustomer({
+            name:[fields.fname,fields.lname].filter(Boolean).join(' '),
+            email:fields.email,
+            phone,
+          });
+          checkoutVerification={
+            verificationToken:data.verificationToken,
+            customerId:data.customerId||customer.id,
+            phone,
+            verifiedAt:new Date().toISOString(),
+          };
+          DB.saveCheckoutSession(checkoutVerification);
+          unlockCheckoutPayment();
+          toast('Phone verified successfully');
+        }catch(error){
+          toast(error.message||'Verification failed');
+        }finally{
+          if(btn){btn.disabled=false;btn.textContent='Verify and continue';}
+        }
+      }
+
+      function renderCheckoutSummary(){
+        const cart=DB.getCart();
+        const total=DB.cartTotal();
+        document.getElementById('co-items').innerHTML=cart.map(i=>`<div style="display:flex;gap:12px;align-items:center;padding:10px;background:var(--g50);border-radius:var(--r)"><span style="width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;border-radius:10px;background:#fff">${mediaMarkup(i.image)}</span><div style="flex:1"><div style="font-size:14px;font-weight:600">${i.name}</div><div style="font-size:12px;color:var(--g500)">Qty: ${i.qty||1}</div></div><div style="font-weight:700;color:var(--b6)">${i.currency||'GHS'} ${((i.price||0)*(i.qty||1)).toFixed(2)}</div></div>`).join('');
+        document.getElementById('co-summary-items').innerHTML=cart.map(i=>`<div class="os-row"><span>${i.name} ×${i.qty||1}</span><span>${i.currency||'GHS'} ${((i.price||0)*(i.qty||1)).toFixed(2)}</span></div>`).join('');
+        document.getElementById('co-sub').textContent='GHS '+total.toFixed(2);
+        document.getElementById('co-total').textContent='GHS '+total.toFixed(2);
+        if(cart.length===0){window.location.href='cart.html';}
+      }
+      async function placeOrder(){
+        const {fname,email,phone,wardName,wardClass}=getCheckoutCustomerFields();
+        if(!fname||!phone||!wardName||!wardClass){toast('Please fill in all required fields');return;}
+        checkoutVerification=checkoutVerification||DB.getCheckoutSession();
+        if(!checkoutVerification?.verificationToken){toast('Verify your mobile number before checkout');showCheckoutStep('verify');return;}
+        const ref='NJ-ORD-'+crypto.randomUUID().slice(0,8).toUpperCase();
+        const cart=DB.getCart();
+        const paymentMethod=document.querySelector('[name="pay"]:checked')?.value||'stripe';
+        const customer=DB.findOrCreateShopCustomer({name:fname,email,phone});
+        const localVerified=String(checkoutVerification.verificationToken||'').startsWith('local-');
+        const order={id:DB._id(),ref,customerId:checkoutVerification.customerId||customer.id,customer:fname,email,phone,wardName,wardClass,pickupMethod:'school',items:cart,total:DB.cartTotal(),paymentMethod,status:paymentMethod==='stripe'&&!localVerified?'pending_payment':'pending',verified:true,date:new Date().toISOString().split("T")[0]};
+        DB.add('orders',order);
+        DB.saveRemoteContent?.('orders',DB.getAll('orders'));
+        DB.saveRemoteContent?.('logs',DB.getAll('logs'));
+        if(paymentMethod==='stripe'&&!localVerified){
+          const btn=document.getElementById('co-place-order-btn');
+          if(btn){btn.disabled=true;btn.textContent='Opening secure checkout...';}
+          try{
+            const data=await createCheckoutSession({
+              type:'shop',
+              reference:ref,
+              customerEmail:email,
+              verificationToken:checkoutVerification.verificationToken,
+              items:cart.map(i=>({name:i.name,price:i.price,currency:i.currency||'GHS',quantity:i.qty||1,image:i.image||''})),
+              origin:window.location.origin
+            });
+            DB.clearCheckoutSession();
+            window.location.href=data.url;
+            return;
+          }catch(error){
+            if(btn){btn.disabled=false;btn.textContent='Place Order & Pay';}
+            toast(error.message||'Order saved. Payment checkout is not available yet.');
+            return;
+          }
+        }
+        document.getElementById('order-ref').textContent='Order #'+ref;
+        DB.clearCart();
+        DB.clearCheckoutSession();
+        document.getElementById('order-success').style.display='flex';
+        toast('Order placed! Ref: '+ref);
+      }
+      document.addEventListener('DOMContentLoaded',()=>{
+        checkoutVerification=DB.getCheckoutSession();
+        if(checkoutVerification?.verificationToken) unlockCheckoutPayment();
+        const params=new URLSearchParams(window.location.search);
+        if(params.get('payment')==='success'){
+          const ref=params.get('ref')||'';
+          DB.clearCart();
+          DB.clearCheckoutSession();
+          checkoutVerification=null;
+          if(ref){
+            document.getElementById('order-ref').textContent='Order #'+ref;
+            const orders=DB.getAll('orders');
+            const match=orders.find(o=>o.ref===ref);
+            if(match && match.status==='pending_payment'){
+              DB.update('orders',match.id,{status:'paid'});
+              DB.saveRemoteContent?.('orders',DB.getAll('orders'));
+            }
+          }
+          document.getElementById('order-success').style.display='flex';
+          toast('Payment completed. Thank you for your order!');
+          window.history.replaceState({},document.title,'checkout.html');
+          return;
+        }
+        if(params.get('payment')==='cancelled'){
+          toast('Payment was cancelled. Your cart is still here.');
+          window.history.replaceState({},document.title,'checkout.html');
+        }
+        renderCheckoutSummary();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>NJUASCO Admin Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --b6: #2563eb;
+        --p6: #9333ea;
+        --pk: #db2777;
+        --r6: #dc2626;
+        --gn: #10b981;
+        --go: #f59e0b;
+        --gp: linear-gradient(135deg, #2563eb, #4338ca);
+        --gs: linear-gradient(135deg, #9333ea, #db2777);
+        --gd: linear-gradient(135deg, #dc2626, #db2777);
+        --g50: #f9fafb;
+        --g100: #f3f4f6;
+        --g200: #e5e7eb;
+        --g300: #d1d5db;
+        --g400: #9ca3af;
+        --g500: #6b7280;
+        --g600: #4b5563;
+        --g700: #374151;
+        --g800: #1f2937;
+        --g900: #111827;
+        --sh1: 0 1px 3px rgba(0, 0, 0, 0.07);
+        --sh2: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --sh3: 0 10px 40px rgba(0, 0, 0, 0.1);
+        --sh4: 0 20px 60px rgba(0, 0, 0, 0.12);
+        --r: 12px;
+        --rl: 20px;
+        --rx: 28px;
+        --tr: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --sb: env(safe-area-inset-bottom, 0px);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+        height: 100%;
+        overflow: hidden;
+        max-width: 100%;
+        background: var(--g900);
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--g50);
+        color: var(--g800);
+        height: 100%;
+        overflow: hidden;
+        max-width: 100%;
+        -webkit-font-smoothing: antialiased;
+      }
+      button {
+        cursor: pointer;
+        font-family: inherit;
+        border: none;
+        background: none;
+      }
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+        font-size: 16px;
+      }
+      ul {
+        list-style: none;
+      }
+      .layout {
+        display: flex;
+        height: 100vh;
+        height: 100dvh;
+        width: 100%;
+        overflow: hidden;
+      }
+      /* SIDEBAR */
+      .sb {
+        width: 260px;
+        background: var(--g900);
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-top: env(safe-area-inset-top, 0);
+      }
+      .sb.open {
+        transform: translateX(0);
+      }
+      @media (min-width: 1024px) {
+        .sb {
+          transform: translateX(0);
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          bottom: 0;
+        }
+        .main {
+          margin-left: 260px;
+          width: calc(100% - 260px);
+        }
+      }
+      .sb-brand {
+        padding: 22px 20px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        flex-shrink: 0;
+      }
+      .sb-logo {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        padding: 3px;
+      }
+      .sb-logo img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+      .sb-name {
+        font-family: "Playfair Display", serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+      }
+      .sb-sub {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        margin-top: 2px;
+        letter-spacing: 0.5px;
+      }
+      .sb-nav {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .sb-nav::-webkit-scrollbar {
+        display: none;
+      }
+      .sb-section {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.3);
+        padding: 12px 12px 5px;
+        margin-top: 4px;
+      }
+      .sb-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: var(--tr);
+        margin-bottom: 1px;
+      }
+      .sb-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+      .sb-item.active {
+        background: rgba(37, 99, 235, 0.25);
+        color: #93c5fd;
+        font-weight: 600;
+      }
+      .sb-ic {
+        width: 20px;
+        text-align: center;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .sb-badge {
+        margin-left: auto;
+        background: var(--r6);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 100px;
+      }
+      .sb-badge:empty {
+        display: none;
+      }
+      .sb-footer {
+        padding: 14px 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        flex-shrink: 0;
+        padding-bottom: calc(14px + var(--sb));
+      }
+      .sb-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sb-av {
+        width: 34px;
+        height: 34px;
+        background: var(--gs);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .sb-uname {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .sb-urole {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 1px;
+      }
+      .sb-logout {
+        margin-left: auto;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 18px;
+        cursor: pointer;
+        transition: color 0.2s;
+        background: none;
+        border: none;
+        padding: 4px;
+      }
+      .sb-logout:hover {
+        color: var(--r6);
+      }
+      /* MAIN */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+      }
+      .main.scroll-lock .content,
+      .content.scroll-lock {
+        overflow: hidden;
+      }
+      .ico {
+        width: 1em;
+        height: 1em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        vertical-align: -0.15em;
+      }
+      .ico svg {
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      /* TOPBAR */
+      .topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--g200);
+        padding: 0 20px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        flex-shrink: 0;
+      }
+      .mt {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--g200);
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .mtl {
+        width: 18px;
+        height: 2px;
+        background: var(--g700);
+        border-radius: 2px;
+      }
+      @media (min-width: 1024px) {
+        .mt {
+          display: none;
+        }
+      }
+      .topbar-title {
+        font-family: "Playfair Display", serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--g900);
+        flex: 1;
+      }
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .maint-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid var(--g200);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+        user-select: none;
+        min-height: 40px;
+        position: relative;
+        z-index: 2;
+      }
+      .maint-toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+      }
+      .maint-toggle-ui {
+        width: 38px;
+        height: 22px;
+        border-radius: 999px;
+        background: var(--g200);
+        position: relative;
+        flex-shrink: 0;
+        transition: background 0.2s;
+        pointer-events: none;
+      }
+      .maint-toggle-ui::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s;
+      }
+      .maint-toggle input:checked + .maint-toggle-ui {
+        background: #f59e0b;
+      }
+      .maint-toggle input:checked + .maint-toggle-ui::after {
+        transform: translateX(16px);
+      }
+      .maint-toggle-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--g700);
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .settings-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 12px 14px;
+        border: 1px solid var(--g200);
+        border-radius: 12px;
+        cursor: pointer;
+      }
+      .settings-check input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--b6);
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .settings-check-note {
+        display: block;
+        font-size: 12px;
+        color: var(--g500);
+        font-weight: 400;
+        margin-top: 4px;
+      }
+      .tb-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--g200);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        color: var(--g600);
+        transition: var(--tr);
+        position: relative;
+        flex-shrink: 0;
+      }
+      .tb-btn:hover {
+        border-color: var(--b6);
+        color: var(--b6);
+      }
+      .tb-bdg {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 16px;
+        height: 16px;
+        background: var(--r6);
+        border-radius: 50%;
+        font-size: 9px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+      }
+      .tb-bdg:empty {
+        display: none;
+      }
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        background: var(--g100);
+        color: var(--g700);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--tr);
+        border: 1px solid var(--g200);
+        text-decoration: none;
+      }
+      .back-btn:hover {
+        background: var(--g200);
+      }
+      /* CONTENT */
+      .content {
+        flex: 1;
+        min-height: 0;
+        padding: 20px;
+        padding-bottom: calc(32px + var(--sb));
+        overflow-y: scroll;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+      }
+      @media (min-width: 768px) {
+        .content {
+          padding: 28px 32px;
+        }
+      }
+      /* PAGES */
+      .apage {
+        display: none;
+        animation: pin 0.3s ease;
+      }
+      .apage.active {
+        display: block;
+      }
+      @keyframes pin {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* BUTTONS */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: var(--tr);
+        font-family: "DM Sans", sans-serif;
+        white-space: nowrap;
+      }
+      .btn-p {
+        background: var(--gp);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+      }
+      .btn-p:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+      }
+      .btn-s {
+        background: var(--gs);
+        color: #fff;
+      }
+      .btn-g {
+        background: var(--g100);
+        color: var(--g700);
+        border: 1px solid var(--g200);
+      }
+      .btn-g:hover {
+        background: var(--g200);
+      }
+      .btn-r {
+        background: rgba(220, 38, 38, 0.08);
+        color: var(--r6);
+        border: 1px solid rgba(220, 38, 38, 0.15);
+      }
+      .btn-r:hover {
+        background: rgba(220, 38, 38, 0.15);
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      .btn-full {
+        width: 100%;
+        justify-content: center;
+      }
+      /* STATS */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      @media (min-width: 640px) {
+        .stats-row {
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        }
+      }
+      .stat-w {
+        background: #fff;
+        border-radius: var(--rl);
+        padding: 20px;
+        box-shadow: var(--sh1);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: var(--tr);
+      }
+      .stat-w:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--sh2);
+      }
+      .sw-ic {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .sw-num {
+        font-family: "Playfair Display", serif;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--g900);
+        line-height: 1;
+      }
+      .sw-lbl {
+        font-size: 12px;
+        color: var(--g500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sw-chg {
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+      }
+      .sw-up {
+        color: var(--gn);
+      }
+      .sw-dn {
+        color: var(--r6);
+      }
+      /* GRID */
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      @media (min-width: 768px) {
+        .grid2 {
+          grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+        }
+      }
+      @media (max-width: 1180px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      /* CARD */
+      .card {
+        background: #fff;
+        border-radius: var(--rl);
+        padding: 22px;
+        box-shadow: var(--sh1);
+      }
+      .card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--g900);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      /* TABLE */
+      .tbl-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      table.tbl {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 480px;
+      }
+      table.tbl th {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--g400);
+        padding: 0 8px 10px 0;
+        text-align: left;
+        white-space: nowrap;
+      }
+      table.tbl td {
+        padding: 11px 8px 11px 0;
+        font-size: 13px;
+        color: var(--g700);
+        border-top: 1px solid var(--g100);
+        vertical-align: middle;
+      }
+      table.tbl tr:hover td {
+        background: var(--g50);
+      }
+      /* TAGS */
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .tag-g {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+      }
+      .tag-b {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--b6);
+      }
+      .tag-y {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+      }
+      .tag-r {
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--r6);
+      }
+      .tag-p {
+        background: rgba(147, 51, 234, 0.1);
+        color: var(--p6);
+      }
+      /* FORM */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      @media (min-width: 640px) {
+        .form-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .fg {
+        margin-bottom: 0;
+      }
+      .repeater-row {
+        border: 1px solid var(--g200);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background: #fafbfd;
+      }
+      .repeater-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .repeater-head strong {
+        font-size: 14px;
+        color: var(--g800);
+      }
+      .hint-text {
+        font-size: 12px;
+        color: var(--g500);
+        line-height: 1.5;
+        margin: 0 0 12px;
+      }
+      .sync-note {
+        font-size: 12px;
+        color: var(--g500);
+        margin-top: 8px;
+      }
+      .flbl {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--g600);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .finp {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--g200);
+        border-radius: 10px;
+        font-size: 14px;
+        color: var(--g800);
+        font-family: "DM Sans", sans-serif;
+        transition: var(--tr);
+        background: #fff;
+        outline: none;
+      }
+      .finp:focus {
+        border-color: var(--b6);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+      .color-picker-wrap .flbl {
+        margin-bottom: 8px;
+      }
+      .color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+      .color-swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .color-swatch {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 2px solid rgba(17, 24, 39, 0.08);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      }
+      .color-swatch:hover {
+        transform: scale(1.06);
+      }
+      .color-swatch.active {
+        border-color: var(--g900);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      }
+      .color-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 1.5px solid var(--g200);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .color-custom-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--g600);
+      }
+      .color-native {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+      .fta {
+        min-height: 100px;
+        resize: vertical;
+      }
+      /* SECTION HEADER */
+      .sec-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .sec-title {
+        font-family: "Playfair Display", serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--g900);
+      }
+      /* FILTER BAR */
+      .filter-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--g50);
+        border: 1.5px solid var(--g200);
+        border-radius: 10px;
+        padding: 9px 14px;
+        flex: 1;
+        max-width: 360px;
+      }
+      .search-bar input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-family: "DM Sans", sans-serif;
+        color: var(--g800);
+        outline: none;
+        min-width: 0;
+      }
+      /* TABS */
+      .atabs {
+        display: flex;
+        gap: 4px;
+        background: var(--g100);
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .atabs::-webkit-scrollbar {
+        display: none;
+      }
+      .atab {
+        flex-shrink: 0;
+        padding: 8px 16px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--g600);
+        cursor: pointer;
+        transition: var(--tr);
+        border: none;
+        background: transparent;
+        font-family: "DM Sans", sans-serif;
+        white-space: nowrap;
+      }
+      .atab.active {
+        background: #fff;
+        color: var(--b6);
+        font-weight: 700;
+        box-shadow: var(--sh1);
+      }
+      .atpane {
+        display: none;
+      }
+      .atpane.active {
+        display: block;
+      }
+      /* QUICK ACTIONS */
+      .qa-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      @media (min-width: 640px) {
+        .qa-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .qa-card {
+        background: var(--g50);
+        border: 1px solid var(--g100);
+        border-radius: var(--r);
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: var(--tr);
+      }
+      .qa-card:hover {
+        border-color: var(--b6);
+        background: #fff;
+        transform: translateY(-2px);
+        box-shadow: var(--sh2);
+      }
+      .qa-ic {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+      .qa-lbl {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--g700);
+      }
+      /* ACTIVITY */
+      .act-item {
+        display: flex;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--g100);
+      }
+      .act-item:last-child {
+        border-bottom: none;
+      }
+      .act-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .act-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--g800);
+        margin-bottom: 2px;
+      }
+      .act-sub {
+        font-size: 12px;
+        color: var(--g500);
+      }
+      .act-time {
+        font-size: 11px;
+        color: var(--g400);
+        margin-top: 2px;
+      }
+      /* NEWS LIST */
+      .news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .news-item {
+        background: #fff;
+        border-radius: var(--r);
+        padding: 14px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        border: 1px solid var(--g100);
+        transition: var(--tr);
+      }
+      .news-item:hover {
+        box-shadow: var(--sh2);
+      }
+      .news-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .news-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .news-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--g900);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .news-meta {
+        font-size: 12px;
+        color: var(--g500);
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .news-acts {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+      }
+      /* TEAM GRID */
+      .team-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 640px) {
+        .team-list {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .team-item {
+        background: #fff;
+        border-radius: var(--r);
+        padding: 16px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        border: 1px solid var(--g100);
+      }
+      .team-av {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .media-img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+      .media-img.contain {
+        object-fit: contain;
+      }
+      .media-field {
+        display: grid;
+        gap: 8px;
+      }
+      .media-preview {
+        width: 100%;
+        max-width: 220px;
+        aspect-ratio: 16 / 9;
+        border-radius: 12px;
+        border: 1px solid var(--g200);
+        background: var(--g50);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: var(--g400);
+      }
+      /* PAGINATION */
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .pager-info {
+        font-size: 13px;
+        color: var(--g500);
+      }
+      /* MODAL */
+      #modal-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #modal-ov.open {
+        display: flex;
+      }
+      .modal {
+        background: #fff;
+        border-radius: var(--rx);
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .modal-hdr {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--g100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+      }
+      .modal-title {
+        font-family: "Playfair Display", serif;
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--g900);
+      }
+      .modal-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid var(--g200);
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: var(--g600);
+      }
+      .modal-body {
+        padding: 22px;
+      }
+      .modal-footer {
+        padding: 14px 22px;
+        border-top: 1px solid var(--g100);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      /* SIDEBAR OVERLAY */
+      #sb-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 199;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+      #sb-ov.open {
+        display: block;
+      }
+      /* TOAST */
+      #toast {
+        position: fixed;
+        bottom: calc(22px + var(--sb));
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--g900);
+        color: #fff;
+        padding: 11px 22px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        white-space: nowrap;
+        max-width: 90vw;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      /* AVATAR */
+      .av-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      /* CONFIRM DIALOG */
+      #confirm-ov {
+        position: fixed;
+        inset: 0;
+        z-index: 600;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      #confirm-ov.open {
+        display: flex;
+      }
+      .confirm-box {
+        background: #fff;
+        border-radius: var(--rx);
+        padding: 28px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+      .confirm-ic {
+        font-size: 44px;
+        margin-bottom: 12px;
+      }
+      .confirm-title {
+        font-family: "Playfair Display", serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--g900);
+        margin-bottom: 8px;
+      }
+      .confirm-msg {
+        font-size: 14px;
+        color: var(--g500);
+        margin-bottom: 22px;
+        line-height: 1.6;
+      }
+      .confirm-acts {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      /* RESPONSIVE */
+      @media (max-width: 479px) {
+        .content {
+          padding: 14px;
+        }
+        .modal {
+          border-radius: var(--rx) var(--rx) 0 0;
+          max-height: 88vh;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          max-width: 100%;
+        }
+        #modal-ov {
+          align-items: flex-end;
+          padding: 0;
+        }
+        .confirm-acts {
+          flex-direction: column;
+        }
+      }
+      :focus-visible {
+        outline: 2px solid var(--b6);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- DB ENGINE (same as main site) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="admin-shared.js"></script>
+
+    <div id="toast" role="alert" aria-live="polite"></div>
+    <div id="sb-ov" onclick="csbmob()"></div>
+
+    <!-- CONFIRM DIALOG -->
+    <div id="confirm-ov">
+      <div class="confirm-box">
+        <div class="confirm-ic" id="confirm-ic">⚠</div>
+        <div class="confirm-title" id="confirm-title">Are you sure?</div>
+        <div class="confirm-msg" id="confirm-msg">
+          This action cannot be undone.
+        </div>
+        <div class="confirm-acts">
+          <button
+            class="btn btn-g"
+            onclick="
+              document.getElementById('confirm-ov').classList.remove('open')
+            "
+          >
+            Cancel
+          </button>
+          <button class="btn btn-r" id="confirm-ok">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal-ov" role="dialog" aria-modal="true">
+      <div class="modal" id="modal">
+        <div class="modal-hdr">
+          <div class="modal-title" id="modal-title">Modal</div>
+          <button class="modal-close" onclick="cmodal()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer" id="modal-footer"></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sb" id="sidebar">
+        <div class="sb-brand">
+          <div class="sb-logo">
+            <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+          </div>
+          <div class="sb-name">NJUASCO Admin</div>
+          <div class="sb-sub">Management System</div>
+        </div>
+        <div class="sb-nav" id="sb-nav">
+          <div class="sb-item active" onclick="showPage('dashboard', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-home"
+                data-ico="home"
+                aria-hidden="true"
+              ></span></span
+            >Dashboard
+          </div>
+          <div class="sb-section">Website</div>
+          <div class="sb-item" onclick="showPage('school-info', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-school"
+                data-ico="school"
+                aria-hidden="true"
+              ></span></span
+            >School Info
+          </div>
+          <div class="sb-item" onclick="showPage('about-page', this)">
+            <span class="sb-ic">📖</span>About Page
+          </div>
+          <div class="sb-item" onclick="showPage('ai-knowledge', this)">
+            <span class="sb-ic">🤖</span>AI Knowledge
+          </div>
+          <div class="sb-item" onclick="showPage('news-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-news"
+                data-ico="news"
+                aria-hidden="true"
+              ></span></span
+            >News & Events<span class="sb-badge" id="news-badge"></span>
+          </div>
+          <div class="sb-item" onclick="showPage('team-mgr', this)">
+            <span class="sb-ic">👥</span>Team Members
+          </div>
+          <div class="sb-item" onclick="showPage('departments-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-book"
+                data-ico="book"
+                aria-hidden="true"
+              ></span></span
+            >Departments
+          </div>
+          <div class="sb-item" onclick="showPage('gallery-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-image"
+                data-ico="image"
+                aria-hidden="true"
+              ></span></span
+            >Gallery
+          </div>
+          <div class="sb-item" onclick="showPage('docs-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-book"
+                data-ico="book"
+                aria-hidden="true"
+              ></span></span
+            >Documents
+          </div>
+          <div class="sb-item" onclick="showPage('slides-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-image"
+                data-ico="image"
+                aria-hidden="true"
+              ></span></span
+            >Homepage Slides
+          </div>
+          <div class="sb-item" onclick="showPage('facilities-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-landmark"
+                data-ico="landmark"
+                aria-hidden="true"
+              ></span></span
+            >Facilities
+          </div>
+          <div class="sb-item" onclick="showPage('houses-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-home"
+                data-ico="home"
+                aria-hidden="true"
+              ></span></span
+            >Houses
+          </div>
+          <div class="sb-item" onclick="showPage('clubs-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-masks"
+                data-ico="masks"
+                aria-hidden="true"
+              ></span></span
+            >Clubs
+          </div>
+          <div class="sb-section">People</div>
+          <div class="sb-item" onclick="showPage('students-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-cap"
+                data-ico="cap"
+                aria-hidden="true"
+              ></span></span
+            >Students
+          </div>
+          <div class="sb-item" onclick="showPage('teachers-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-user"
+                data-ico="user"
+                aria-hidden="true"
+              ></span
+              ><span
+                class="ico ico-school"
+                data-ico="school"
+                aria-hidden="true"
+              ></span></span
+            >Teachers
+          </div>
+          <div class="sb-item" onclick="showPage('admissions-mgr', this)">
+            <span class="sb-ic">📝</span>Applications<span
+              class="sb-badge"
+              id="app-badge"
+              ></span
+            >
+          </div>
+          <div class="sb-section">Finance</div>
+          <div class="sb-item" onclick="showPage('donations-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-heart"
+                data-ico="heart"
+                aria-hidden="true"
+              ></span></span
+            >Donations
+          </div>
+          <div class="sb-item" onclick="showPage('merch-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-shop"
+                data-ico="shop"
+                aria-hidden="true"
+              ></span></span
+            >Merchandise
+          </div>
+          <div class="sb-item" onclick="showPage('orders-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-cart"
+                data-ico="cart"
+                aria-hidden="true"
+              ></span></span
+            >Orders
+          </div>
+          <div class="sb-section">Communications</div>
+          <div class="sb-item" onclick="showPage('messages-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-mail"
+                data-ico="mail"
+                aria-hidden="true"
+              ></span></span
+            >Messages
+          </div>
+          <div class="sb-item" onclick="showPage('notif-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-bell"
+                data-ico="bell"
+                aria-hidden="true"
+              ></span></span
+            >Notifications
+          </div>
+          <div class="sb-section">System</div>
+          <div class="sb-item" onclick="showPage('logs-mgr', this)">
+            <span class="sb-ic"
+              ><span
+                class="ico ico-clipboard"
+                data-ico="clipboard"
+                aria-hidden="true"
+              ></span></span
+            >Activity Logs
+          </div>
+          <div class="sb-item" onclick="showPage('subadmins-mgr', this)">
+            <span class="sb-ic">🛡️</span>Sub-Admins
+          </div>
+          <div class="sb-item" onclick="showPage('settings-mgr', this)">
+            <span class="sb-ic">⚙️</span>Settings
+          </div>
+        </div>
+        <div class="sb-footer">
+          <div class="sb-user">
+            <div class="sb-av">SA</div>
+            <div>
+              <div class="sb-uname">Super Admin</div>
+              <div class="sb-urole">Full Access</div>
+            </div>
+            <button
+              class="sb-logout"
+              onclick="
+                if (confirm('Log out?')) adminLogout();
+              "
+              title="Logout"
+            >
+              ⏻
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div class="main">
+        <div class="topbar">
+          <button class="mt" onclick="osbmob()" aria-label="Toggle sidebar">
+            <span class="mtl"></span><span class="mtl"></span
+            ><span class="mtl"></span>
+          </button>
+          <div class="topbar-title" id="page-title">Dashboard</div>
+          <div class="topbar-actions">
+            <label class="maint-toggle" title="Toggle site maintenance mode">
+              <input id="top-maint-toggle" type="checkbox" onchange="toggleMaintenanceMode(this.checked)" />
+              <span class="maint-toggle-ui" aria-hidden="true"></span>
+              <span class="maint-toggle-label">Maintenance</span>
+            </label>
+            <button
+              class="tb-btn"
+              title="Notifications"
+              onclick="showPage('notif-mgr', null)"
+            >
+              <span
+                class="ico ico-bell"
+                data-ico="bell"
+                aria-hidden="true"
+              ></span
+              ><span class="tb-bdg" id="tb-badge" style="display: none"></span>
+            </button>
+            <a
+              href="sub-admin.html"
+              target="_blank"
+              class="back-btn"
+              style="
+                background: rgba(147, 51, 234, 0.08);
+                color: var(--p6);
+                border-color: rgba(147, 51, 234, 0.2);
+              "
+              >Sub-Admin</a
+            ><a href="index.html" class="back-btn">← View Site</a>
+          </div>
+        </div>
+
+        <div class="content">
+          <!-- DASHBOARD -->
+          <div class="apage active" id="pg-dashboard">
+            <div class="stats-row" id="dash-stats"></div>
+            <div class="grid2">
+              <div class="card">
+                <div class="card-title">📝 Recent Applications</div>
+                <div class="tbl-wrap">
+                  <table class="tbl" id="dash-apps-table"></table>
+                </div>
+                <div style="margin-top: 14px">
+                  <button
+                    class="btn btn-g btn-sm"
+                    onclick="showPage('admissions-mgr', null)"
+                  >
+                    View All Applications →
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div class="card" style="margin-bottom: 20px">
+                  <div class="card-title">⚡ Quick Actions</div>
+                  <div class="qa-grid">
+                    <div class="qa-card" onclick="openModal('news')">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-news"
+                          data-ico="news"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Add News</div>
+                    </div>
+                    <div class="qa-card" onclick="openModal('notif')">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-bell"
+                          data-ico="bell"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Send Notification</div>
+                    </div>
+                    <div class="qa-card" onclick="openModal('team')">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-user"
+                          data-ico="user"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Add Staff</div>
+                    </div>
+                    <div class="qa-card" onclick="openModal('gallery')">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-image"
+                          data-ico="image"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Add Photo</div>
+                    </div>
+                    <div
+                      class="qa-card"
+                      onclick="showPage('students-mgr', null)"
+                    >
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-cap"
+                          data-ico="cap"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Students</div>
+                    </div>
+                    <div class="qa-card" onclick="openModal('club')">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-masks"
+                          data-ico="masks"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Add Club</div>
+                    </div>
+                    <div
+                      class="qa-card"
+                      onclick="showPage('donations-mgr', null)"
+                    >
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-heart"
+                          data-ico="heart"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Donations</div>
+                    </div>
+                    <div class="qa-card" onclick="showPage('logs-mgr', null)">
+                      <div class="qa-ic">
+                        <span
+                          class="ico ico-clipboard"
+                          data-ico="clipboard"
+                          aria-hidden="true"
+                        ></span>
+                      </div>
+                      <div class="qa-lbl">Activity Log</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-title">🕒 Recent Activity</div>
+                  <div id="dash-logs"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCHOOL INFO -->
+          <div class="apage" id="pg-school-info">
+            <div class="sec-hdr">
+              <div class="sec-title">School Information</div>
+              <button class="btn btn-p" onclick="saveSchoolInfo()">
+                💾 Save All Changes
+              </button>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">
+                <span
+                  class="ico ico-school"
+                  data-ico="school"
+                  aria-hidden="true"
+                ></span>
+                Identity
+              </div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">Full School Name</label
+                  ><input
+                    class="finp"
+                    id="si-name"
+                    value="New Juaben Senior High School"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Short Name</label
+                  ><input class="finp" id="si-short" value="NJUASCO" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">School Code</label
+                  ><input class="finp" id="si-code" value="0020103" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Category</label
+                  ><select class="finp" id="si-cat">
+                    <option selected>B</option>
+                    <option>A</option>
+                    <option>C</option>
+                  </select>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Year Founded</label
+                  ><input class="finp" id="si-founded" value="1953" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Motto</label
+                  ><input
+                    class="finp"
+                    id="si-motto"
+                    value="HARDWORK"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">War Cry</label
+                  ><input class="finp" id="si-warcry" value="DAASEBRE MMA" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">
+                <span
+                  class="ico ico-phone"
+                  data-ico="phone"
+                  aria-hidden="true"
+                ></span>
+                Contact Details
+              </div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">Phone</label
+                  ><input class="finp" id="si-phone" value="+233 XX XXX XXXX" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Email</label
+                  ><input
+                    class="finp"
+                    id="si-email"
+                    value="info@njuasco.edu.gh"
+                  />
+                </div>
+                <div class="fg" style="grid-column: 1/-1">
+                  <label class="flbl">Address</label
+                  ><input
+                    class="finp"
+                    id="si-address"
+                    value="New Juaben, Koforidua, Eastern Region, Ghana"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Office Hours</label
+                  ><input
+                    class="finp"
+                    id="si-hours"
+                    value="Monday – Friday: 8:00 AM – 4:00 PM"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Facebook URL</label
+                  ><input class="finp" id="si-fb" value="#" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Twitter/X URL</label
+                  ><input class="finp" id="si-tw" value="#" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Instagram URL</label
+                  ><input class="finp" id="si-ig" value="#" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">LinkedIn URL</label
+                  ><input class="finp" id="si-li" value="#" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">Homepage Statistics</div>
+              <p class="hint-text" style="margin-bottom:14px">These numbers appear on the homepage hero banner and the dark stats section (Students, Staff, Years, Clubs). Clubs uses your Clubs manager by default.</p>
+              <div id="si-stats-preview" class="hint-text" style="margin-bottom:14px;padding:12px 14px;background:var(--g100);border-radius:10px;line-height:1.6"></div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">Years of Excellence</label>
+                  <input class="finp" id="si-stat-years" type="number" min="0" oninput="updateHeroStatsPreview()" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Current Students</label>
+                  <input class="finp" id="si-stat-students" type="number" min="0" oninput="updateHeroStatsPreview()" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Academic Programmes</label>
+                  <input class="finp" id="si-stat-programmes" type="number" min="0" oninput="updateHeroStatsPreview()" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Qualified Staff</label>
+                  <input class="finp" id="si-stat-staff" type="number" min="0" oninput="updateHeroStatsPreview()" />
+                </div>
+                <div class="fg" style="grid-column:1/-1">
+                  <label class="settings-check">
+                    <input id="si-clubs-live" type="checkbox" checked onchange="updateHeroStatsPreview()" />
+                    <span>Use live clubs count from Clubs manager <span class="settings-check-note">When enabled, the clubs number updates automatically from the clubs you add in admin</span></span>
+                  </label>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Manual Clubs Count (optional)</label>
+                  <input class="finp" id="si-clubs-manual" type="number" min="0" placeholder="Only used when live count is off" oninput="updateHeroStatsPreview()" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">📝 Website Content</div>
+              <div style="display: flex; flex-direction: column; gap: 16px">
+                <div class="fg">
+                  <label class="flbl">Hero Title</label
+                  ><input class="finp" id="si-hero" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Hero Subtitle</label
+                  ><textarea
+                    class="finp fta"
+                    id="si-herosub"
+                    style="min-height: 80px"
+                  ></textarea>
+                </div>
+                <div class="fg media-field">
+                  <label class="flbl">Homepage Hero Background Image</label>
+                  <div class="media-preview" id="si-hero-preview"></div>
+                  <input class="finp" id="si-hero-file" type="file" accept="image/*" />
+                  <input class="finp" id="si-hero-image" placeholder="Optional image URL" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Welcome Text (Homepage intro)</label
+                  ><textarea class="finp fta" id="si-welcome"></textarea>
+                </div>
+                <div class="fg" style="grid-column:1/-1">
+                  <label class="settings-check">
+                    <input id="si-first-welcome-enabled" type="checkbox" checked />
+                    <span>Show first-visit welcome popup <span class="settings-check-note">Turn this off to stop the NJB City popup from showing to new visitors.</span></span>
+                  </label>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Popup Small Text</label>
+                  <input class="finp" id="si-first-welcome-kicker" placeholder="New Juaben Senior High School" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Popup Title</label>
+                  <input class="finp" id="si-first-welcome-title" placeholder="Welcome to NJB City" />
+                </div>
+                <div class="fg" style="grid-column:1/-1">
+                  <label class="flbl">Popup Message</label>
+                  <textarea class="finp fta" id="si-first-welcome-text"></textarea>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Popup Button Text</label>
+                  <input class="finp" id="si-first-welcome-button" placeholder="Enter NJB City" />
+                </div>
+                <div class="fg media-field">
+                  <label class="flbl">Popup Image</label>
+                  <input class="finp" id="si-first-welcome-file" type="file" accept="image/*" />
+                  <input class="finp" id="si-first-welcome-image" placeholder="njb.jpg or image URL" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Popup Logo</label>
+                  <input class="finp" id="si-first-welcome-logo" placeholder="NJUASCO LOGO.png" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">Footer Credits</div>
+              <div class="form-grid">
+                <div class="fg" style="grid-column: 1/-1">
+                  <label class="flbl">Copyright Text</label>
+                  <input class="finp" id="si-footer-copy" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">NOVATech Name</label>
+                  <input class="finp" id="si-nova-name" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">NOVATech URL</label>
+                  <input class="finp" id="si-nova-url" placeholder="https://..." />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Galaxy Studio Name</label>
+                  <input class="finp" id="si-galaxy-name" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Galaxy Studio URL</label>
+                  <input class="finp" id="si-galaxy-url" placeholder="https://..." />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABOUT PAGE -->
+          <div class="apage" id="pg-about-page">
+            <div class="sec-hdr">
+              <div class="sec-title">About Page Content</div>
+              <button class="btn btn-p" onclick="saveAboutPage()">💾 Save About Page</button>
+            </div>
+            <p class="hint-text">Edit the About page sections shown on the public website. Changes sync to all devices automatically.</p>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">📜 History & Identity Cards</div>
+              <div class="fg">
+                <label class="flbl">History Paragraph (Our Journey section)</label>
+                <textarea class="finp fta" id="ab-history" style="min-height:90px"></textarea>
+              </div>
+              <div class="form-grid" style="margin-top:16px">
+                <div class="fg">
+                  <label class="flbl">Founded Card — Description</label>
+                  <textarea class="finp fta" id="ab-founded-desc"></textarea>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Location Card — Place Name</label>
+                  <input class="finp" id="ab-location-val" placeholder="Koforidua" />
+                </div>
+                <div class="fg" style="grid-column:1/-1">
+                  <label class="flbl">Location Card — Description</label>
+                  <textarea class="finp fta" id="ab-location-desc"></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">🎯 Vision & Mission</div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">Vision Statement</label>
+                  <textarea class="finp fta" id="ab-vision"></textarea>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Mission Statement</label>
+                  <textarea class="finp fta" id="ab-mission"></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">👨‍🏫 Principal's Message</div>
+              <div class="fg">
+                <label class="flbl">Message</label>
+                <textarea class="finp fta" id="ab-pm" style="min-height:100px"></textarea>
+              </div>
+              <div class="form-grid" style="margin-top:12px">
+                <div class="fg">
+                  <label class="flbl">Name</label>
+                  <input class="finp" id="ab-pname" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Title</label>
+                  <input class="finp" id="ab-ptitle" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Emoji</label>
+                  <input class="finp" id="ab-principal-emoji" placeholder="👨‍🏫" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">🏠 Homepage Badge</div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flbl">Badge Number / Title</label>
+                  <input class="finp" id="ab-home-badge-title" placeholder="70+" />
+                </div>
+                <div class="fg">
+                  <label class="flbl">Badge Subtitle</label>
+                  <input class="finp" id="ab-home-badge-sub" placeholder="Years of Excellence" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">📅 School Timeline</div>
+              <p class="hint-text">Add each milestone as its own entry. Use the colour picker for the dot on the About page.</p>
+              <div id="timeline-editor"></div>
+              <button class="btn btn-g" type="button" onclick="addTimelineEntry()">+ Add Timeline Entry</button>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">⭐ Core Values</div>
+              <p class="hint-text">Each value appears on the About page with its emoji, title, and description.</p>
+              <div id="values-editor"></div>
+              <button class="btn btn-g" type="button" onclick="addCoreValueEntry()">+ Add Core Value</button>
+            </div>
+            <p class="sync-note" id="about-sync-note"></p>
+          </div>
+
+          <!-- AI KNOWLEDGE -->
+          <div class="apage" id="pg-ai-knowledge">
+            <div class="sec-hdr">
+              <div class="sec-title">AI Knowledge Base</div>
+            </div>
+            <p class="hint-text">Add one official fact or instruction at a time. Each save creates a knowledge point the AI will use when answering questions.</p>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">Add Knowledge Point</div>
+              <div class="fg">
+                <label class="flbl">New Point</label>
+                <textarea class="finp fta" id="ai-knowledge-input" style="min-height:110px" placeholder="Example: School fees for 2025/2026 are handled through the admissions office."></textarea>
+              </div>
+              <button class="btn btn-p" type="button" onclick="addAIKnowledgePoint()">Save Point</button>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">Saved Knowledge Points</div>
+              <div id="ai-knowledge-points"></div>
+            </div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">Quick Q&amp;A for AI</div>
+              <p class="hint-text">Common questions and official answers the AI should use.</p>
+              <div id="ai-faq-editor"></div>
+              <button class="btn btn-g" type="button" onclick="addAIFaqEntry()">+ Add Q&amp;A</button>
+            </div>
+            <p class="sync-note" id="ai-sync-note"></p>
+          </div>
+
+          <!-- NEWS MANAGER -->
+          <div class="apage" id="pg-news-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">News & Events</div>
+              <button class="btn btn-p" onclick="openModal('news')">
+                + Add Post
+              </button>
+            </div>
+            <div class="atabs">
+              <button class="atab active" onclick="stab2(this, 'na-all')">
+                All
+              </button>
+              <button class="atab" onclick="stab2(this, 'na-pub')">
+                Published
+              </button>
+              <button class="atab" onclick="stab2(this, 'na-draft')">
+                Drafts
+              </button>
+            </div>
+            <div class="atpane active" id="na-all">
+              <div class="news-list" id="news-list-all"></div>
+            </div>
+            <div class="atpane" id="na-pub">
+              <div class="news-list" id="news-list-pub"></div>
+            </div>
+            <div class="atpane" id="na-draft">
+              <div class="news-list" id="news-list-draft"></div>
+            </div>
+          </div>
+
+          <!-- TEAM MANAGER -->
+          <div class="apage" id="pg-team-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Team Members</div>
+              <button class="btn btn-p" onclick="openModal('team')">
+                + Add Member
+              </button>
+            </div>
+            <div class="team-list" id="team-list"></div>
+          </div>
+
+          <!-- DEPARTMENTS MANAGER -->
+          <div class="apage" id="pg-departments-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Academic Departments</div>
+              <button class="btn btn-p" onclick="openModal('department')">
+                + Add Department
+              </button>
+            </div>
+            <div id="dept-list" style="display: grid; gap: 12px"></div>
+          </div>
+
+          <!-- GALLERY MANAGER -->
+          <div class="apage" id="pg-gallery-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Gallery</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadGallery(this)" />
+                <button class="btn btn-g" onclick="document.getElementById('gallery-bulk-files').click()">
+                  Bulk Upload
+                </button>
+                <button class="btn btn-g" onclick="selectAll('admin-gallery-select', true)">
+                  Select All
+                </button>
+                <button class="btn btn-g" onclick="bulkArrange('gallery','gallery-mgr','admin-gallery-select')">
+                  Arrange Selected
+                </button>
+                <button class="btn btn-r" onclick="bulkDelete('gallery','gallery-mgr','admin-gallery-select')">
+                  Delete Selected
+                </button>
+                <button class="btn btn-p" onclick="openModal('gallery')">
+                  + Add Photo
+                </button>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 14px;
+              "
+              id="gallery-list"
+            ></div>
+          </div>
+
+          <!-- DOCUMENTS MANAGER -->
+          <div class="apage" id="pg-docs-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Documents</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="docs-bulk-files" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'documents','docs-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('docs-bulk-files').click()">
+                  Bulk Upload
+                </button>
+                <button class="btn btn-g" onclick="selectAll('admin-doc-select', true)">
+                  Select All
+                </button>
+                <button class="btn btn-g" onclick="bulkArrange('documents','docs-mgr','admin-doc-select')">
+                  Arrange Selected
+                </button>
+                <button class="btn btn-r" onclick="bulkDelete('documents','docs-mgr','admin-doc-select')">
+                  Delete Selected
+                </button>
+                <button class="btn btn-p" onclick="openModal('doc')">
+                  + Add Document
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="docs-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- HOMEPAGE SLIDES -->
+          <div class="apage" id="pg-slides-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Homepage Slides</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="slides-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'homepageSlides','slides-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('slides-bulk-files').click()">Bulk Upload</button>
+                <button class="btn btn-p" onclick="openModal('slide')">+ Add Slide</button>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 14px;
+              "
+              id="slides-list"
+            ></div>
+          </div>
+
+          <!-- FACILITIES MANAGER -->
+          <div class="apage" id="pg-facilities-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Facilities</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="fac-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'facilities','facilities-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('fac-bulk-files').click()">Bulk Upload</button>
+                <button class="btn btn-p" onclick="openModal('facility')">+ Add Facility</button>
+              </div>
+            </div>
+            <div
+              style="display: grid; grid-template-columns: 1fr; gap: 12px"
+              id="fac-list"
+            ></div>
+          </div>
+
+          <!-- HOUSES MANAGER -->
+          <div class="apage" id="pg-houses-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">School Houses</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="house-bulk-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'houses','houses-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('house-bulk-files').click()">Bulk Upload</button>
+                <button class="btn btn-p" onclick="openModal('house')">+ Add House</button>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+                max-width: 800px;
+              "
+              id="house-list"
+            ></div>
+          </div>
+
+          <!-- CLUBS MANAGER -->
+          <div class="apage" id="pg-clubs-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Clubs & Societies</div>
+              <button class="btn btn-p" onclick="openModal('club')">
+                + Add Club
+              </button>
+            </div>
+            <div
+              style="display: grid; grid-template-columns: 1fr; gap: 12px"
+              id="clubs-list"
+            ></div>
+          </div>
+
+          <!-- STUDENTS -->
+          <div class="apage" id="pg-students-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Students</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-g" onclick="selectAll('admin-student-select', true)">Select All</button>
+                <button class="btn btn-r" onclick="bulkDelete('students','students-mgr','admin-student-select')">Delete Selected</button>
+                <button class="btn btn-p" onclick="openModal('student')">+ Add Student</button>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <div class="search-bar">
+                <span
+                  ><span
+                    class="ico ico-search"
+                    data-ico="search"
+                    aria-hidden="true"
+                  ></span></span
+                ><input
+                  placeholder="Search students…"
+                  oninput="filterStudents(this.value)"
+                  id="student-search"
+                />
+              </div>
+              <select
+                class="finp"
+                style="max-width: 160px; padding: 9px 14px"
+                id="student-prog-filter"
+                onchange="
+                  filterStudents(
+                    document.getElementById('student-search').value,
+                  )
+                "
+              >
+                <option value="">All Programmes</option>
+                <option>General Science</option>
+                <option>General Arts</option>
+                <option>Business</option>
+                <option>Home Economics</option>
+                <option>Visual Arts</option>
+                <option>Agriculture</option>
+                <option>Languages</option>
+              </select>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="students-table"></table>
+              </div>
+              <div class="pager">
+                <span class="pager-info" id="students-pager-info"
+                  >Loading…</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- TEACHERS -->
+          <div class="apage" id="pg-teachers-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Teachers</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-g" onclick="selectAll('admin-teacher-select', true)">Select All</button>
+                <button class="btn btn-r" onclick="bulkDelete('teachers','teachers-mgr','admin-teacher-select')">Delete Selected</button>
+                <button class="btn btn-p" onclick="openModal('teacher')">+ Add Teacher</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="teachers-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- APPLICATIONS -->
+          <div class="apage" id="pg-admissions-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Admission Applications</div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-g" onclick="exportCSV()">
+                  Export CSV
+                </button>
+                <button class="btn btn-p" onclick="exportApplicationsPDF()">
+                  Export PDF
+                </button>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+                gap: 12px;
+                margin-bottom: 20px;
+              "
+              id="apps-stats"
+            ></div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="apps-table"></table>
+              </div>
+            </div>
+            <div id="app-review-modal" style="display:none"></div>
+          </div>
+
+          <!-- DONATIONS -->
+          <div class="apage" id="pg-donations-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Donations</div>
+              <button class="btn btn-p" onclick="openModal('donation')">
+                + Record Donation
+              </button>
+            </div>
+            <div class="stats-row" id="donation-stats"></div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="donations-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- MERCHANDISE -->
+          <div class="apage" id="pg-merch-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Merchandise</div>
+              <button class="btn btn-p" onclick="openModal('merch')">
+                + Add Product
+              </button>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 14px;
+              "
+              id="merch-list"
+            ></div>
+          </div>
+
+          <!-- ORDERS -->
+          <div class="apage" id="pg-orders-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Shop Orders</div>
+              <button class="btn btn-p" onclick="downloadOrderFulfillmentList()">Download Ward Collection List</button>
+            </div>
+            <div class="stats-row" id="order-stats"></div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="orders-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- MESSAGES -->
+          <div class="apage" id="pg-messages-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Website Messages</div>
+              <button class="btn btn-r" onclick="bulkDelete('messages','messages-mgr','admin-message-select')">Delete Selected</button>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="messages-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS -->
+          <div class="apage" id="pg-notif-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Notifications</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-r" onclick="clearNotifs()">
+                  Clear All
+                </button>
+                <button class="btn btn-p" onclick="openModal('notif')">
+                  + Send Notification
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="notif-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTIVITY LOGS -->
+          <div class="apage" id="pg-logs-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Activity Logs</div>
+              <button
+                class="btn btn-r"
+                onclick="clearLogs()"
+              >
+                Clear Logs
+              </button>
+            </div>
+            <div class="card">
+              <div class="tbl-wrap">
+                <table class="tbl" id="logs-table"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div class="apage" id="pg-settings-mgr">
+            <div class="sec-hdr"><div class="sec-title">Settings</div></div>
+            <div class="atabs">
+              <button class="atab active" onclick="stab2(this, 'set-gen')">
+                General
+              </button>
+              <button class="atab" onclick="stab2(this, 'set-password')">
+                Password
+              </button>
+              <button class="atab" onclick="stab2(this, 'set-danger')">
+                Danger Zone
+              </button>
+            </div>
+            <div class="atpane active" id="set-gen">
+              <div class="card">
+                <div class="card-title">System Settings</div>
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                  <label class="settings-check">
+                    <input id="set-logging" type="checkbox" />
+                    <span>Activity Logging <span class="settings-check-note">Log admin and sub-admin actions</span></span>
+                  </label>
+                  <label class="settings-check">
+                    <input id="set-maintenance" type="checkbox" />
+                    <span>Maintenance Mode <span class="settings-check-note">Hide the public website while admin and sub-admin pages remain open</span></span>
+                  </label>
+                  <label class="settings-check">
+                    <input id="set-portal-coming-soon" type="checkbox" />
+                    <span>Portal Coming Soon <span class="settings-check-note">Show a "Coming Soon" placeholder for all portal pages</span></span>
+                  </label>
+                  <div class="fg">
+                    <label class="flbl">Site URL</label>
+                    <input class="finp" id="set-site-url" placeholder="https://njuasco.edu.gh" />
+                  </div>
+                  <div class="fg">
+                    <label class="flbl">Maintenance Title</label>
+                    <input class="finp" id="set-maint-title" placeholder="Site Under Maintenance" />
+                  </div>
+                  <div class="fg">
+                    <label class="flbl">Maintenance Message</label>
+                    <textarea class="finp fta" id="set-maint-msg" placeholder="We are updating the website. Please check back soon."></textarea>
+                  </div>
+                  <button class="btn btn-p" style="align-self:flex-start" onclick="saveSettings()">Save Settings</button>
+                </div>
+              </div>
+            </div>
+            <div class="atpane" id="set-password">
+              <div class="card" style="max-width: 520px">
+                <div class="card-title">
+                  <span
+                    class="ico ico-key"
+                    data-ico="key"
+                    aria-hidden="true"
+                  ></span>
+                  Admin Login Credentials
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                  <div class="fg">
+                    <label class="flbl">Admin Email</label
+                    ><input
+                      class="finp"
+                      type="email"
+                      id="pw-email"
+                      placeholder="info@njuasco.edu.gh"
+                      autocomplete="email"
+                    />
+                  </div>
+                  <div class="fg">
+                    <label class="flbl">Current Password</label
+                    ><input
+                      class="finp"
+                      type="password"
+                      id="pw-cur"
+                      placeholder="Default is admin123"
+                      autocomplete="current-password"
+                    />
+                  </div>
+                  <div class="fg">
+                    <label class="flbl">New Password</label
+                    ><input
+                      class="finp"
+                      type="password"
+                      id="pw-new"
+                      placeholder="Leave blank to keep current password"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                  <div class="fg">
+                    <label class="flbl">Confirm Password</label
+                    ><input
+                      class="finp"
+                      type="password"
+                      id="pw-con"
+                      placeholder="Repeat new password"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                  <div style="font-size:12px;color:var(--g500);line-height:1.55">
+                    First-time Supabase Auth users should be created with the temporary password <strong>admin123</strong>. Change it here after signing in.
+                  </div>
+                  <button
+                    class="btn btn-p"
+                    style="align-self: flex-start"
+                    onclick="chpw()"
+                  >
+                    Update Login
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="atpane" id="set-danger">
+              <div
+                class="card"
+                style="border: 1px solid rgba(220, 38, 38, 0.2)"
+              >
+                <div class="card-title">🚨 Danger Zone</div>
+                <div style="display: flex; flex-direction: column; gap: 16px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 12px;
+                    "
+                  >
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600">
+                        Reset All Data
+                      </div>
+                      <div style="font-size: 12px; color: var(--g500)">
+                        Erase all localStorage data and re-seed defaults
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-r btn-sm"
+                      onclick="confirmAct('Reset ALL data?','This will permanently delete all posts, team, gallery, and student data and restore defaults.','Reset',()=>{const keys=Object.keys(localStorage).filter(k=>k.startsWith(\'nj_\'));keys.forEach(k=>localStorage.removeItem(k));localStorage.removeItem(\'nj_seeded\');location.reload();})"
+                    >
+                      Reset Data
+                    </button>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 12px;
+                    "
+                  >
+                    <div>
+                      <div style="font-size: 13px; font-weight: 600">
+                        Clear Activity Logs
+                      </div>
+                      <div style="font-size: 12px; color: var(--g500)">
+                        Remove all admin activity log entries
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-r btn-sm"
+                      onclick="confirmAct('Clear logs?','All activity log entries will be deleted.','Clear',()=>{DB._set(\'logs\',[]);toast(\'Logs cleared\');})"
+                    >
+                      Clear Logs
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-ADMINS -->
+          <div class="apage" id="pg-subadmins-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">Sub-Admin Management</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-g" onclick="selectAll('admin-sa-select', true)">Select All</button>
+                <button class="btn btn-r" onclick="bulkDeleteSubAdmins()">Delete Selected</button>
+                <button class="btn btn-p" onclick="openModal('subadmin')">+ Add Sub-Admin</button>
+              </div>
+            </div>
+            <div
+              style="
+                background: #fff;
+                border-radius: var(--rl);
+                padding: 22px;
+                box-shadow: var(--sh1);
+                margin-bottom: 20px;
+              "
+            >
+              <div class="card-title">
+                <span
+                  class="ico ico-info"
+                  data-ico="info"
+                  aria-hidden="true"
+                ></span>
+                About Sub-Admin Access
+              </div>
+              <p
+                style="
+                  font-size: 14px;
+                  color: var(--g500);
+                  line-height: 1.7;
+                  margin-bottom: 16px;
+                "
+              >
+                Add a staff email only — they set their own password on first
+                login (you will see it below). Quick entry:
+                <strong>staff.html</strong>, Portal Hub, or triple-click the
+                footer logo on the homepage.
+              </p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <a href="staff.html" target="_blank" class="btn btn-p"
+                  >Open Staff Portal →</a
+                >
+                <a href="sub-admin.html" target="_blank" class="btn btn-g"
+                  >Google Sign-In Shortcut →</a
+                >
+              </div>
+            </div>
+            <div
+              id="sa-list"
+              style="display: grid; grid-template-columns: 1fr; gap: 14px"
+            ></div>
+          </div>
+        </div>
+        <!-- content -->
+      </div>
+      <!-- main -->
+    </div>
+    <!-- layout -->
+
+    <script src="admin-dashboard.js"></script>
+  </body>
+</html>

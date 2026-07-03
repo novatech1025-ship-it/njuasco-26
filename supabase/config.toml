@@ -1,0 +1,28 @@
+project_id = "gkzuzugokctccfadzqwf"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[storage]
+enabled = true
+file_size_limit = "20MiB"
+
+[functions.send-admission-notification]
+verify_jwt = false
+
+[functions.njuasco-ai]
+verify_jwt = false
+
+[functions.checkout-otp]
+verify_jwt = false
+
+[functions.stripe-checkout]
+verify_jwt = false

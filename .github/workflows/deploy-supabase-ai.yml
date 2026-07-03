@@ -1,0 +1,35 @@
+name: Deploy NJUASCO AI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/njuasco-ai/**"
+      - ".github/workflows/deploy-supabase-ai.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Set Supabase secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          supabase secrets set \
+            GROQ_API_KEY="$GROQ_API_KEY" \
+            GROQ_MODEL=llama-3.1-8b-instant \
+            --project-ref gkzuzugokctccfadzqwf
+
+      - name: Deploy njuasco-ai function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy njuasco-ai --project-ref gkzuzugokctccfadzqwf

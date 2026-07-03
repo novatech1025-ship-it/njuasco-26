@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <title>About NJUASCO | NJUASCO</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="shared.js"></script>
+    <div id="ldr"></div>
+    <div id="toast" role="alert" aria-live="polite"></div>
+    <div id="atrig" onclick="atclick()"></div>
+    <div id="admin-ov" role="dialog" aria-modal="true">
+      <div class="abox">
+        <div class="alo">
+          <span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span>
+        </div>
+        <div class="at">Admin Access</div>
+        <div class="as2">NJUASCO Management System</div>
+        <div class="afw">
+          <span class="afic"
+            ><span
+              class="ico ico-user"
+              data-ico="user"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="ainp"
+            type="text"
+            id="auser"
+            placeholder="Username"
+            autocomplete="username"
+          />
+        </div>
+        <div class="afw">
+          <span class="afic"
+            ><span
+              class="ico ico-key"
+              data-ico="key"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="ainp"
+            type="password"
+            id="apass"
+            placeholder="Password"
+            autocomplete="current-password"
+          /><button class="aeye" onclick="tpw()" type="button">
+            <span class="ico ico-eye" data-ico="eye" aria-hidden="true"></span>
+          </button>
+        </div>
+        <button class="asub" type="button" onclick="alogin()">
+          Sign In to Dashboard →</button
+        ><button
+          class="abk"
+          type="button"
+          onclick="document.getElementById('admin-ov').classList.remove('show')"
+        >
+          ← Back to Website
+        </button>
+      </div>
+    </div>
+    <div id="festive">
+      <span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>
+      Welcome to New Juaben Senior High School &nbsp;|&nbsp; Academic Excellence
+      Since 1953 &nbsp;|&nbsp; War Cry: DAASEBRE MMA! &nbsp;|&nbsp; Admissions
+      Open 2025/2026
+      <span class="ico ico-trophy" data-ico="trophy" aria-hidden="true"></span>
+    </div>
+    <header id="hdr">
+      <div class="hi">
+        <div class="brand" onclick="go('home')">
+          <div class="logo">
+            <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+          </div>
+          <div>
+            <div class="sn">New Juaben Senior High</div>
+            <div class="sc">NJUASCO · Est. 1953</div>
+          </div>
+        </div>
+        <nav class="hnav">
+          <div class="ni">
+            <button class="nl" onclick="go('home')">Home</button>
+          </div>
+          <div class="ni">
+            <button class="nl active" onclick="go('about')">About</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('academics')">Academics</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('admissions')">Admissions</button>
+          </div>
+          <div class="ni">
+            <button class="nl">
+              News & More
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div class="ndrop">
+              <div class="dl" onclick="go('news')">
+                <div class="dlic" style="background: rgba(37, 99, 235, 0.1)">
+                  <span
+                    class="ico ico-news"
+                    data-ico="news"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                News & Events
+              </div>
+              <div class="dl" onclick="go('gallery')">
+                <div class="dlic" style="background: rgba(147, 51, 234, 0.1)">
+                  <span
+                    class="ico ico-image"
+                    data-ico="image"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Gallery
+              </div>
+              <div class="dl" onclick="go('facilities')">
+                <div class="dlic" style="background: rgba(16, 185, 129, 0.1)">
+                  <span
+                    class="ico ico-landmark"
+                    data-ico="landmark"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Facilities
+              </div>
+              <div class="dl" onclick="go('clubs')">
+                <div class="dlic" style="background: rgba(245, 158, 11, 0.1)">
+                  <span
+                    class="ico ico-masks"
+                    data-ico="masks"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Clubs
+              </div>
+            </div>
+          </div>
+          <div class="ni">
+            <button class="nl">
+              Community
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div class="ndrop">
+              <div class="dl" onclick="go('njosa')">
+                <div class="dlic" style="background: rgba(245, 158, 11, 0.1)">
+                  <span
+                    class="ico ico-cap"
+                    data-ico="cap"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                NJOSA
+              </div>
+              <div class="dl" onclick="go('shop')">
+                <div class="dlic" style="background: rgba(16, 185, 129, 0.1)">
+                  <span
+                    class="ico ico-shop"
+                    data-ico="shop"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                School Shop
+              </div>
+              <div class="dl" onclick="go('donate')">
+                <div class="dlic" style="background: rgba(220, 38, 38, 0.1)">
+                  <span
+                    class="ico ico-heart"
+                    data-ico="heart"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                Donate
+              </div>
+            </div>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('portal-hub')">Portal</button>
+          </div>
+          <div class="ni">
+            <button class="nl" onclick="go('contact')">Contact</button>
+          </div>
+        </nav>
+        <div class="ha">
+          <button class="hb" onclick="osearch()">
+            <span
+              class="ico ico-search"
+              data-ico="search"
+              aria-hidden="true"
+            ></span>
+          </button>
+          <button class="hb" onclick="tnotif()" id="nbtn">
+            <span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span
+            ><span class="nbadge" id="notif-count">3</span>
+          </button>
+          <div
+            class="cart-badge-wrap"
+            onclick="go('cart')"
+            style="cursor: pointer; position: relative; display: inline-flex"
+          >
+            <button class="hb">
+              <span
+                class="ico ico-cart"
+                data-ico="cart"
+                aria-hidden="true"
+              ></span></button
+            ><span class="cart-badge" id="cart-badge" style="display: none"
+              >0</span
+            >
+          </div>
+          <button class="dbtn" onclick="go('donate')">
+            <span
+              class="ico ico-heart"
+              data-ico="heart"
+              aria-hidden="true"
+            ></span>
+            Donate
+          </button>
+          <button
+            class="ham"
+            onclick="omob()"
+            id="hambtn"
+            aria-expanded="false"
+          >
+            <span class="hl2"></span><span class="hl2"></span
+            ><span class="hl2"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div id="npanel">
+      <div class="nph">
+        <span class="npt">Notifications</span
+        ><button class="npm" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div id="notif-list"></div>
+    </div>
+    <div id="mob">
+      <div class="mp">
+        <div class="mh">
+          <div>
+            <div class="msn">New Juaben Senior High</div>
+            <div class="msc">NJUASCO · Est. 1953</div>
+          </div>
+          <button class="mx" onclick="cmob()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="mnav">
+          <div
+            class="ml"
+            onclick="
+              go('home');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-home"
+                data-ico="home"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Home
+          </div>
+          <div
+            class="ml active"
+            onclick="
+              go('about');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(147, 51, 234, 0.1)">
+              <span
+                class="ico ico-info"
+                data-ico="info"
+                aria-hidden="true"
+              ></span>
+            </div>
+            About NJUASCO
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('academics');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-book"
+                data-ico="book"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Academics
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('admissions');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(245, 158, 11, 0.1)">
+              <span
+                class="ico ico-clipboard"
+                data-ico="clipboard"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Admissions
+          </div>
+          <div class="msl">News & Community</div>
+          <div
+            class="ml"
+            onclick="
+              go('news');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-news"
+                data-ico="news"
+                aria-hidden="true"
+              ></span>
+            </div>
+            News & Events
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('gallery');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(147, 51, 234, 0.1)">
+              <span
+                class="ico ico-image"
+                data-ico="image"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Gallery
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('facilities');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-landmark"
+                data-ico="landmark"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Facilities
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('clubs');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(245, 158, 11, 0.1)">
+              <span
+                class="ico ico-masks"
+                data-ico="masks"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Clubs & Societies
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('njosa');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(245, 158, 11, 0.1)">
+              <span
+                class="ico ico-cap"
+                data-ico="cap"
+                aria-hidden="true"
+              ></span>
+            </div>
+            NJOSA Alumni
+          </div>
+          <div class="msl">Portals & Shop</div>
+          <div
+            class="ml"
+            onclick="
+              go('portal-hub');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(37, 99, 235, 0.1)">
+              <span
+                class="ico ico-monitor"
+                data-ico="monitor"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Portal Hub
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('shop');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(16, 185, 129, 0.1)">
+              <span
+                class="ico ico-shop"
+                data-ico="shop"
+                aria-hidden="true"
+              ></span>
+            </div>
+            School Shop
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('cart');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(220, 38, 38, 0.1)">
+              <span
+                class="ico ico-cart"
+                data-ico="cart"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Cart
+          </div>
+          <div
+            class="ml"
+            onclick="
+              go('contact');
+              cmob();
+            "
+          >
+            <div class="mli" style="background: rgba(6, 182, 212, 0.1)">
+              <span
+                class="ico ico-phone"
+                data-ico="phone"
+                aria-hidden="true"
+              ></span>
+            </div>
+            Contact Us
+          </div>
+        </div>
+        <div class="mft">
+          <button
+            class="mdb"
+            onclick="
+              go('donate');
+              cmob();
+            "
+          >
+            <span
+              class="ico ico-heart"
+              data-ico="heart"
+              aria-hidden="true"
+            ></span>
+            Donate to NJUASCO
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="smod">
+      <div class="sbox">
+        <div class="sipw">
+          <span style="font-size: 18px; color: var(--g400)"
+            ><span
+              class="ico ico-search"
+              data-ico="search"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="smi"
+            id="sinp"
+            placeholder="Search NJUASCO…"
+            oninput="dosearch(this.value)"
+          /><button class="scl" onclick="csearch()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="sres" id="sres"></div>
+      </div>
+    </div>
+    <div id="lb">
+      <button class="lbcl" onclick="clb()">
+        <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+      </button>
+      <div class="lbc">
+        <div class="lbi" id="lbimg"></div>
+        <div style="padding: 16px 20px">
+          <div
+            id="lbtit"
+            style="font-size: 16px; font-weight: 700; color: var(--g900)"
+          ></div>
+          <div
+            id="lbdesc"
+            style="font-size: 13px; color: var(--g500); margin-top: 4px"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <button id="fab" onclick="tchat()">
+      <span class="ico ico-message" data-ico="message" aria-hidden="true"></span
+      ><span class="fping"></span>
+    </button>
+    <div id="cwin">
+      <div class="chdr">
+        <div class="cav">
+          <span class="ico ico-message" data-ico="message" aria-hidden="true"></span>
+        </div>
+        <div>
+          <div class="cn">NJB City AI</div>
+          <div class="cst" id="ai-status">Powered by AI</div>
+        </div>
+        <button class="cx" onclick="tchat()">
+          <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="cbody" id="cbody">
+        <div class="cmsg bot">
+          <div class="cbb">
+            <span
+              class="ico ico-wave"
+              data-ico="wave"
+              aria-hidden="true"
+            ></span>
+            Hi! I'm the NJB City AI. Ask me anything about the school —
+            admissions, programmes, events, and more!
+          </div>
+        </div>
+      </div>
+      <div class="cchips">
+        <span class="cchip" onclick="scmsg('What programmes do you offer?')"
+          >Programmes</span
+        ><span class="cchip" onclick="scmsg('How do I apply for admission?')"
+          >Admissions</span
+        ><span class="cchip" onclick="scmsg('Tell me about NJOSA')">NJOSA</span
+        ><span
+          class="cchip"
+          onclick="scmsg('What facilities does NJUASCO have?')"
+          >Facilities</span
+        >
+      </div>
+      <div class="cinp">
+        <input
+          class="cinput"
+          id="cinput"
+          placeholder="Ask about NJUASCO…"
+          onkeydown="if (event.key === 'Enter') schat();"
+        /><button class="csend" onclick="schat()">→</button>
+      </div>
+    </div>
+    <main>
+      <div class="ph">
+        <div class="container phc">
+          <div class="bc">
+            <span onclick="go('home')">Home</span><span class="bcs">›</span
+            ><span class="bcc">About Us</span>
+          </div>
+          <h1 class="pht">About <span class="hl">NJUASCO</span></h1>
+          <p class="phd">
+            Discover our rich 71-year history, guiding values, vibrant culture,
+            and the dedicated people who make NJUASCO exceptional.
+          </p>
+          <div class="motto-badge">HARDWORK</div>
+        </div>
+      </div>
+      <!-- Identity Cards -->
+      <section class="sec sec-lt">
+        <div class="container">
+          <div class="ab-cards">
+            <div class="ab-card rv" style="border-color: #2563eb">
+              <div class="ab-card-val gt" id="about-founded-val">1953</div>
+              <div class="ab-card-lbl">Year Founded</div>
+              <div class="ab-card-desc" id="about-founded-desc">
+                Serving the New Juaben community with quality secondary
+                education for over 71 years of proud history.
+              </div>
+            </div>
+            <div class="ab-card rv rv1" style="border-color: #9333ea">
+              <div
+                class="ab-card-val"
+                style="font-size: 22px; color: #9333ea"
+                id="about-location-val"
+              >
+                Koforidua
+              </div>
+              <div class="ab-card-lbl">Location</div>
+              <div class="ab-card-desc" id="about-location-desc">
+                New Juaben, Eastern Region, Ghana. School Code: 0020103 ·
+                Category B school.
+              </div>
+            </div>
+            <div class="ab-card rv rv2" style="border-color: #d97706">
+              <div
+                class="ab-card-val"
+                style="font-size: 18px; color: #d97706; line-height: 1.3"
+                id="about-warcry"
+              >
+                DAASEBRE MMA
+              </div>
+              <div class="ab-card-lbl">Our War Cry</div>
+              <div class="ab-card-desc">
+                The rallying call that unites every NJUASCO student with pride,
+                passion, and school spirit.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- History -->
+      <section class="sec">
+        <div class="container">
+          <div class="slbl rv">Our Journey</div>
+          <h2 class="stitle rv">
+            A Rich History of <span class="gt">Achievement</span>
+          </h2>
+          <p class="sdesc rv" id="about-history" style="margin-bottom: 0">
+            Founded in 1953 in New Juaben, Koforidua, NJUASCO has grown from
+            humble beginnings into one of Ghana's respected senior high schools.
+            With the motto "HARDWORK," we consistently
+            produce graduates who excel in academia, public service, and
+            business — making lasting impact on Ghana and the world.
+          </p>
+          <div class="timeline rv" id="about-timeline"></div>
+        </div>
+      </section>
+      <!-- Vision & Mission -->
+      <section class="sec sec-lt">
+        <div class="container">
+          <div class="slbl rv">What Drives Us</div>
+          <h2 class="stitle rv">Vision & <span class="gt">Mission</span></h2>
+          <div class="vm-grid rv">
+            <div class="vm-card vm-dark">
+              <div class="vm-ico">🔭</div>
+              <div class="vm-tag">Our Vision</div>
+              <div class="vm-title">Where We're Going</div>
+              <p class="vm-text" id="about-vision">
+                To be a preferred destination for quality secondary education to
+                prepare students from diverse backgrounds for further studies
+                and the world of work.
+              </p>
+            </div>
+            <div class="vm-card vm-blue">
+              <div class="vm-ico">🎯</div>
+              <div class="vm-tag">Our Mission</div>
+              <div class="vm-title">How We Get There</div>
+              <p class="vm-text" id="about-mission">
+                Provision of a conducive environment that nurtures students to
+                acquire knowledge, skills, and attitudes to support life-long
+                learning.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Core Values -->
+      <section class="sec">
+        <div class="container">
+          <div class="slbl rv">Our Principles</div>
+          <h2 class="stitle rv">Six Core <span class="gt">Values</span></h2>
+          <p class="sdesc rv" style="margin-bottom: 0">
+            These principles guide every decision we make, every lesson we
+            teach, and every student we nurture toward greatness.
+          </p>
+          <div class="val-grid" id="about-values"></div>
+        </div>
+      </section>
+      <!-- Principal's Message -->
+      <section class="sec sec-lt">
+        <div class="container">
+          <div class="slbl rv">From the Leadership</div>
+          <h2 class="stitle rv">Principal's <span class="gt">Message</span></h2>
+          <div class="ps-wrap rv">
+            <div class="ps-inner">
+              <div class="ps-av" id="about-principal-emoji">👨‍🏫</div>
+              <div>
+                <div class="ps-tag">Message from the Headmaster</div>
+                <p class="ps-quote" id="about-pm">
+                  "Welcome to New Juaben Senior High School — a place where
+                  excellence is not just a goal, but a way of life. Since 1953,
+                  we have been committed to nurturing the whole student:
+                  intellectually, morally, and socially. Our dedicated staff,
+                  modern facilities, and vibrant community create the perfect
+                  environment for your child to thrive. We invite you to be part
+                  of the NJUASCO family."
+                </p>
+                <div class="ps-name" id="about-pname">Mr. Emmanuel Ofori</div>
+                <div class="ps-title" id="about-ptitle">
+                  Headmaster, NJUASCO
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Houses -->
+      <section class="sec">
+        <div class="container">
+          <div class="slbl rv">School Houses</div>
+          <h2 class="stitle rv">Our <span class="gt">Houses</span></h2>
+          <p class="sdesc rv" style="margin-bottom: 0">
+            Proud houses compete in academics, sports, and culture —
+            fostering healthy competition, unity, and lasting school spirit.
+          </p>
+          <div class="houses-grid" id="about-houses"></div>
+        </div>
+      </section>
+      <!-- Leadership -->
+      <section class="sec sec-lt">
+        <div class="container">
+          <div class="slbl rv">Our People</div>
+          <h2 class="stitle rv">Leadership <span class="gt">Team</span></h2>
+          <p class="sdesc rv" style="margin-bottom: 0">
+            Experienced, dedicated, and passionate — our leadership team guides
+            NJUASCO toward greater heights every day.
+          </p>
+          <div class="team-grid" id="about-team"></div>
+        </div>
+      </section>
+      <!-- ACADEMICS -->
+    </main>
+    <!-- FOOTER -->
+    <footer id="footer">
+      <div class="container">
+        <div class="fgrid">
+          <div>
+            <div class="flogo">
+              <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+            </div>
+            <div class="fbn">New Juaben Senior High School</div>
+            <p class="fbd">
+              Providing quality secondary education in Koforidua, Eastern
+              Region, Ghana since 1953. HARDWORK.
+            </p>
+            <div class="fcode">
+              <span
+                class="ico ico-clipboard"
+                data-ico="clipboard"
+                aria-hidden="true"
+              ></span>
+              Code: 0020103
+            </div>
+            <div class="srow" style="margin-top: 16px">
+              <a class="sl" href="#" title="Facebook">f</a>
+              <a class="sl" href="#" title="X/Twitter">𝕏</a>
+              <a class="sl" href="#" title="LinkedIn">in</a>
+              <a class="sl" href="#" title="Instagram"
+                ><span
+                  class="ico ico-camera"
+                  data-ico="camera"
+                  aria-hidden="true"
+                ></span
+              ></a>
+            </div>
+          </div>
+          <div>
+            <div class="fh">Quick Links</div>
+            <ul class="flinks">
+              <li><a onclick="go('home')">Home</a></li>
+              <li><a onclick="go('about')">About NJUASCO</a></li>
+              <li><a onclick="go('academics')">Programmes</a></li>
+              <li><a onclick="go('admissions')">Admissions</a></li>
+              <li><a onclick="go('news')">News & Events</a></li>
+              <li><a onclick="go('portal-hub')">Portal Hub</a></li>
+              <li><a onclick="go('contact')">Contact Us</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="fh">Contact</div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-pin"
+                  data-ico="pin"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-address"
+                >New Juaben, Koforidua, Eastern Region, Ghana</span
+              >
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-phone"
+                  data-ico="phone"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-phone">+233 XX XXX XXXX</span>
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-mail"
+                  data-ico="mail"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-email">info@njuasco.edu.gh</span>
+            </div>
+            <div class="fci">
+              <span class="fcii"
+                ><span
+                  class="ico ico-clock"
+                  data-ico="clock"
+                  aria-hidden="true"
+                ></span></span
+              ><span id="f-hours">Mon–Fri: 8:00 AM – 4:00 PM</span>
+            </div>
+          </div>
+          <div>
+            <div class="fh">Community</div>
+            <ul class="flinks">
+              <li><a onclick="go('njosa')">NJOSA Alumni</a></li>
+              <li><a onclick="go('shop')">School Shop</a></li>
+              <li><a onclick="go('donate')">Donate</a></li>
+              <li><a onclick="go('gallery')">Photo Gallery</a></li>
+              <li><a onclick="go('clubs')">Clubs & Societies</a></li>
+              <li><a onclick="go('facilities')">Facilities</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="fbot">
+          <span
+            >© 2025 New Juaben Senior High School. All rights reserved.</span
+          >
+          <span style="color: rgba(255, 255, 255, 0.25)"
+            >Created by <span style="color: #3b82f6">NOVATech</span> &
+            <span style="color: #9333ea">Galaxy Design Studio</span></span
+          >
+        </div>
+      </div>
+    </footer>
+    <script src="page-common.js"></script>
+  </body>
+</html>

@@ -1,0 +1,3527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <title>Sub-Admin Portal | NJUASCO</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body style="margin: 0; padding: 0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="staff-auth.js"></script>
+    <script src="admin-shared.js"></script>
+
+    <style>
+      html {
+        height: 100%;
+        overflow: hidden;
+        background: var(--g900);
+      }
+      body.sa-portal {
+        height: 100%;
+        overflow: hidden;
+      }
+      .sa-layout {
+        display: flex;
+        height: 100vh;
+        height: 100dvh;
+        background: var(--g50);
+        overflow: hidden;
+      }
+      .sa-sidebar {
+        width: 240px;
+        background: var(--g900);
+        flex-shrink: 0;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.35s;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-top: env(safe-area-inset-top, 0);
+      }
+      .sa-sidebar.open {
+        transform: translateX(0);
+      }
+      @media (min-width: 1024px) {
+        .sa-sidebar {
+          transform: translateX(0);
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          bottom: 0;
+        }
+        .sa-main {
+          margin-left: 240px;
+        }
+      }
+      .sa-brand {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .sa-logo {
+        width: 40px;
+        height: 40px;
+        background: var(--gs);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        font-family: "Playfair Display", serif;
+        margin-bottom: 10px;
+      }
+      .sa-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+      }
+      .sa-role {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        margin-top: 2px;
+      }
+      .sa-nav {
+        flex: 1;
+        padding: 8px;
+        overflow-y: auto;
+      }
+      .sa-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 1px;
+      }
+      .sa-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+      .sa-item.active {
+        background: rgba(37, 99, 235, 0.25);
+        color: #93c5fd;
+        font-weight: 600;
+      }
+      .sa-item.locked {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .sa-ic {
+        width: 18px;
+        text-align: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sa-ic .ico {
+        width: 18px;
+        height: 18px;
+      }
+      .sa-lock {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        opacity: 0.55;
+      }
+      .sa-lock .ico {
+        width: 14px;
+        height: 14px;
+      }
+      .sa-stat-ic {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sa-stat-ic .ico {
+        width: 20px;
+        height: 20px;
+      }
+      .sa-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--g900);
+        margin-bottom: 14px;
+      }
+      .sa-section-title .ico {
+        width: 18px;
+        height: 18px;
+        color: var(--b6);
+      }
+      .ad-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: rgba(220, 38, 38, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--r6);
+      }
+      .ad-icon .ico {
+        width: 34px;
+        height: 34px;
+      }
+      .sa-perm-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--b6);
+        padding: 5px 12px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .sa-perm-chip .ico {
+        width: 14px;
+        height: 14px;
+      }
+      .sa-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+      }
+      .sa-main.scroll-lock .sa-content,
+      .sa-content.scroll-lock {
+        overflow: hidden;
+      }
+      .sa-topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--g200);
+        padding: 0 20px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        flex-shrink: 0;
+      }
+      .sa-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--g200);
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      @media (min-width: 1024px) {
+        .sa-toggle {
+          display: none;
+        }
+      }
+      .sa-content {
+        padding: 20px;
+        flex: 1;
+        min-height: 0;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+      }
+      @media (min-width: 768px) {
+        .sa-content {
+          padding: 28px 32px;
+        }
+      }
+      .color-picker-wrap .flbl {
+        margin-bottom: 8px;
+      }
+      .color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+      .color-swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .color-swatch {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 2px solid rgba(17, 24, 39, 0.08);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      }
+      .color-swatch:hover {
+        transform: scale(1.06);
+      }
+      .color-swatch.active {
+        border-color: var(--g900);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      }
+      .color-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 1.5px solid var(--g200);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .color-custom-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--g600);
+      }
+      .color-native {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+      .sa-page {
+        display: none;
+      }
+      .sa-page.active {
+        display: block;
+      }
+      .sa-footer {
+        padding: 14px 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .sa-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sa-av {
+        width: 32px;
+        height: 32px;
+        background: var(--gs);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      /* Login */
+      .sa-login-wrap {
+        min-height: 100vh;
+        background: var(--g900);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .sa-login-wrap::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(
+          ellipse,
+          rgba(37, 99, 235, 0.2) 0%,
+          transparent 70%
+        );
+      }
+      .sa-login-wrap::after {
+        content: "";
+        position: absolute;
+        bottom: -30%;
+        right: -10%;
+        width: 50%;
+        height: 150%;
+        background: radial-gradient(
+          ellipse,
+          rgba(147, 51, 234, 0.15) 0%,
+          transparent 70%
+        );
+      }
+      .sa-login-box {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--rx);
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 420px;
+        position: relative;
+        z-index: 1;
+      }
+      .sa-login-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--gs);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin: 0 auto 18px;
+      }
+      .sa-login-title {
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #fff;
+        text-align: center;
+        margin-bottom: 5px;
+      }
+      .sa-login-sub {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.45);
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      .sa-inp-wrap {
+        position: relative;
+        margin-bottom: 14px;
+      }
+      .sa-inp {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 13px 16px 13px 46px;
+        color: #fff;
+        font-size: 16px;
+        font-family: "DM Sans", sans-serif;
+        outline: none;
+        transition: all 0.3s;
+      }
+      .sa-inp::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+      .sa-inp:focus {
+        border-color: rgba(37, 99, 235, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .sa-inp-ic {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 17px;
+      }
+      .sa-login-btn {
+        width: 100%;
+        background: var(--gs);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.3s;
+        box-shadow: 0 8px 24px rgba(147, 51, 234, 0.3);
+        margin-top: 6px;
+      }
+      .sa-login-btn:hover {
+        transform: translateY(-1px);
+      }
+      .sa-login-btn:disabled {
+        opacity: 0.7;
+        cursor: wait;
+        transform: none;
+      }
+      .sa-login-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 18px 0 14px;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .sa-login-divider::before,
+      .sa-login-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .sa-google-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #fff;
+        color: #1f2937;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 12px;
+        padding: 13px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.25s;
+      }
+      .sa-google-btn:hover {
+        background: #f8fafc;
+        transform: translateY(-1px);
+      }
+      .sa-google-btn:disabled {
+        opacity: 0.7;
+        cursor: wait;
+        transform: none;
+      }
+      .sa-shortcut-hint {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(37, 99, 235, 0.12);
+        border: 1px solid rgba(147, 51, 234, 0.25);
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.72);
+        text-align: center;
+      }
+      .sa-shortcut-hint strong {
+        color: #fff;
+        font-weight: 700;
+      }
+
+      /* Access denied */
+      .access-denied {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: var(--rx);
+        box-shadow: var(--sh3);
+      }
+      .ad-title {
+        font-family: "Playfair Display", serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--g900);
+        margin-bottom: 8px;
+      }
+      .ad-msg {
+        font-size: 14px;
+        color: var(--g500);
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      #staff-otp-ov {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.72);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 5000;
+        padding: 20px;
+      }
+      #staff-otp-ov.show {
+        display: flex;
+      }
+      .staff-otp-box {
+        width: min(440px, 100%);
+        background: #fff;
+        border-radius: 18px;
+        padding: 28px 24px;
+        box-shadow: var(--sh3);
+      }
+      .staff-otp-box h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      .staff-otp-box p {
+        font-size: 14px;
+        color: var(--g500);
+        line-height: 1.6;
+        margin-bottom: 18px;
+      }
+    </style>
+
+    <!-- SUB-ADMIN LOGIN SCREEN -->
+    <div id="staff-otp-ov" role="dialog" aria-modal="true">
+      <div class="staff-otp-box">
+        <h2>Verify it's you</h2>
+        <p>SMS verification is currently disabled. Use your sub-admin email and password to sign in.</p>
+        <div class="fg"><label class="flbl">Mobile Number</label><input class="finp" id="staff-otp-phone" type="tel" placeholder="+233 XX XXX XXXX" /></div>
+        <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-p" type="button" id="staff-otp-send">Send code</button></div>
+        <div id="staff-otp-panel" style="display:none;margin-top:16px">
+          <div class="fg"><label class="flbl">SMS Code</label><input class="finp" id="staff-otp-code" inputmode="numeric" maxlength="6" /></div>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px"><input id="staff-otp-remember" type="checkbox" /> Remember this device for 30 days</label>
+          <button class="btn btn-p btn-full" type="button" id="staff-otp-verify" style="margin-top:14px">Verify &amp; continue</button>
+        </div>
+        <div id="staff-otp-msg" style="font-size:13px;color:var(--b6);margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div id="sa-login-screen" class="sa-login-wrap">
+      <div class="sa-login-box">
+        <div class="sa-login-logo">
+          <span class="ico ico-user" data-ico="user" aria-hidden="true"></span>
+        </div>
+        <div class="sa-login-title">Sub-Admin Login</div>
+        <div class="sa-login-sub">NJUASCO Staff Portal</div>
+        <button
+          class="sa-google-btn"
+          type="button"
+          id="sa-google-btn"
+          onclick="saGoogleLogin()"
+          style="display: none"
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.083 36 24 36c-5.514 0-10-4.486-10-10s4.486-10 10-10c2.84 0 5.405 1.197 7.207 3.113l5.657-5.657C33.64 10.053 29.082 8 24 8 12.955 8 4 16.955 4 28s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 16.108 18.961 13 24 13c2.84 0 5.405 1.197 7.207 3.113l5.657-5.657C33.64 10.053 29.082 8 24 8c-7.682 0-14.344 4.337-17.694 10.691z"/>
+            <path fill="#4CAF50" d="M24 48c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 39.091 26.715 40 24 40c-5.052 0-9.377-3.01-11.413-7.314l-6.57 5.064C9.55 43.053 16.212 48 24 48z"/>
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 41.205 44 34 44 28c0-1.341-.138-2.65-.389-3.917z"/>
+          </svg>
+          Email sign-in only
+        </button>
+        <div class="sa-login-divider" style="display: none"><span>or email</span></div>
+        <div class="sa-inp-wrap">
+          <span class="sa-inp-ic"
+            ><span
+              class="ico ico-user"
+              data-ico="user"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="sa-inp"
+            type="email"
+            id="sa-user"
+            placeholder="Email"
+            autocomplete="email"
+          />
+        </div>
+        <div class="sa-inp-wrap" id="sa-pass-wrap">
+          <span class="sa-inp-ic"
+            ><span
+              class="ico ico-key"
+              data-ico="key"
+              aria-hidden="true"
+            ></span></span
+          ><input
+            class="sa-inp"
+            type="password"
+            id="sa-pass"
+            placeholder="Your password"
+            autocomplete="current-password"
+          />
+        </div>
+        <div id="sa-setup-wrap" style="display: none">
+          <div class="sa-inp-wrap">
+            <span class="sa-inp-ic"
+              ><span class="ico ico-key" data-ico="key" aria-hidden="true"></span></span
+            ><input
+              class="sa-inp"
+              type="password"
+              id="sa-new-pass"
+              placeholder="Create password (min. 8 characters)"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="sa-inp-wrap">
+            <span class="sa-inp-ic"
+              ><span class="ico ico-key" data-ico="key" aria-hidden="true"></span></span
+            ><input
+              class="sa-inp"
+              type="password"
+              id="sa-confirm-pass"
+              placeholder="Confirm password"
+              autocomplete="new-password"
+            />
+          </div>
+          <p style="font-size: 12px; color: rgba(255, 255, 255, 0.55); margin: 0 0 10px; line-height: 1.5">
+            Welcome! This is your first login. Create a password you will use next time.
+          </p>
+        </div>
+        <button class="sa-login-btn" id="sa-continue-btn" type="button" onclick="saContinueEmail()" style="display: none">
+          Continue →
+        </button>
+        <button
+          class="sa-login-btn"
+          id="sa-login-btn"
+          type="button"
+          onclick="saLogin()"
+        >
+          Sign In with Email →
+        </button>
+        <button
+          class="sa-login-btn"
+          id="sa-setup-btn"
+          type="button"
+          onclick="saSavePassword()"
+          style="display: none"
+        >
+          Save Password &amp; Enter →
+        </button>
+        <button
+          type="button"
+          id="sa-back-btn"
+          onclick="saResetLoginForm()"
+          style="display: none; width: 100%; margin-top: 8px; background: none; border: none; color: rgba(255, 255, 255, 0.45); font-size: 13px; cursor: pointer"
+        >
+          ← Use a different email
+        </button>
+        <div class="sa-shortcut-hint">
+          <strong>Quick link:</strong> bookmark
+          <strong id="sa-shortcut-url">…/staff.html</strong>
+          or use Portal Hub → Staff Sub-Admin Portal
+        </div>
+        <div style="text-align: center; margin-top: 16px">
+          <a
+            href="index.html"
+            style="font-size: 13px; color: rgba(255, 255, 255, 0.35)"
+            >← Back to Website</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-ADMIN DASHBOARD (shown after login -->
+    <div id="sa-dashboard" style="display: none">
+      <div class="sa-layout">
+        <aside class="sa-sidebar" id="sa-sb">
+          <div class="sa-brand">
+            <div class="sa-logo">NJ</div>
+            <div class="sa-name" id="sa-sb-name">Sub Admin</div>
+            <div class="sa-role" id="sa-sb-role">Staff Member</div>
+          </div>
+          <div class="sa-nav" id="sa-nav-items"></div>
+          <div class="sa-footer">
+            <div class="sa-user">
+              <div class="sa-av" id="sa-av-initials">SA</div>
+              <div>
+                <div
+                  style="font-size: 12px; font-weight: 600; color: #fff"
+                  id="sa-footer-name"
+                >
+                  Sub Admin
+                </div>
+                <div
+                  style="font-size: 11px; color: rgba(255, 255, 255, 0.4)"
+                  id="sa-footer-role"
+                >
+                  Staff
+                </div>
+              </div>
+              <button
+                style="
+                  margin-left: auto;
+                  background: none;
+                  border: none;
+                  color: rgba(255, 255, 255, 0.35);
+                  font-size: 16px;
+                  cursor: pointer;
+                "
+                onclick="saLogout()"
+                title="Logout"
+              >
+                ⏻
+              </button>
+            </div>
+          </div>
+        </aside>
+        <div class="sa-main">
+          <div class="sa-topbar">
+            <button
+              class="sa-toggle"
+              onclick="saToggleSidebar()"
+              id="sa-sb-toggle"
+            >
+              <span class="hl2"></span><span class="hl2"></span
+              ><span class="hl2"></span>
+            </button>
+            <div
+              style="
+                font-family: &quot;Playfair Display&quot;, serif;
+                font-size: 17px;
+                font-weight: 700;
+                color: var(--g900);
+                flex: 1;
+              "
+              id="sa-page-title"
+            >
+              Dashboard
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+              "
+            >
+              <a
+                href="index.html"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 8px 14px;
+                  border-radius: 10px;
+                  background: var(--g100);
+                  color: var(--g700);
+                  font-size: 13px;
+                  font-weight: 600;
+                  border: 1px solid var(--g200);
+                "
+                >← View Site</a
+              >
+              <button
+                type="button"
+                onclick="saLogout()"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 8px 14px;
+                  border-radius: 10px;
+                  background: var(--gp);
+                  color: #fff;
+                  font-size: 13px;
+                  font-weight: 600;
+                  border: 0;
+                  cursor: pointer;
+                "
+                >Logout</button>
+            </div>
+          </div>
+          <div class="sa-content">
+            <!-- DASHBOARD -->
+            <div class="sa-page active" id="sap-dashboard">
+              <div class="slbl">Welcome Back</div>
+              <h2 class="stitle" id="sa-welcome-title">
+                Sub-Admin <span class="gt">Dashboard</span>
+              </h2>
+              <div
+                id="sa-dash-stats"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(2, 1fr);
+                  gap: 14px;
+                  margin-bottom: 24px;
+                "
+              ></div>
+              <div style="display: grid; grid-template-columns: 1fr; gap: 20px">
+                <div
+                  style="
+                    background: #fff;
+                    border-radius: var(--rl);
+                    padding: 22px;
+                    box-shadow: var(--sh1);
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 15px;
+                      font-weight: 700;
+                      color: var(--g900);
+                      margin-bottom: 16px;
+                    "
+                  >
+                    <span
+                      class="ico ico-key"
+                      data-ico="key"
+                      aria-hidden="true"
+                    ></span>
+                    Your Permissions
+                  </div>
+                  <div
+                    id="sa-perms-display"
+                    style="display: flex; flex-wrap: wrap; gap: 8px"
+                  ></div>
+                </div>
+                <div
+                  style="
+                    background: #fff;
+                    border-radius: var(--rl);
+                    padding: 22px;
+                    box-shadow: var(--sh1);
+                  "
+                >
+                  <div class="sa-section-title">
+                    <span class="ico ico-clock" data-ico="clock" aria-hidden="true"></span>
+                    Recent Activity
+                  </div>
+                  <div id="sa-recent-logs"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WEBSITE CONTENT -->
+            <div class="sa-page" id="sap-school-info">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Website <span class="gt">Content</span>
+                </h2>
+                <button class="btn btn-p" onclick="saveSaSchoolInfo()">
+                  Save Changes
+                </button>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                  display: grid;
+                  gap: 14px;
+                "
+              >
+                <div>
+                  <label class="flbl">Hero Title</label>
+                  <input class="finp" id="sasi-hero" />
+                </div>
+                <div>
+                  <label class="flbl">Hero Subtitle</label>
+                  <textarea class="finp fta" id="sasi-herosub"></textarea>
+                </div>
+                <div>
+                  <label class="flbl">Hero Image Upload / URL</label>
+                  <input class="finp" id="sasi-hero-file" type="file" accept="image/*" style="margin-bottom:8px" />
+                  <input class="finp" id="sasi-hero-image" placeholder="Paste image URL or keep existing image" />
+                </div>
+                <div>
+                  <label class="flbl">Welcome / History Text</label>
+                  <textarea class="finp fta" id="sasi-welcome"></textarea>
+                </div>
+                <div>
+                  <label class="flbl">Vision Statement</label>
+                  <textarea class="finp fta" id="sasi-vision"></textarea>
+                </div>
+                <div>
+                  <label class="flbl">Mission Statement</label>
+                  <textarea class="finp fta" id="sasi-mission"></textarea>
+                </div>
+                <div>
+                  <label class="flbl">Principal's Message</label>
+                  <textarea class="finp fta" id="sasi-pm"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+                  <div>
+                    <label class="flbl">Principal's Name</label>
+                    <input class="finp" id="sasi-pname" />
+                  </div>
+                  <div>
+                    <label class="flbl">Principal's Title</label>
+                    <input class="finp" id="sasi-ptitle" />
+                  </div>
+                  <div>
+                    <label class="flbl">Motto</label>
+                    <input class="finp" id="sasi-motto" />
+                  </div>
+                  <div>
+                    <label class="flbl">War Cry</label>
+                    <input class="finp" id="sasi-warcry" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TEAM MANAGEMENT -->
+            <div class="sa-page" id="sap-team">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">Leadership <span class="gt">Team</span></h2>
+                <button class="btn btn-p" onclick="saOpenModal('team')">+ Add Staff</button>
+              </div>
+              <div id="sa-team-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <!-- FACILITIES MANAGEMENT -->
+            <div class="sa-page" id="sap-facilities">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">School <span class="gt">Facilities</span></h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="sa-fac-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadMedia(this,'facilities','facilities')" />
+                  <button class="btn btn-g" onclick="document.getElementById('sa-fac-bulk-files').click()">Bulk Upload</button>
+                  <button class="btn btn-p" onclick="saOpenModal('facility')">+ Add Facility</button>
+                </div>
+              </div>
+              <div id="sa-facilities-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <!-- DEPARTMENTS MANAGEMENT -->
+            <div class="sa-page" id="sap-departments">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">Academic <span class="gt">Departments</span></h2>
+                <button class="btn btn-p" onclick="saOpenModal('department')">+ Add Department</button>
+              </div>
+              <div id="sa-departments-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <!-- HOUSES MANAGEMENT -->
+            <div class="sa-page" id="sap-houses">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">School <span class="gt">Houses</span></h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="sa-house-bulk-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" multiple style="display:none" onchange="saBulkUploadMedia(this,'houses','houses')" />
+                  <button class="btn btn-g" onclick="document.getElementById('sa-house-bulk-files').click()">Bulk Upload</button>
+                  <button class="btn btn-p" onclick="saOpenModal('house')">+ Add House</button>
+                </div>
+              </div>
+              <div id="sa-houses-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <!-- CLUBS MANAGEMENT -->
+            <div class="sa-page" id="sap-clubs">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">Clubs & <span class="gt">Societies</span></h2>
+                <button class="btn btn-p" onclick="saOpenModal('club')">+ Add Club</button>
+              </div>
+              <div id="sa-clubs-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            </div>
+
+            <!-- TEACHERS MANAGEMENT -->
+            <div class="sa-page" id="sap-teachers">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">Teacher <span class="gt">Records</span></h2>
+                <button class="btn btn-p" onclick="saOpenModal('teacher')">+ Add Teacher</button>
+              </div>
+              <div style="background:#fff;border-radius:var(--rl);padding:22px;box-shadow:var(--sh1);overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;min-width:620px" id="sa-teachers-table"></table>
+              </div>
+            </div>
+
+            <!-- NEWS MANAGEMENT -->
+            <div class="sa-page" id="sap-news">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  News & <span class="gt">Events</span>
+                </h2>
+                <button class="btn btn-p" onclick="saOpenModal('news')">
+                  + Add Post
+                </button>
+              </div>
+              <div id="sa-news-list"></div>
+            </div>
+
+            <!-- GALLERY MANAGEMENT -->
+            <div class="sa-page" id="sap-gallery">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Photo <span class="gt">Gallery</span>
+                </h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="sa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadGallery(this)" />
+                  <button class="btn btn-g" onclick="document.getElementById('sa-gallery-bulk-files').click()">
+                    Bulk Upload
+                  </button>
+                  <button class="btn btn-g" onclick="saSelectAll('sa-gallery-select', true)">
+                    Select All
+                  </button>
+                  <button class="btn btn-g" onclick="saBulkArrange('gallery','gallery','sa-gallery-select')">
+                    Arrange Selected
+                  </button>
+                  <button class="btn btn-r" onclick="saBulkDelete('gallery','gallery','sa-gallery-select')">
+                    Delete Selected
+                  </button>
+                  <button class="btn btn-p" onclick="saOpenModal('gallery')">
+                    + Add Photo
+                  </button>
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                  gap: 12px;
+                "
+                id="sa-gallery-list"
+              ></div>
+            </div>
+
+            <!-- DOCUMENTS MANAGEMENT -->
+            <div class="sa-page" id="sap-documents">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  School <span class="gt">Documents</span>
+                </h2>
+                <input id="sa-docs-bulk-files" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,image/*" multiple style="display:none" onchange="saBulkUploadMedia(this,'documents','documents')" />
+                <button class="btn btn-g" onclick="document.getElementById('sa-docs-bulk-files').click()">Bulk Upload</button>
+                <button class="btn btn-g" onclick="saSelectAll('sa-doc-select', true)">Select All</button>
+                <button class="btn btn-g" onclick="saBulkArrange('documents','documents','sa-doc-select')">Arrange Selected</button>
+                <button class="btn btn-p" onclick="saOpenModal('doc')">
+                  + Add Document
+                </button>
+                <button class="btn btn-r" onclick="saBulkDelete('documents','documents','sa-doc-select')">
+                  Delete Selected
+                </button>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                "
+              >
+                <div style="overflow-x: auto">
+                  <table
+                    style="
+                      width: 100%;
+                      border-collapse: collapse;
+                      min-width: 560px;
+                    "
+                    id="sa-docs-table"
+                  ></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- HOMEPAGE SLIDES -->
+            <div class="sa-page" id="sap-slides">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Homepage <span class="gt">Slides</span>
+                </h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="sa-slides-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadMedia(this,'homepageSlides','slides')" />
+                  <button class="btn btn-g" onclick="document.getElementById('sa-slides-bulk-files').click()">Bulk Upload</button>
+                  <button class="btn btn-p" onclick="saOpenModal('slide')">+ Add Slide</button>
+                </div>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                  gap: 12px;
+                "
+                id="sa-slides-list"
+              ></div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="sa-page" id="sap-notifications">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Send <span class="gt">Notifications</span>
+                </h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-r" onclick="saClearNotifs()">
+                    Clear All
+                  </button>
+                  <button class="btn btn-p" onclick="saOpenModal('notif')">
+                    + Send Notification
+                  </button>
+                </div>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                "
+              >
+                <div style="overflow-x: auto">
+                  <table
+                    style="
+                      width: 100%;
+                      border-collapse: collapse;
+                      min-width: 480px;
+                    "
+                    id="sa-notif-table"
+                  ></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- APPLICATIONS -->
+            <div class="sa-page" id="sap-applications">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Admission <span class="gt">Applications</span>
+                </h2>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                "
+              >
+                <div style="overflow-x: auto">
+                  <table
+                    style="
+                      width: 100%;
+                      border-collapse: collapse;
+                      min-width: 500px;
+                    "
+                    id="sa-apps-table"
+                  ></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- STUDENTS VIEW -->
+            <div class="sa-page" id="sap-students">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Student <span class="gt">Records</span>
+                </h2>
+                <button class="btn btn-p" onclick="saOpenModal('student')">
+                  + Add Student
+                </button>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 16px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      background: var(--g50);
+                      border: 1.5px solid var(--g200);
+                      border-radius: 10px;
+                      padding: 9px 14px;
+                      flex: 1;
+                      max-width: 300px;
+                    "
+                  >
+                    <span
+                      ><span
+                        class="ico ico-search"
+                        data-ico="search"
+                        aria-hidden="true"
+                      ></span></span
+                    ><input
+                      placeholder="Search students…"
+                      oninput="saSearchStudents(this.value)"
+                      style="
+                        flex: 1;
+                        border: none;
+                        background: transparent;
+                        font-size: 14px;
+                        outline: none;
+                        min-width: 0;
+                      "
+                    />
+                  </div>
+                </div>
+                <div style="overflow-x: auto">
+                  <table
+                    style="
+                      width: 100%;
+                      border-collapse: collapse;
+                      min-width: 480px;
+                    "
+                    id="sa-students-table"
+                  ></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- SHOP ORDERS -->
+            <div class="sa-page" id="sap-orders">
+              <div style="margin-bottom: 20px">
+                <h2 class="stitle" style="margin: 0">
+                  Shop <span class="gt">Orders</span>
+                </h2>
+              </div>
+              <div
+                style="
+                  background: #fff;
+                  border-radius: var(--rl);
+                  padding: 22px;
+                  box-shadow: var(--sh1);
+                "
+              >
+                <div style="overflow-x: auto">
+                  <table
+                    style="
+                      width: 100%;
+                      border-collapse: collapse;
+                      min-width: 480px;
+                    "
+                    id="sa-orders-table"
+                  ></table>
+                </div>
+              </div>
+            </div>
+
+            <!-- MERCHANDISE -->
+            <div class="sa-page" id="sap-merchandise">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 12px;
+                  margin-bottom: 20px;
+                "
+              >
+                <h2 class="stitle" style="margin: 0">
+                  Merchandise <span class="gt">Manager</span>
+                </h2>
+                <button class="btn btn-p" onclick="saOpenModal('merch')">
+                  + Add Product
+                </button>
+              </div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                  gap: 14px;
+                "
+                id="sa-merch-list"
+              ></div>
+            </div>
+
+            <!-- ACCESS DENIED PLACEHOLDER -->
+            <div class="sa-page" id="sap-denied">
+              <div class="access-denied">
+                <div class="ad-icon">
+                  <span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span>
+                </div>
+                <div class="ad-title">Access Restricted</div>
+                <div class="ad-msg">
+                  You don't have permission to access this section. Please
+                  contact the Super Admin to request access.
+                </div>
+                <button
+                  class="btn btn-g"
+                  onclick="showSaPage('dashboard', null)"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PASSWORD MODAL -->
+    <div
+      id="dashboard-password-ov"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 700;
+        background: rgba(15, 23, 42, 0.58);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: var(--rx);
+          width: min(440px, 100%);
+          padding: 28px;
+          box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+        "
+      >
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+          <div
+            style="
+              width: 72px;
+              height: 72px;
+              border-radius: 999px;
+              background: rgba(37, 99, 235, 0.08);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: var(--b6);
+            "
+          >
+            <span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span>
+          </div>
+          <div
+            style="
+              font-family: &quot;Playfair Display&quot;, serif;
+              font-size: 20px;
+              font-weight: 700;
+              color: var(--g900);
+            "
+            id="dashboard-password-title"
+          >
+            Verify dashboard access
+          </div>
+          <div
+            style="font-size: 14px; color: var(--g500); line-height: 1.5;"
+            id="dashboard-password-msg"
+          ></div>
+          <input
+            id="dashboard-password-input"
+            type="password"
+            autocomplete="current-password"
+            style="
+              width: 100%;
+              padding: 12px 14px;
+              border-radius: 10px;
+              border: 1px solid var(--g200);
+              font-size: 14px;
+              color: var(--g900);
+              outline: none;
+            "
+          />
+          <div style="display:flex;gap:10px;width:100%;margin-top:4px">
+            <button class="btn btn-g" type="button" id="dashboard-password-cancel" style="flex:1">Cancel</button>
+            <button class="btn btn-p" type="button" id="dashboard-password-submit" style="flex:1">Continue</button>
+          </div>
+          <div id="dashboard-password-error" style="font-size:13px;color:var(--r6);min-height:18px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-ADMIN MODAL -->
+    <div
+      id="sa-modal-ov"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: var(--rx);
+          width: 100%;
+          max-width: 520px;
+          max-height: 88vh;
+          overflow-y: auto;
+        "
+      >
+        <div
+          style="
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--g100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+          "
+        >
+          <div
+            style="
+              font-family: &quot;Playfair Display&quot;, serif;
+              font-size: 18px;
+              font-weight: 700;
+              color: var(--g900);
+            "
+            id="sa-modal-title"
+          >
+            Modal
+          </div>
+          <button
+            style="
+              width: 34px;
+              height: 34px;
+              border-radius: 8px;
+              border: 1px solid var(--g200);
+              background: #fff;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 18px;
+              color: var(--g600);
+            "
+            onclick="closeSaModal()"
+          >
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div style="padding: 20px" id="sa-modal-body"></div>
+        <div
+          style="
+            padding: 14px 22px;
+            border-top: 1px solid var(--g100);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+          "
+          id="sa-modal-footer"
+        ></div>
+      </div>
+    </div>
+
+    <script>
+      // ══ SUB-ADMIN SYSTEM ══════════════════════════════════════
+
+      // Sub-admin profiles are synced as site content. Supabase Auth owns passwords.
+      DB._getSaAdmins = function () {
+        return this._get("subadmins");
+      };
+      DB._saveSaAdmins = function (d) {
+        this._set("subadmins", d);
+      };
+
+      // Seed default sub-admins if none exist
+      (function seedSubAdmins() {
+        if (localStorage.getItem("nj_sa_seeded")) return;
+        if (DB._getSaAdmins().length) {
+          localStorage.setItem("nj_sa_seeded", "1");
+          return;
+        }
+        DB._saveSaAdmins([
+          {
+            id: "sa1",
+            username: "newseditor",
+            email: "newseditor@njuasco.edu.gh",
+            name: "Mr. Kofi Asante",
+            role: "News Editor",
+            permissions: ["news", "gallery", "notifications"],
+            active: true,
+            color: "linear-gradient(135deg,#2563eb,#4338ca)",
+          },
+          {
+            id: "sa2",
+            username: "admissions",
+            email: "admissions@njuasco.edu.gh",
+            name: "Mrs. Ama Boateng",
+            role: "Admissions Officer",
+            permissions: ["applications", "students"],
+            active: true,
+            color: "linear-gradient(135deg,#9333ea,#db2777)",
+          },
+          {
+            id: "sa3",
+            username: "shopmanager",
+            email: "shopmanager@njuasco.edu.gh",
+            name: "Mr. Yaw Mensah",
+            role: "Shop Manager",
+            permissions: ["merchandise", "orders"],
+            active: true,
+            color: "linear-gradient(135deg,#10b981,#059669)",
+          },
+          {
+            id: "sa4",
+            username: "communications",
+            email: "communications@njuasco.edu.gh",
+            name: "Mrs. Grace Osei",
+            role: "Communications Officer",
+            permissions: ["notifications", "news"],
+            active: true,
+            color: "linear-gradient(135deg,#f59e0b,#d97706)",
+          },
+        ]);
+        localStorage.setItem("nj_sa_seeded", "1");
+      })();
+
+      // All possible permissions
+      const ALL_PERMS = {
+        school: {
+          label: "School Info",
+          icon: '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>',
+          page: "sap-school-info",
+        },
+        team: {
+          label: "Leadership & Staff",
+          icon: '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>',
+          page: "sap-team",
+        },
+        facilities: {
+          label: "Facilities",
+          icon: '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>',
+          page: "sap-facilities",
+        },
+        departments: {
+          label: "Departments",
+          icon: '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
+          page: "sap-departments",
+        },
+        houses: {
+          label: "Houses",
+          icon: '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>',
+          page: "sap-houses",
+        },
+        clubs: {
+          label: "Clubs & Societies",
+          icon: '<span class="ico ico-masks" data-ico="masks" aria-hidden="true"></span>',
+          page: "sap-clubs",
+        },
+        teachers: {
+          label: "Teacher Records",
+          icon: '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>',
+          page: "sap-teachers",
+        },
+        news: {
+          label: "News & Events",
+          icon: '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>',
+          page: "sap-news",
+        },
+        gallery: {
+          label: "Photo Gallery",
+          icon: '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
+          page: "sap-gallery",
+        },
+        documents: {
+          label: "Documents",
+          icon: '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
+          page: "sap-documents",
+        },
+        slides: {
+          label: "Homepage Slides",
+          icon: '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
+          page: "sap-slides",
+        },
+        notifications: {
+          label: "Send Notifications",
+          icon: '<span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span>',
+          page: "sap-notifications",
+        },
+        applications: {
+          label: "Admission Applications",
+          icon: '<span class="ico ico-clipboard" data-ico="clipboard" aria-hidden="true"></span>',
+          page: "sap-applications",
+        },
+        students: {
+          label: "Student Records",
+          icon: '<span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>',
+          page: "sap-students",
+        },
+        merchandise: {
+          label: "Merchandise",
+          icon: '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span>',
+          page: "sap-merchandise",
+        },
+        orders: {
+          label: "Shop Orders",
+          icon: '<span class="ico ico-cart" data-ico="cart" aria-hidden="true"></span>',
+          page: "sap-orders",
+        },
+      };
+
+      let CURRENT_SA = null;
+      let CURRENT_SA_PAGE = "dashboard";
+      let CURRENT_AUTH_EMAIL = "";
+      let SA_EDIT_ID = null;
+      const SA_SESSION_KEY = "nj_sa_session";
+      const SA_SESSION_MS = DB?.PORTAL_SESSION_MS || 5 * 60 * 60 * 1000;
+
+      function esc(s) {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function mediaMarkup(src) {
+        const val = String(src || "").trim();
+        if (!val) return "";
+        if (/^(data:image\/|https?:\/\/|\.?\/|[\w\s-]+\.(png|jpe?g|gif|webp|svg))/i.test(val)) {
+          return `<img src="${esc(val)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+        }
+        return val;
+      }
+
+      function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function saMediaField(current, fallback) {
+        return `<div>
+    <label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Image Upload / Icon</label>
+    <input class="finp" id="smf-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" style="margin-bottom:8px">
+    <input class="finp" id="smf-image" value="${esc(current || fallback || "")}" placeholder="Paste an image URL, file path, or icon">
+  </div>`;
+      }
+
+      async function saPrepareImageFile(file, maxDim = 1920, quality = 0.85) {
+        if (!file?.type?.startsWith("image/")) return file;
+        if (file.size <= 600_000) return file;
+        try {
+          const bitmap = await createImageBitmap(file);
+          const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height, 1));
+          const width = Math.max(1, Math.round(bitmap.width * scale));
+          const height = Math.max(1, Math.round(bitmap.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+          bitmap.close?.();
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob((value) => (value ? resolve(value) : reject(new Error("encode failed"))), "image/jpeg", quality);
+          });
+          const baseName = String(file.name || "image").replace(/\.[^.]+$/, "") || "image";
+          return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+        } catch {
+          return file;
+        }
+      }
+
+      async function saUploadImageAsset(file, folder = "media") {
+        if (!file) return "";
+        const prepared = await saPrepareImageFile(file);
+        return (await DB.uploadSiteAsset?.(prepared, folder)) || (await fileToDataURL(prepared));
+      }
+
+      async function saMediaValue(fallback = "", folder = "media") {
+        const file = document.getElementById("smf-file")?.files?.[0];
+        if (file) return saUploadImageAsset(file, folder);
+        return gsmv("smf-image") || fallback;
+      }
+
+      async function saDocFileValue(fallback = "#") {
+        const file = document.getElementById("smf-doc-file")?.files?.[0];
+        if (file) return await fileToDataURL(file);
+        return gsmv("smf-file-url") || fallback;
+      }
+
+      function normalizeSaAdmin(a) {
+        const email = String(a.email || a.username || "").trim().toLowerCase();
+        return {
+          ...a,
+          username: String(a.username || "").trim(),
+          email,
+          permissions: Array.isArray(a.permissions) ? a.permissions : [],
+          active: a.active !== false,
+          passwordSet: a.passwordSet === true,
+          staffPassword: a.staffPassword || "",
+        };
+      }
+
+      function saveSaSession(profileId, email) {
+        const payload = {
+          id: profileId,
+          email: String(email || "").trim().toLowerCase(),
+          expiresAt: Date.now() + SA_SESSION_MS,
+        };
+        localStorage.setItem(SA_SESSION_KEY, JSON.stringify(payload));
+        sessionStorage.removeItem(SA_SESSION_KEY);
+        return payload;
+      }
+
+      function readSaSession() {
+        try {
+          const saved =
+            JSON.parse(localStorage.getItem(SA_SESSION_KEY) || "null") ||
+            JSON.parse(sessionStorage.getItem(SA_SESSION_KEY) || "null");
+          if (!saved?.id || !saved?.email) {
+            clearSaSession();
+            return null;
+          }
+          if (saved.expiresAt && Number(saved.expiresAt) <= Date.now()) {
+            clearSaSession();
+            return null;
+          }
+          if (!saved.expiresAt) {
+            return saveSaSession(saved.id || saved.username, saved.email);
+          }
+          sessionStorage.removeItem(SA_SESSION_KEY);
+          return saved;
+        } catch {
+          clearSaSession();
+          return null;
+        }
+      }
+
+      function clearSaSession() {
+        localStorage.removeItem(SA_SESSION_KEY);
+        sessionStorage.removeItem(SA_SESSION_KEY);
+      }
+
+      function saResetLoginForm() {
+        document.getElementById("sa-user").disabled = false;
+        document.getElementById("sa-pass-wrap").style.display = "none";
+        document.getElementById("sa-setup-wrap").style.display = "none";
+        document.getElementById("sa-continue-btn").style.display = "block";
+        document.getElementById("sa-login-btn").style.display = "none";
+        document.getElementById("sa-setup-btn").style.display = "none";
+        document.getElementById("sa-back-btn").style.display = "none";
+        document.getElementById("sa-pass").value = "";
+        document.getElementById("sa-new-pass").value = "";
+        document.getElementById("sa-confirm-pass").value = "";
+        setSaLoginBusy(false);
+      }
+
+      async function saContinueEmail() {
+        const email = document.getElementById("sa-user").value.trim();
+        if (!email) {
+          saToast("Enter your staff email first");
+          return;
+        }
+        if (DB?.syncRemoteAll) await DB.syncRemoteAll();
+        const profile = DB.findSubAdminByEmail?.(email);
+        if (!profile) {
+          saToast("This email is not assigned as a sub-admin. Contact the Super Admin.");
+          return;
+        }
+        const existingUser = (await DB.getAuthUser?.()) || null;
+        const freshProfile = DB.findSubAdminByEmail?.(email) || profile;
+        document.getElementById("sa-user").disabled = true;
+        document.getElementById("sa-continue-btn").style.display = "none";
+        document.getElementById("sa-back-btn").style.display = "block";
+        if (DB.subAdminNeedsPasswordSetup?.(freshProfile, existingUser)) {
+          document.getElementById("sa-setup-wrap").style.display = "block";
+          document.getElementById("sa-setup-btn").style.display = "block";
+          saToast("Create your password to finish setup");
+        } else {
+          document.getElementById("sa-pass-wrap").style.display = "block";
+          document.getElementById("sa-login-btn").style.display = "block";
+          document.getElementById("sa-pass").focus();
+        }
+      }
+
+      async function saSavePassword() {
+        const email = document.getElementById("sa-user").value.trim();
+        const password = document.getElementById("sa-new-pass").value;
+        const confirm = document.getElementById("sa-confirm-pass").value;
+        if (!email) {
+          saToast("Enter your email");
+          return;
+        }
+        if (password.length < 8) {
+          saToast("Password must be at least 8 characters");
+          return;
+        }
+        if (password !== confirm) {
+          saToast("Passwords do not match");
+          return;
+        }
+        setSaLoginBusy(true, "Saving...");
+        try {
+          const { user, profile } = await DB.setupSubAdminPassword(email, password);
+          await saFlushRemoteSync?.();
+          await completeSaSession(user, profile);
+          saToast("Password saved! Welcome to your dashboard.");
+        } catch (error) {
+          saToast(error?.message || "Could not save password");
+        } finally {
+          setSaLoginBusy(false);
+        }
+      }
+
+      function getFreshCurrentSa() {
+        if (!CURRENT_SA?.id) return null;
+        if (!CURRENT_AUTH_EMAIL) {
+          saLogout("Please sign in again.");
+          return null;
+        }
+        const fresh = DB._getSaAdmins()
+          .map(normalizeSaAdmin)
+          .find((a) => a.id === CURRENT_SA.id && a.email === CURRENT_AUTH_EMAIL);
+        if (!fresh || fresh.active === false) {
+          saLogout("Your sub-admin access has changed. Please contact the Super Admin.");
+          return null;
+        }
+        CURRENT_SA = fresh;
+        saveSaSession(fresh.id, fresh.email);
+        return fresh;
+      }
+
+      function permForSaType(type) {
+        return {
+          news: "news",
+          school: "school",
+          team: "team",
+          facility: "facilities",
+          facilities: "facilities",
+          department: "departments",
+          departments: "departments",
+          house: "houses",
+          houses: "houses",
+          club: "clubs",
+          clubs: "clubs",
+          teacher: "teachers",
+          teachers: "teachers",
+          student: "students",
+          gallery: "gallery",
+          doc: "documents",
+          documents: "documents",
+          slide: "slides",
+          slides: "slides",
+          homepageSlides: "slides",
+          notif: "notifications",
+          notifications: "notifications",
+          merch: "merchandise",
+          merchandise: "merchandise",
+          applications: "applications",
+          students: "students",
+          orders: "orders",
+        }[type];
+      }
+
+      function hasSaPerm(perm) {
+        const fresh = getFreshCurrentSa();
+        return !!fresh && (fresh.permissions || []).includes(perm);
+      }
+
+      function requireSaPerm(perm) {
+        if (hasSaPerm(perm)) return true;
+        saToast("You don't have permission for this action");
+        return false;
+      }
+
+      function saLog(action, section, detail) {
+        const logs = DB._get("logs");
+        logs.unshift({
+          id: DB._id(),
+          user: CURRENT_SA?.name || "Sub-admin",
+          action,
+          detail: `${section}: "${detail}"`,
+          ip: "Local",
+          time: new Date().toLocaleString(),
+        });
+        if (logs.length > 200) logs.pop();
+        DB._set("logs", logs);
+      }
+
+      async function saFlushRemoteSync() {
+        if (!(await DB.isSupabaseAuthenticated?.())) return false;
+        await DB._flushPendingRemoteWrites?.();
+        return true;
+      }
+
+      async function saSyncAfterChange(message) {
+        const synced = await saFlushRemoteSync();
+        saToast(
+          synced
+            ? `${message} Synced to all devices.`
+            : `${message} Saved locally.`,
+        );
+        return synced;
+      }
+
+      async function saQuickUpdate(dbKey, id, data, reloadKey, message = "Updated!") {
+        const item = saUpdate(dbKey, id, data);
+        if (!item) return;
+        await saSyncAfterChange(message);
+        if (reloadKey) loadSaPage(reloadKey);
+      }
+      window.saQuickUpdate = saQuickUpdate;
+
+      function saAdd(dbKey, data) {
+        if (!requireSaPerm(permForSaType(dbKey))) return null;
+        const list = DB._get(dbKey);
+        const item = { ...data, id: data.id || DB._id() };
+        list.push(item);
+        DB._set(dbKey, list);
+        if (dbKey === "notifications") notifySaNotificationsChanged();
+        saLog("Sub-admin added", dbKey, item.name || item.title || item.ref || item.id);
+        return item;
+      }
+
+      async function saBulkUploadGallery(input) {
+        await saBulkUploadMedia(input, "gallery", "gallery");
+      }
+      function saFileTitle(file) {
+        return file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+      }
+      async function saBulkUploadMedia(input, key, page) {
+        if (!requireSaPerm(permForSaType(key))) return;
+        const files = Array.from(input?.files || []);
+        if (!files.length) return;
+        for (const [index, file] of files.entries()) {
+          const src =
+            key === "houses" || key === "gallery" || key === "facilities" || key === "homepageSlides"
+              ? await saUploadImageAsset(file, key === "homepageSlides" ? "homepageSlides" : key)
+              : await fileToDataURL(file);
+          const title = saFileTitle(file);
+          const order = Date.now() + index;
+          if (key === "documents") {
+            saAdd(key, { title, category: "General", description: "", file: src, status: "published", order });
+          } else if (key === "homepageSlides") {
+            saAdd(key, { title, image: src, status: "active", order });
+          } else if (key === "facilities") {
+            saAdd(key, { name: title, category: "other", description: "", image: src, color: "linear-gradient(135deg,#1e40af,#4f46e5)", features: [], order });
+          } else if (key === "houses") {
+            saAdd(key, { name: title, gender: "Mixed", color: "#2563eb", master: "", motto: "", achievements: "", story: "", image: src, gallery: [src], order });
+          } else {
+            saAdd(key, { title, category: "campus", image: src, description: "", color: "linear-gradient(135deg,#1e40af,#4f46e5)", order });
+          }
+        }
+        if (input) input.value = "";
+        loadSaPage(page);
+        await saSyncAfterChange(
+          `${files.length} item${files.length === 1 ? "" : "s"} uploaded!`,
+        );
+      }
+      function saSelectAll(selectorClass, checked = true) {
+        document.querySelectorAll(`.${selectorClass}`).forEach((el) => (el.checked = checked));
+      }
+      function saBulkArrange(key, page, selectorClass) {
+        const ids = Array.from(document.querySelectorAll(`.${selectorClass}:checked`)).map((el) => el.value);
+        if (!ids.length) {
+          saToast("Select at least one item first");
+          return;
+        }
+        const start = Number(prompt("Start order number", "1"));
+        if (!Number.isFinite(start)) return;
+        const items = DB.getAll(key);
+        ids.forEach((id, index) => {
+          const item = items.find((x) => x.id === id);
+          if (item) item.order = start + index;
+        });
+        DB._set(key, items);
+        saFlushRemoteSync().then((synced) => {
+          loadSaPage(page);
+          saToast(synced ? "Selected items arranged and synced." : "Selected items arranged.");
+        });
+      }
+
+      function saUpdate(dbKey, id, data) {
+        if (!requireSaPerm(permForSaType(dbKey))) return null;
+        const list = DB._get(dbKey);
+        const index = list.findIndex((x) => x.id === id);
+        if (index === -1) return null;
+        list[index] = { ...list[index], ...data };
+        DB._set(dbKey, list);
+        if (dbKey === "notifications") notifySaNotificationsChanged();
+        const item = list[index];
+        if (item) saLog("Sub-admin updated", dbKey, item.name || item.title || item.ref || id);
+        return item;
+      }
+
+      async function saDelete(dbKey, id, reloadKey) {
+        const perm = permForSaType(reloadKey || dbKey);
+        if (!requireSaPerm(perm)) return;
+        const item = DB.getById(dbKey, id);
+        DB._set(
+          dbKey,
+          DB._get(dbKey).filter((x) => x.id !== id),
+        );
+        if (dbKey === "notifications") notifySaNotificationsChanged();
+        saLog("Sub-admin deleted", dbKey, item?.name || item?.title || item?.ref || id);
+        await saSyncAfterChange("Deleted!");
+        loadSaPage(reloadKey || perm);
+      }
+
+      async function saBulkDelete(dbKey, reloadKey, selectorClass) {
+        const perm = permForSaType(reloadKey || dbKey);
+        if (!requireSaPerm(perm)) return;
+        const ids = Array.from(document.querySelectorAll(`.${selectorClass}:checked`)).map(
+          (el) => el.value,
+        );
+        if (!ids.length) {
+          saToast("Select at least one item first");
+          return;
+        }
+        if (!confirm(`Delete ${ids.length} selected item${ids.length === 1 ? "" : "s"}?`)) return;
+        const selected = new Set(ids);
+        DB._set(
+          dbKey,
+          DB._get(dbKey).filter((x) => !selected.has(x.id)),
+        );
+        saLog("Sub-admin deleted", dbKey, `${ids.length} selected items`);
+        await saSyncAfterChange("Selected items deleted!");
+        loadSaPage(reloadKey || perm);
+      }
+
+      function notifySaNotificationsChanged() {
+        window.dispatchEvent(new Event("nj-notifications-updated"));
+      }
+
+      function saClearNotifs() {
+        if (!requireSaPerm("notifications")) return;
+        if (!confirm("Clear all notifications?")) return;
+        DB._set("notifications", []);
+        notifySaNotificationsChanged();
+        saLog("Sub-admin cleared", "notifications", "All notifications");
+        loadSaNotifs();
+        saToast("Notifications cleared");
+      }
+
+      function setSaLoginBusy(busy, label) {
+        ["sa-login-btn", "sa-continue-btn", "sa-setup-btn"].forEach((id) => {
+          const btn = document.getElementById(id);
+          if (!btn || btn.style.display === "none") return;
+          btn.disabled = busy;
+        });
+        const emailBtn = document.getElementById("sa-login-btn");
+        if (emailBtn && emailBtn.style.display !== "none") {
+          emailBtn.textContent = label || "Sign In with Email →";
+        }
+        const setupBtn = document.getElementById("sa-setup-btn");
+        if (setupBtn && setupBtn.style.display !== "none" && label) {
+          setupBtn.textContent = label;
+        } else if (setupBtn) {
+          setupBtn.textContent = "Save Password & Enter →";
+        }
+        const continueBtn = document.getElementById("sa-continue-btn");
+        if (continueBtn && continueBtn.style.display !== "none" && label) {
+          continueBtn.textContent = label;
+        } else if (continueBtn) {
+          continueBtn.textContent = "Continue →";
+        }
+        const googleBtn = document.getElementById("sa-google-btn");
+        if (googleBtn) googleBtn.disabled = busy;
+      }
+
+      async function completeSaSession(user, profile) {
+        CURRENT_AUTH_EMAIL = String(user?.email || "").trim().toLowerCase();
+        const isGoogle =
+          user?.app_metadata?.provider === "google" ||
+          (Array.isArray(user?.identities) &&
+            user.identities.some((item) => item?.provider === "google"));
+        let nextProfile = DB.findSubAdminByEmail?.(CURRENT_AUTH_EMAIL) || profile;
+        if (nextProfile?.id && DB.subAdminNeedsPasswordSetup?.(nextProfile, user)) {
+          nextProfile = await DB.markSubAdminPasswordReady?.(
+            nextProfile,
+            isGoogle ? "— Google Sign-In —" : "Set",
+          );
+        }
+        CURRENT_SA = normalizeSaAdmin(nextProfile);
+        DB.savePortalSession?.("subadmin", CURRENT_AUTH_EMAIL);
+        const admins = DB._getSaAdmins().map(normalizeSaAdmin);
+        const updated = admins.map((a) =>
+          a.id === CURRENT_SA.id
+            ? { ...a, lastLogin: new Date().toLocaleString() }
+            : a,
+        );
+        DB._saveSaAdmins(updated);
+        await DB._flushPendingRemoteWrites?.();
+        saveSaSession(CURRENT_SA.id, CURRENT_AUTH_EMAIL);
+        saLog("Login", "Sub-admin", CURRENT_SA.email);
+        if (DB?.syncRemoteAll) await DB.syncRemoteAll();
+        showDashboard();
+      }
+
+      async function saLogin() {
+        const email = document.getElementById("sa-user").value.trim().toLowerCase();
+        const password = document.getElementById("sa-pass").value;
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          saToast("Please enter a valid sub-admin email.");
+          return;
+        }
+        if (!password) {
+          saToast("Please enter your password.");
+          return;
+        }
+        setSaLoginBusy(true, "Signing in...");
+        try {
+          const { user, profile } = await DB.signInSubAdmin(email, password);
+          await completeSaSession(user, profile);
+        } catch (error) {
+          saToast(error?.message || "Could not sign in to the sub-admin dashboard.");
+        } finally {
+          setSaLoginBusy(false);
+        }
+      }
+
+      async function saGoogleLogin() {
+        saToast("Use your sub-admin email and password to sign in.");
+      }
+
+      async function tryRestoreSubAdminSession() {
+        const portal = DB.getPortalSession?.("subadmin");
+        const saved = readSaSession();
+        if (saved) {
+          if (!portal) {
+            clearSaSession();
+            return false;
+          }
+          const savedId = saved.id || saved.username;
+          const user = await DB.getAuthUser?.();
+          CURRENT_AUTH_EMAIL = String(user?.email || saved.email || "").trim().toLowerCase();
+          if (!CURRENT_AUTH_EMAIL) {
+            if (portal) {
+              clearSaSession();
+              return false;
+            }
+            clearSaSession();
+            return false;
+          }
+          if (portal.email !== CURRENT_AUTH_EMAIL) {
+            clearSaSession();
+            return false;
+          }
+          CURRENT_SA =
+            DB._getSaAdmins()
+              .map(normalizeSaAdmin)
+              .find(
+                (a) =>
+                  (a.id === savedId || a.username === savedId) &&
+                  a.email === CURRENT_AUTH_EMAIL,
+              ) || null;
+          if (!CURRENT_SA) {
+            clearSaSession();
+            return false;
+          }
+          saveSaSession(CURRENT_SA.id, CURRENT_AUTH_EMAIL);
+          if (DB?.syncRemoteAll) await DB.syncRemoteAll();
+          showDashboard();
+          return true;
+        }
+        const user = await DB.getAuthUser?.();
+        if (!user?.email) return false;
+        const portalMatch = DB.getPortalSession?.("subadmin");
+        if (portalMatch && portalMatch.email !== DB._email(user.email)) return false;
+        if (!portalMatch) return false;
+        const profile = await DB.getSubAdminProfileForUser(user);
+        await completeSaSession(user, profile);
+        return true;
+      }
+
+      async function revealSubAdminPasswordStep(email) {
+        const emailInput = document.getElementById("sa-user");
+        const emailWrap = emailInput?.closest(".sa-inp-wrap");
+        const passWrap = document.getElementById("sa-pass-wrap");
+        const loginBtn = document.getElementById("sa-login-btn");
+        const setupWrap = document.getElementById("sa-setup-wrap");
+        const setupBtn = document.getElementById("sa-setup-btn");
+        const backBtn = document.getElementById("sa-back-btn");
+        const continueBtn = document.getElementById("sa-continue-btn");
+        const divider = document.querySelector("#sa-login-screen .sa-login-divider");
+        const passInput = document.getElementById("sa-pass");
+        const newPassInput = document.getElementById("sa-new-pass");
+        const confirmPassInput = document.getElementById("sa-confirm-pass");
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        if (DB?.syncRemoteAll) await DB.syncRemoteAll();
+        const profile = normalizedEmail ? DB.findSubAdminByEmail?.(normalizedEmail) : null;
+        const authUser = await DB.getAuthUser?.();
+        const needsSetup = !!(
+          profile &&
+          DB.subAdminNeedsPasswordSetup?.(profile, authUser)
+        );
+
+        if (emailInput) {
+          emailInput.value = normalizedEmail || "";
+          emailInput.disabled = true;
+          emailInput.readOnly = true;
+        }
+        if (emailWrap) emailWrap.style.display = "none";
+        if (divider) divider.style.display = "none";
+        if (continueBtn) continueBtn.style.display = "none";
+        if (backBtn) backBtn.style.display = "block";
+        if (needsSetup) {
+          if (passWrap) passWrap.style.display = "none";
+          if (loginBtn) loginBtn.style.display = "none";
+          if (setupWrap) setupWrap.style.display = "block";
+          if (setupBtn) setupBtn.style.display = "block";
+          if (newPassInput) newPassInput.value = "";
+          if (confirmPassInput) confirmPassInput.value = "";
+          newPassInput?.focus();
+          saToast("Your account has been verified. Create your password to continue.");
+        } else {
+          if (passWrap) passWrap.style.display = "block";
+          if (loginBtn) loginBtn.style.display = "block";
+          if (setupWrap) setupWrap.style.display = "none";
+          if (setupBtn) setupBtn.style.display = "none";
+          if (passInput) passInput.value = "";
+          passInput?.focus();
+          saToast("Enter your sub-admin password to continue.");
+        }
+      }
+
+      function showDashboardPasswordModal(email) {
+        const overlay = document.getElementById("dashboard-password-ov");
+        const input = document.getElementById("dashboard-password-input");
+        const msg = document.getElementById("dashboard-password-msg");
+        const error = document.getElementById("dashboard-password-error");
+        if (!overlay || !input || !msg || !error) {
+          return Promise.reject(
+            new Error("Password verification modal is unavailable.")
+          );
+        }
+        msg.textContent = `Enter your password for ${email} to continue.`;
+        error.textContent = "";
+        input.value = "";
+        overlay.style.display = "flex";
+        input.focus();
+
+        return new Promise((resolve, reject) => {
+          const cleanup = () => {
+            input.removeEventListener("keydown", onKeyDown);
+            overlay.removeEventListener("click", onOverlayClick);
+            document.removeEventListener("keydown", onDocKeyDown);
+          };
+          const close = (result, shouldReject = false) => {
+            cleanup();
+            overlay.style.display = "none";
+            if (shouldReject) reject(result);
+            else resolve(result);
+          };
+          const submit = () => {
+            const value = input.value.trim();
+            if (!value) {
+              error.textContent = "Please enter your password.";
+              return;
+            }
+            close(value);
+          };
+          const onKeyDown = (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              submit();
+            }
+          };
+          const onOverlayClick = (event) => {
+            if (event.target === overlay) close("", true);
+          };
+          const onDocKeyDown = (event) => {
+            if (event.key === "Escape") close("", true);
+          };
+
+          document.getElementById("dashboard-password-cancel")?.addEventListener("click", () => close("", true), { once: true });
+          document.getElementById("dashboard-password-submit")?.addEventListener("click", submit, { once: true });
+          input.addEventListener("keydown", onKeyDown);
+          overlay.addEventListener("click", onOverlayClick);
+          document.addEventListener("keydown", onDocKeyDown);
+        });
+      }
+
+      async function challengeDashboardPassword(role, email) {
+        if (!email || !DB?.needsDashboardPasswordChallenge || !DB?.verifyDashboardPassword) return true;
+        if (!DB.needsDashboardPasswordChallenge(role, email)) return true;
+        let password;
+        try {
+          password = await showDashboardPasswordModal(email);
+        } catch {
+          throw new Error("Dashboard password is required to continue.");
+        }
+        if (!password) {
+          throw new Error("Dashboard password is required to continue.");
+        }
+        if (!DB.verifyDashboardPassword(role, email, password)) {
+          throw new Error("Incorrect password. Please try again.");
+        }
+        DB.saveDashboardPasswordTrust?.(role, email);
+        return true;
+      }
+
+      async function saLogout(msg) {
+        if (CURRENT_AUTH_EMAIL) window.StaffAuth?.clearTrust?.("subadmin", CURRENT_AUTH_EMAIL);
+        CURRENT_SA = null;
+        CURRENT_AUTH_EMAIL = "";
+        clearSaSession();
+        DB.clearPortalSession?.("subadmin");
+        await DB.signOut?.();
+        document.getElementById("sa-login-screen").style.display = "flex";
+        document.getElementById("sa-dashboard").style.display = "none";
+        document.body.classList.remove("sa-portal");
+        document.querySelector(".sa-content")?.classList.remove("scroll-lock");
+        if (msg) saToast(msg);
+      }
+
+      async function showDashboard() {
+        if (!getFreshCurrentSa()) return;
+        document.getElementById("sa-login-screen").style.display = "none";
+        document.getElementById("sa-dashboard").style.display = "block";
+        document.body.classList.add("sa-portal");
+        // Set user info
+        document.getElementById("sa-sb-name").textContent = CURRENT_SA.name;
+        document.getElementById("sa-sb-role").textContent = CURRENT_SA.role;
+        document.getElementById("sa-footer-name").textContent = CURRENT_SA.name;
+        document.getElementById("sa-footer-role").textContent = CURRENT_SA.role;
+        document.getElementById("sa-av-initials").textContent = CURRENT_SA.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+        document.getElementById("sa-welcome-title").innerHTML =
+          CURRENT_SA.name.split(" ")[0] +
+          "'s <span class='gt'>Dashboard</span>";
+        buildSaSidebar();
+        loadSaPage("dashboard");
+        hydrateIcons(document);
+      }
+
+      function buildSaSidebar() {
+        const perms = CURRENT_SA.permissions || [];
+        const nav = document.getElementById("sa-nav-items");
+        nav.innerHTML = `<div class="sa-item active" onclick="showSaPage('dashboard',this)"><span class="sa-ic"><span class="ico ico-home" data-ico="home" aria-hidden="true"></span></span>Dashboard</div>`;
+        Object.entries(ALL_PERMS).forEach(([key, info]) => {
+          const has = perms.includes(key);
+          nav.innerHTML += `<div class="sa-item ${has ? "" : "locked"}" onclick="${has ? `showSaPage('${key}',this)` : `saToast('You don\'t have permission for this section')`}"><span class="sa-ic">${info.icon}</span>${info.label}${has ? "" : '<span class="sa-lock"><span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span></span>'}</div>`;
+        });
+        hydrateIcons(nav);
+      }
+
+      function saToggleSidebar() {
+        const sb = document.getElementById("sa-sb");
+        const content = document.querySelector(".sa-content");
+        sb.classList.toggle("open");
+        content?.classList.toggle("scroll-lock", sb.classList.contains("open"));
+      }
+
+      function showSaPage(key, el) {
+        CURRENT_SA_PAGE = key;
+        if (key !== "dashboard" && !requireSaPerm(key)) {
+          document
+            .querySelectorAll(".sa-page")
+            .forEach((p) => p.classList.remove("active"));
+          document.getElementById("sap-denied").classList.add("active");
+          document.getElementById("sa-page-title").textContent = "Access Restricted";
+          return;
+        }
+        document
+          .querySelectorAll(".sa-page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".sa-item")
+          .forEach((i) => i.classList.remove("active"));
+        if (el) el.classList.add("active");
+        // Map key to page id
+        const pageId =
+          key === "dashboard"
+            ? "sap-dashboard"
+            : ALL_PERMS[key]
+              ? ALL_PERMS[key].page
+              : null;
+        if (pageId) {
+          document.getElementById(pageId).classList.add("active");
+          const perms = CURRENT_SA?.permissions || [];
+          if (key !== "dashboard" && !perms.includes(key)) {
+            document.getElementById("sap-denied").classList.add("active");
+            document.getElementById(pageId).classList.remove("active");
+            return;
+          }
+        }
+        document.getElementById("sa-page-title").textContent =
+          key === "dashboard" ? "Dashboard" : ALL_PERMS[key]?.label || key;
+        document.getElementById("sa-sb").classList.remove("open");
+        document.querySelector(".sa-content")?.classList.remove("scroll-lock");
+        document.querySelector(".sa-content")?.scrollTo({ top: 0, behavior: "smooth" });
+        loadSaPage(key);
+      }
+
+      function loadSaPage(key) {
+        CURRENT_SA_PAGE = key;
+        if (key !== "dashboard" && !requireSaPerm(key)) return;
+        if (key === "dashboard") loadSaDashboard();
+        else if (key === "school") loadSaSchoolInfo();
+        else if (key === "team") loadSaTeam();
+        else if (key === "facilities") loadSaFacilities();
+        else if (key === "departments") loadSaDepartments();
+        else if (key === "houses") loadSaHouses();
+        else if (key === "clubs") loadSaClubs();
+        else if (key === "teachers") loadSaTeachers();
+        else if (key === "news") loadSaNews();
+        else if (key === "gallery") loadSaGallery();
+        else if (key === "documents") loadSaDocs();
+        else if (key === "slides") loadSaSlides();
+        else if (key === "notifications") loadSaNotifs();
+        else if (key === "applications") loadSaApps();
+        else if (key === "students") loadSaStudents();
+        else if (key === "merchandise") loadSaMerch();
+        else if (key === "orders") loadSaOrders();
+        requestAnimationFrame(() => hydrateIcons(document));
+      }
+
+      function loadSaDashboard() {
+        const perms = CURRENT_SA?.permissions || [];
+        // Stats based on what they can see
+        let html = "";
+        if (perms.includes("news")) {
+          const n = DB.getAll("news");
+          html += `<div style="background:#fff;border-radius:var(--rl);padding:18px;box-shadow:var(--sh1);display:flex;gap:12px;align-items:center"><div class="sa-stat-ic" style="background:rgba(37,99,235,.1);color:var(--b6)"><span class="ico ico-news" data-ico="news" aria-hidden="true"></span></div><div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900">${n.length}</div><div style="font-size:12px;color:var(--g500)">News Posts</div></div></div>`;
+        }
+        if (perms.includes("applications")) {
+          const a = DB.getAll("applications");
+          html += `<div style="background:#fff;border-radius:var(--rl);padding:18px;box-shadow:var(--sh1);display:flex;gap:12px;align-items:center"><div class="sa-stat-ic" style="background:rgba(245,158,11,.1);color:#d97706"><span class="ico ico-clipboard" data-ico="clipboard" aria-hidden="true"></span></div><div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900">${a.filter((x) => x.status === "submitted" || x.status === "under_review").length}</div><div style="font-size:12px;color:var(--g500)">Pending Applications</div></div></div>`;
+        }
+        if (perms.includes("students")) {
+          const s = DB.getAll("students");
+          html += `<div style="background:#fff;border-radius:var(--rl);padding:18px;box-shadow:var(--sh1);display:flex;gap:12px;align-items:center"><div class="sa-stat-ic" style="background:rgba(16,185,129,.1);color:#059669"><span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span></div><div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900">${s.length}</div><div style="font-size:12px;color:var(--g500)">Students</div></div></div>`;
+        }
+        if (perms.includes("merchandise")) {
+          const m = DB.getAll("merchandise");
+          html += `<div style="background:#fff;border-radius:var(--rl);padding:18px;box-shadow:var(--sh1);display:flex;gap:12px;align-items:center"><div class="sa-stat-ic" style="background:rgba(147,51,234,.1);color:#9333ea"><span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span></div><div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900">${m.length}</div><div style="font-size:12px;color:var(--g500)">Products</div></div></div>`;
+        }
+        document.getElementById("sa-dash-stats").innerHTML =
+          html ||
+          '<div style="color:var(--g400);font-size:14px">No stats available for your current permissions.</div>';
+        // Perms display
+        document.getElementById("sa-perms-display").innerHTML =
+          (CURRENT_SA?.permissions || [])
+            .map(
+              (p) =>
+                `<span class="sa-perm-chip">${ALL_PERMS[p]?.icon || ""} ${ALL_PERMS[p]?.label || p}</span>`,
+            )
+            .join("") ||
+          '<span style="color:var(--g400);font-size:13px">No permissions assigned</span>';
+        // Recent logs
+        const allowedSections = new Set(perms.map((p) => permForSaType(p) || p));
+        allowedSections.add("Sub-admin");
+        const logs = DB.getAll("logs")
+          .filter((l) => {
+            const section = String(l.detail || "").split(":")[0];
+            return allowedSections.has(section) || l.user === CURRENT_SA?.name;
+          })
+          .slice(0, 5);
+        document.getElementById("sa-recent-logs").innerHTML =
+          logs
+            .map(
+              (l) =>
+                `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100)"><div style="width:32px;height:32px;border-radius:50%;background:rgba(37,99,235,.08);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0"><span class="ico ico-clipboard" data-ico="clipboard" aria-hidden="true"></span></div><div><div style="font-size:13px;font-weight:600">${l.action}</div><div style="font-size:12px;color:var(--g500)">${l.detail}</div><div style="font-size:11px;color:var(--g400)">${l.time}</div></div></div>`,
+            )
+            .join("") ||
+          '<div style="color:var(--g400);font-size:13px">No recent activity</div>';
+        hydrateIcons(document.getElementById("sa-dash-stats"));
+        hydrateIcons(document.getElementById("sa-perms-display"));
+        hydrateIcons(document.getElementById("sa-recent-logs"));
+      }
+
+      function sgv(id) {
+        return document.getElementById(id)?.value.trim() || "";
+      }
+
+      function loadSaSchoolInfo() {
+        const info = DB.getInfo();
+        const set = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.value = value || "";
+        };
+        set("sasi-hero", info.heroTitle);
+        set("sasi-herosub", info.heroSubtitle);
+        set("sasi-hero-image", info.heroImage);
+        set("sasi-welcome", info.welcomeText);
+        set("sasi-vision", info.vision);
+        set("sasi-mission", info.mission);
+        set("sasi-pm", info.principalMessage);
+        set("sasi-pname", info.principalName);
+        set("sasi-ptitle", info.principalTitle);
+        set("sasi-motto", info.motto);
+        set("sasi-warcry", info.warCry);
+      }
+
+      async function saveSaSchoolInfo() {
+        if (!requireSaPerm("school")) return;
+        const file = document.getElementById("sasi-hero-file")?.files?.[0];
+        const info = {
+          ...DB.getInfo(),
+          heroTitle: sgv("sasi-hero"),
+          heroSubtitle: sgv("sasi-herosub"),
+          heroImage: file ? await fileToDataURL(file) : sgv("sasi-hero-image"),
+          welcomeText: sgv("sasi-welcome"),
+          vision: sgv("sasi-vision"),
+          mission: sgv("sasi-mission"),
+          principalMessage: sgv("sasi-pm"),
+          principalName: sgv("sasi-pname"),
+          principalTitle: sgv("sasi-ptitle"),
+          motto: sgv("sasi-motto"),
+          warCry: sgv("sasi-warcry"),
+        };
+        const synced = await DB.saveInfo(info);
+        saLog("Sub-admin updated", "School Info", "Website content");
+        saToast(
+          synced
+            ? "School info saved and synced to all devices!"
+            : "School info saved locally.",
+        );
+      }
+
+      function loadSaTeam() {
+        const items = DB.getAll("team").sort((a, b) => (a.order || 0) - (b.order || 0));
+        document.getElementById("sa-team-list").innerHTML =
+          items
+            .map(
+              (t) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
+      <div style="width:56px;height:56px;border-radius:12px;background:${t.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(t.image)}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(t.name)}</div><div style="font-size:12px;color:var(--b6);font-weight:600">${esc(t.position)}</div><div style="font-size:12px;color:var(--g500)">${esc(t.department)} · ${esc(t.email)}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('team','${t.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete staff member?'))saDelete('team','${t.id}','team')">Delete</button></div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400)">No staff members yet.</div>';
+      }
+
+      function loadSaFacilities() {
+        const items = DB.getAll("facilities").sort((a, b) => (a.order || 0) - (b.order || 0));
+        document.getElementById("sa-facilities-list").innerHTML =
+          items
+            .map(
+              (f) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
+      <div style="width:56px;height:56px;border-radius:12px;background:${f.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(f.image)}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(f.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc((f.description || "").slice(0, 140))}</div><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${(f.features || []).map((x) => `<span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px">${esc(x)}</span>`).join("")}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('facility','${f.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete facility?'))saDelete('facilities','${f.id}','facilities')">Delete</button></div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400)">No facilities yet.</div>';
+      }
+
+      function loadSaDepartments() {
+        const items = DB.getAll("departments").sort((a, b) => (a.order || 0) - (b.order || 0));
+        document.getElementById("sa-departments-list").innerHTML =
+          items
+            .map(
+              (d) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
+      <div style="width:56px;height:56px;border-radius:12px;background:${d.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(d.image || '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(d.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc(d.description || "")}</div><div style="font-size:11px;color:var(--g400);margin-top:4px">${esc((d.subjects || []).join(", "))}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('department','${d.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete department?'))saDelete('departments','${d.id}','departments')">Delete</button></div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400)">No departments yet.</div>';
+      }
+
+      function loadSaHouses() {
+        const items = DB.getAll("houses").sort((a, b) => (a.order || 0) - (b.order || 0));
+        document.getElementById("sa-houses-list").innerHTML =
+          items
+            .map(
+              (h) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);border-left:4px solid ${esc(h.color || "#2563eb")};display:flex;gap:14px;align-items:flex-start">
+      <div style="width:56px;height:56px;border-radius:12px;background:${esc(h.color || "#2563eb")}22;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(h.image || '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>')}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(h.name)} <span style="background:${esc(h.color || "#2563eb")}22;color:${esc(h.color || "#2563eb")};padding:2px 8px;border-radius:100px;font-size:11px">${esc(h.gender)}</span></div><div style="font-size:12px;color:var(--g500)">Master: ${esc(h.master || "Not set")}</div><div style="font-size:12px;color:var(--g500)">Assistant: ${esc(h.assistantMaster || "Not set")}</div><div style="font-size:12px;color:var(--g500);font-style:italic">${esc(h.motto)}</div><div style="font-size:11px;color:var(--g400);margin-top:4px">${(h.gallery || []).length} gallery image(s)</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('house','${h.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete house?'))saDelete('houses','${h.id}','houses')">Delete</button></div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400)">No houses yet.</div>';
+      }
+
+      function loadSaClubs() {
+        const items = DB.getAll("clubs").sort((a, b) => (a.order || 0) - (b.order || 0));
+        document.getElementById("sa-clubs-list").innerHTML =
+          items
+            .map(
+              (c) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
+      <div style="width:52px;height:52px;border-radius:12px;background:${c.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(c.image)}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(c.name)} <span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px;color:var(--g500)">${esc(c.category)}</span></div><div style="font-size:12px;color:var(--g500)">Coordinator: ${esc(c.coordinator)} · ${esc(c.meetingDays)}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('club','${c.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete club?'))saDelete('clubs','${c.id}','clubs')">Delete</button></div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400)">No clubs yet.</div>';
+      }
+
+      function loadSaTeachers() {
+        const items = DB.getAll("teachers");
+        const rows = items
+          .map(
+            (t) => `<tr><td style="padding:10px 0;border-top:1px solid var(--g100);font-weight:600">${esc(t.name)}<div style="font-size:11px;color:var(--g400)">${esc(t.email || "")}</div></td><td style="padding:10px 8px;border-top:1px solid var(--g100);color:var(--g500)">${esc(t.subject)}</td><td style="padding:10px 8px;border-top:1px solid var(--g100);color:var(--g500)">${esc(t.department)}</td><td style="padding:10px 8px;border-top:1px solid var(--g100)">${esc(t.status)}</td><td style="padding:10px 0;border-top:1px solid var(--g100);white-space:nowrap"><button style="padding:5px 10px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px" onclick="saOpenModal('teacher','${t.id}')">Edit</button><button style="padding:5px 10px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete teacher?'))saDelete('teachers','${t.id}','teachers')">Delete</button></td></tr>`,
+          )
+          .join("");
+        document.getElementById("sa-teachers-table").innerHTML =
+          `<thead><tr><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Teacher</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Subject</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Department</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Status</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Actions</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--g400)">No teachers yet.</td></tr>'}</tbody>`;
+      }
+
+      function loadSaNews() {
+        const items = DB.getAll("news");
+        if (!items.length) {
+          document.getElementById("sa-news-list").innerHTML =
+            '<div style="padding:30px;text-align:center;color:var(--g400)">No posts yet.</div>';
+          return;
+        }
+        document.getElementById("sa-news-list").innerHTML =
+          '<div style="display:flex;flex-direction:column;gap:12px">' +
+            items
+              .map(
+                (n) => `
+    <div style="background:#fff;border-radius:var(--r);padding:14px;display:flex;gap:14px;align-items:flex-start;border:1px solid var(--g100)">
+      <div style="width:52px;height:52px;border-radius:10px;background:${n.color};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden">${mediaMarkup(n.image)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.title}</div>
+        <div style="font-size:12px;color:var(--g500);margin-top:3px">${n.category} · ${n.date} · <span style="color:${n.status === "published" ? "var(--gn)" : "var(--go)"}">${n.status}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('news','${n.id}')">Edit</button>
+        <button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete this post?'))saDelete('news','${n.id}','news')">Delete</button>
+      </div>
+    </div>`,
+              )
+              .join("") +
+            "</div>";
+        const list = document.getElementById("sa-news-list");
+        list.querySelectorAll("[onclick^=\"saOpenModal('news'\"]").forEach((btn) => {
+          const item = btn.closest("div[style*='background:#fff']");
+          const id = btn.getAttribute("onclick")?.match(/'news','([^']+)'/)?.[1];
+          if (!item || !id || item.querySelector(".sa-news-select")) return;
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = id;
+          checkbox.className = "sa-news-select";
+          checkbox.style.cssText =
+            "width:18px;height:18px;accent-color:var(--b6);flex-shrink:0;margin-top:18px";
+          item.prepend(checkbox);
+        });
+        const toolbar = document.createElement("div");
+        toolbar.style.cssText =
+          "display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 12px;flex-wrap:wrap";
+        toolbar.innerHTML =
+          '<button class="btn btn-g btn-sm" type="button" data-sa-news-select-all>Select All</button><button class="btn btn-g btn-sm" type="button" data-sa-news-clear>Clear</button><button class="btn btn-r btn-sm" type="button" data-sa-news-delete>Delete Selected</button>';
+        toolbar.querySelector("[data-sa-news-select-all]")?.addEventListener("click", () => {
+          list.querySelectorAll(".sa-news-select").forEach((el) => (el.checked = true));
+        });
+        toolbar.querySelector("[data-sa-news-clear]")?.addEventListener("click", () => {
+          list.querySelectorAll(".sa-news-select").forEach((el) => (el.checked = false));
+        });
+        toolbar.querySelector("[data-sa-news-delete]")?.addEventListener("click", () => {
+          saBulkDelete("news", "news", "sa-news-select");
+        });
+        list.prepend(toolbar);
+      }
+
+      function loadSaGallery() {
+        const items = DB.getAll("gallery");
+        document.getElementById("sa-gallery-list").innerHTML =
+          items
+            .map(
+              (g) => `
+    <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
+      <div style="aspect-ratio:1;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative"><input class="sa-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image)}</div>
+      <div style="padding:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">${g.title}</div>
+        <div style="font-size:11px;color:var(--g500);margin-bottom:8px">${g.category}</div>
+        <button style="width:100%;padding:6px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete?'))saDelete('gallery','${g.id}','gallery')">Delete</button>
+      </div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400);grid-column:1/-1">No photos yet.</div>';
+      }
+
+      function loadSaDocs() {
+        const items = DB.getAll("documents").sort(
+          (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0),
+        );
+        const rows = items
+          .map(
+            (d) => `<tr>
+    <td style="padding:10px 8px 10px 0;border-top:1px solid var(--g100)"><input class="sa-doc-select" type="checkbox" value="${d.id}" style="accent-color:var(--b6)"></td>
+    <td style="padding:10px 0;border-top:1px solid var(--g100);font-weight:600">${esc(d.title)}</td>
+    <td style="padding:10px 8px;border-top:1px solid var(--g100);color:var(--g500)">${esc(d.category || "General")}</td>
+    <td style="padding:10px 8px;border-top:1px solid var(--g100)">${esc(d.status || "published")}</td>
+    <td style="padding:10px 8px;border-top:1px solid var(--g100)">${esc(d.order || "")}</td>
+    <td style="padding:10px 0;border-top:1px solid var(--g100);white-space:nowrap"><a href="${esc(d.file || "#")}" target="_blank" rel="noopener" style="padding:5px 10px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px;text-decoration:none;color:var(--g700)">View</a><button style="padding:5px 10px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px" onclick="saOpenModal('doc','${d.id}')">Edit</button><button style="padding:5px 10px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete document?'))saDelete('documents','${d.id}','documents')">Delete</button></td>
+  </tr>`,
+          )
+          .join("");
+        document.getElementById("sa-docs-table").innerHTML =
+          `<thead><tr><th style="padding:0 8px 10px 0"><input type="checkbox" onchange="document.querySelectorAll('.sa-doc-select').forEach(x=>x.checked=this.checked)" style="accent-color:var(--b6)"></th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Title</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Category</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Status</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Order</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Actions</th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--g400)">No documents yet.</td></tr>'}</tbody>`;
+      }
+
+      function loadSaSlides() {
+        const items = DB.getAll("homepageSlides").sort(
+          (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0),
+        );
+        document.getElementById("sa-slides-list").innerHTML =
+          items
+            .map(
+              (s) => `
+    <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
+      <div style="aspect-ratio:4/3;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden">${mediaMarkup(s.image)}</div>
+      <div style="padding:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">${esc(s.title)}</div>
+        <div style="font-size:11px;color:var(--g500);margin-bottom:8px">${esc(s.status || "active")} · Order ${esc(s.order || "")}</div>
+        <div style="display:flex;gap:6px"><button style="flex:1;padding:6px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('slide','${s.id}')">Edit</button><button style="flex:1;padding:6px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete?'))saDelete('homepageSlides','${s.id}','slides')">Delete</button></div>
+      </div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400);grid-column:1/-1">No homepage slides yet.</div>';
+      }
+
+      function loadSaNotifs() {
+        const items = DB.getAll("notifications");
+        const th = `<thead><tr><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Title</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Audience</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Date</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Actions</th></tr></thead>`;
+        const rows = items
+          .map(
+            (n) =>
+              `<tr><td style="padding:10px 0;font-size:13px;border-top:1px solid var(--g100);font-weight:600">${n.title}</td><td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500)">${n.audience}</td><td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500);white-space:nowrap">${n.sentDate}</td><td style="padding:10px 0;border-top:1px solid var(--g100)"><button style="padding:5px 10px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete?'))saDelete('notifications','${n.id}','notifications')">Delete</button></td></tr>`,
+          )
+          .join("");
+        document.getElementById("sa-notif-table").innerHTML =
+          th +
+          `<tbody>${rows || '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--g400)">No notifications sent yet.</td></tr>'}</tbody>`;
+      }
+
+      function loadSaApps() {
+        const apps = DB.getAll("applications");
+        const th = `<thead><tr><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Ref</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Applicant</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Programme</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Status</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Actions</th></tr></thead>`;
+        const statusColor = {
+          submitted: "var(--b6)",
+          under_review: "#d97706",
+          approved: "var(--gn)",
+          rejected: "var(--r6)",
+        };
+        const rows = apps
+          .map(
+            (a) => `<tr>
+    <td style="padding:10px 0;font-size:11px;border-top:1px solid var(--g100);font-family:monospace">${a.ref}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);font-weight:600">${a.name}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500)">${a.programme}</td>
+    <td style="padding:10px 8px;border-top:1px solid var(--g100)"><span style="padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${statusColor[a.status] || "var(--g400)"}22;color:${statusColor[a.status] || "var(--g400)"}">${a.status.replace("_", " ")}</span></td>
+    <td style="padding:10px 0;border-top:1px solid var(--g100);white-space:nowrap">
+      ${a.status !== "approved" ? `<button style="padding:5px 10px;background:rgba(16,185,129,.08);color:#059669;border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px" onclick="saQuickUpdate('applications','${a.id}',{status:'approved'},'applications','Approved!')">Approve</button>` : ""}
+      ${a.status !== "rejected" ? `<button style="padding:5px 10px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer" onclick="saQuickUpdate('applications','${a.id}',{status:'rejected'},'applications','Rejected!')">Reject</button>` : ""}
+    </td>
+  </tr>`,
+          )
+          .join("");
+        document.getElementById("sa-apps-table").innerHTML =
+          th +
+          `<tbody>${rows || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--g400)">No applications yet.</td></tr>'}</tbody>`;
+      }
+
+      function loadSaStudents(q = "") {
+        const all = DB.getAll("students");
+        const students = q
+          ? all.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()))
+          : all;
+        const th = `<thead><tr><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Student</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Programme</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Year/Class</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Status</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Actions</th></tr></thead>`;
+        const rows = students
+          .map(
+            (s) =>
+              `<tr><td style="padding:10px 0;border-top:1px solid var(--g100)"><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--gp);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${esc(s.name).slice(0, 2).toUpperCase()}</div><div style="font-size:13px;font-weight:600">${esc(s.name)}</div></div></td><td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500)">${esc(s.programme)}</td><td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500)">${esc(s.year)} · ${esc(s.class)}</td><td style="padding:10px 8px;border-top:1px solid var(--g100)"><span style="padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${s.status === "active" ? "rgba(16,185,129,.1)" : "rgba(220,38,38,.1)"};color:${s.status === "active" ? "#059669" : "var(--r6)"}">${esc(s.status)}</span></td><td style="padding:10px 0;border-top:1px solid var(--g100);white-space:nowrap"><button style="padding:5px 10px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px" onclick="saOpenModal('student','${s.id}')">Edit</button><button style="padding:5px 10px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete student?'))saDelete('students','${s.id}','students')">Delete</button></td></tr>`,
+          )
+          .join("");
+        document.getElementById("sa-students-table").innerHTML =
+          th +
+          `<tbody>${rows || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--g400)">No students found.</td></tr>'}</tbody>`;
+      }
+      function saSearchStudents(q) {
+        loadSaStudents(q);
+      }
+
+      function loadSaMerch() {
+        const items = DB.getAll("merchandise");
+        document.getElementById("sa-merch-list").innerHTML =
+          items
+            .map(
+              (m) => `
+    <div style="background:#fff;border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
+      <div style="aspect-ratio:1;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">${mediaMarkup(m.image)}</div>
+      <div style="padding:14px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:3px">${m.name}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--b6);margin-bottom:4px">GHS ${m.price}</div>
+        <div style="font-size:11px;color:${m.stock ? "var(--gn)" : "var(--r6)"};margin-bottom:8px;display:flex;align-items:center;gap:4px">${m.stock ? '<span class="ico ico-check" data-ico="check" aria-hidden="true"></span> In Stock' : '<span class="ico ico-x" data-ico="x" aria-hidden="true"></span> Out of Stock'}</div>
+        <div style="display:flex;gap:6px">
+          <button style="flex:1;padding:7px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('merch','${m.id}')">Edit</button>
+          <button style="flex:1;padding:7px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete product?'))saDelete('merchandise','${m.id}','merchandise')">Delete</button>
+        </div>
+      </div>
+    </div>`,
+            )
+            .join("") ||
+          '<div style="padding:30px;text-align:center;color:var(--g400);grid-column:1/-1">No products yet.</div>';
+      }
+
+      function loadSaOrders() {
+        const orders = DB.getAll("orders");
+        const th = `<thead><tr><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Order Ref</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Customer</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Total</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Payment</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 8px 10px;text-align:left">Date</th><th style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--g400);padding:0 0 10px;text-align:left">Status</th></tr></thead>`;
+        const rows = orders
+          .map(
+            (o) => `<tr>
+    <td style="padding:10px 0;font-size:11px;border-top:1px solid var(--g100);font-family:monospace;font-weight:600">${o.ref}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);font-weight:600">${o.customer}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);font-weight:700;color:var(--b6)">GHS ${(o.total || 0).toFixed(2)}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500)">${o.paymentMethod}</td>
+    <td style="padding:10px 8px;font-size:13px;border-top:1px solid var(--g100);color:var(--g500);white-space:nowrap">${o.date}</td>
+    <td style="padding:10px 0;border-top:1px solid var(--g100)">
+      <select style="padding:4px 8px;border-radius:8px;border:1px solid var(--g200);font-size:12px;background:#fff;cursor:pointer" onchange="saQuickUpdate('orders','${o.id}',{status:this.value},'orders','Status updated!')">
+        <option ${o.status === "pending" ? "selected" : ""}>pending</option>
+        <option ${o.status === "processing" ? "selected" : ""}>processing</option>
+        <option ${o.status === "completed" ? "selected" : ""}>completed</option>
+        <option ${o.status === "cancelled" ? "selected" : ""}>cancelled</option>
+      </select>
+    </td>
+  </tr>`,
+          )
+          .join("");
+        document.getElementById("sa-orders-table").innerHTML =
+          th +
+          `<tbody>${rows || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--g400)">No orders yet.</td></tr>'}</tbody>`;
+      }
+
+      // SA MODAL
+      let SA_MODAL_TYPE = "";
+      let SA_MODAL_ID = null;
+      function saOpenModal(type, id = null) {
+        const perm = permForSaType(type);
+        if (!requireSaPerm(perm)) return;
+        SA_MODAL_TYPE = type;
+        SA_MODAL_ID = id;
+        const modalDbKeys = {
+          news: "news",
+          team: "team",
+          facility: "facilities",
+          department: "departments",
+          house: "houses",
+          club: "clubs",
+          student: "students",
+          teacher: "teachers",
+          gallery: "gallery",
+          doc: "documents",
+          slide: "homepageSlides",
+          notif: "notifications",
+          merch: "merchandise",
+        };
+        const item = id ? DB.getById(modalDbKeys[type] || type, id) : null;
+        const v = (f, def = "") =>
+          String(item?.[f] ?? def).replace(/"/g, "&quot;");
+        const titles = {
+          news: "News Post",
+          team: "Staff Member",
+          department: "Department",
+          facility: "Facility",
+          house: "House",
+          club: "Club",
+          student: "Student",
+          teacher: "Teacher",
+          gallery: "Gallery Photo",
+          doc: "Document",
+          slide: "Homepage Slide",
+          notif: "Notification",
+          merch: "Product",
+        };
+        document.getElementById("sa-modal-title").textContent =
+          (id ? "Edit " : "Add ") + titles[type];
+        let body = "";
+        if (type === "news")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Post title"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="news" ${item?.category === "news" ? "selected" : ""}>News</option><option value="event" ${item?.category === "event" ? "selected" : ""}>Event</option><option value="achievement" ${item?.category === "achievement" ? "selected" : ""}>Achievement</option><option value="announcement" ${item?.category === "announcement" ? "selected" : ""}>Announcement</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Excerpt</label><input class="finp" id="smf-excerpt" value="${v("excerpt")}" placeholder="Short summary"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Content</label><textarea class="finp fta" id="smf-content" placeholder="Full article…">${v("content")}</textarea></div>
+    ${saMediaField(item?.image, '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>')}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status === "published" ? "selected" : ""}>Published</option><option value="draft" ${item?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
+  </div>`;
+        else if (type === "team")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Full Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="Staff full name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Position</label><input class="finp" id="smf-position" value="${v("position")}" placeholder="e.g. Head of Department"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department</label><input class="finp" id="smf-department" value="${v("department")}" placeholder="e.g. Science"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Email</label><input class="finp" id="smf-email" value="${v("email")}" placeholder="staff@njuasco.edu.gh"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Bio</label><textarea class="finp fta" id="smf-bio" placeholder="Brief biography">${v("bio")}</textarea></div>
+    ${saMediaField(item?.image, '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>')}
+  </div>`;
+        else if (type === "facility")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Facility Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Science Laboratory"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="library" ${item?.category === "library" ? "selected" : ""}>Library</option><option value="laboratory" ${item?.category === "laboratory" ? "selected" : ""}>Laboratory</option><option value="sports" ${item?.category === "sports" ? "selected" : ""}>Sports</option><option value="classroom" ${item?.category === "classroom" ? "selected" : ""}>Classroom</option><option value="cafeteria" ${item?.category === "cafeteria" ? "selected" : ""}>Cafeteria</option><option value="other" ${item?.category === "other" ? "selected" : ""}>Other</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-desc" placeholder="Full description">${v("description")}</textarea></div>
+    ${saMediaField(item?.image, '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>')}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Features</label><input class="finp" id="smf-features" value="${esc((item?.features || []).join(", "))}" placeholder="Feature 1, Feature 2"></div>
+  </div>`;
+        else if (type === "department")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Science Department"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-desc" placeholder="Short department description">${v("description")}</textarea></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Subjects / Tags</label><input class="finp" id="smf-tags" value="${esc((item?.subjects || item?.tags || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Display Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
+    ${saMediaField(item?.image, '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
+  </div>`;
+        else if (type === "house")
+          body = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">House Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Red House"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Gender</label><select class="finp" id="smf-gender"><option ${item?.gender === "Boys" ? "selected" : ""}>Boys</option><option ${item?.gender === "Girls" ? "selected" : ""}>Girls</option><option ${item?.gender === "Mixed" ? "selected" : ""}>Mixed</option></select></div>
+    ${colorPickerField("smf-color", item?.color || "#2563eb", { label: "House Colour" })}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">House Master</label><input class="finp" id="smf-master" value="${v("master")}" placeholder="Mr./Mrs. Name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Assistant House Master</label><input class="finp" id="smf-assistantMaster" value="${v("assistantMaster")}" placeholder="Mr./Mrs. Name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Motto</label><input class="finp" id="smf-motto" value="${v("motto")}" placeholder="House motto"></div>
+    <div style="grid-column:1/-1">${saMediaField(item?.image, '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>')}</div>
+    <div style="grid-column:1/-1"><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">House Story</label><textarea class="finp fta" id="smf-story" placeholder="House story and details">${v("story")}</textarea></div>
+    <div style="grid-column:1/-1"><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Add House Gallery Images</label><input class="finp" id="smf-gallery-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" multiple></div>
+    <div style="grid-column:1/-1"><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Achievements</label><textarea class="finp fta" id="smf-achievements" placeholder="Achievements">${v("achievements")}</textarea></div>
+  </div>`;
+        else if (type === "club")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Club Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Science Club"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="STEM" ${item?.category === "STEM" ? "selected" : ""}>STEM</option><option value="Arts" ${item?.category === "Arts" ? "selected" : ""}>Arts</option><option value="Academic" ${item?.category === "Academic" ? "selected" : ""}>Academic</option><option value="Social" ${item?.category === "Social" ? "selected" : ""}>Social</option><option value="Sports" ${item?.category === "Sports" ? "selected" : ""}>Sports</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Coordinator</label><input class="finp" id="smf-coordinator" value="${v("coordinator")}" placeholder="Teacher name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Meeting Days</label><input class="finp" id="smf-meetingDays" value="${v("meetingDays")}" placeholder="Thursdays, 3:00 PM"></div>
+    ${saMediaField(item?.image, '<span class="ico ico-masks" data-ico="masks" aria-hidden="true"></span>')}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-description" placeholder="Club description">${v("description")}</textarea></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Achievements</label><input class="finp" id="smf-achievements" value="${v("achievements")}" placeholder="Achievements"></div>
+  </div>`;
+        else if (type === "student")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Full Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="Student full name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Programme</label><select class="finp" id="smf-programme"><option ${item?.programme === "General Science" ? "selected" : ""}>General Science</option><option ${item?.programme === "General Arts" ? "selected" : ""}>General Arts</option><option ${item?.programme === "Business" ? "selected" : ""}>Business</option><option ${item?.programme === "Home Economics" ? "selected" : ""}>Home Economics</option><option ${item?.programme === "Visual Arts" ? "selected" : ""}>Visual Arts</option><option ${item?.programme === "Agriculture" ? "selected" : ""}>Agriculture</option><option ${item?.programme === "Languages" ? "selected" : ""}>Languages</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Year</label><select class="finp" id="smf-year"><option ${item?.year === "Year 1" ? "selected" : ""}>Year 1</option><option ${item?.year === "Year 2" ? "selected" : ""}>Year 2</option><option ${item?.year === "Year 3" ? "selected" : ""}>Year 3</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Class</label><input class="finp" id="smf-class" value="${v("class")}" placeholder="SCI-1A"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Guardian Phone</label><input class="finp" id="smf-guardianPhone" value="${v("guardianPhone")}" placeholder="+233 XX XXX XXXX"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="active" ${item?.status === "active" ? "selected" : ""}>Active</option><option value="suspended" ${item?.status === "suspended" ? "selected" : ""}>Suspended</option><option value="graduated" ${item?.status === "graduated" ? "selected" : ""}>Graduated</option></select></div>
+  </div>`;
+        else if (type === "teacher")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Full Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="Teacher full name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Subject</label><input class="finp" id="smf-subject" value="${v("subject")}" placeholder="Biology/Science"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department</label><input class="finp" id="smf-department" value="${v("department")}" placeholder="Science"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Email</label><input class="finp" id="smf-email" value="${v("email")}" placeholder="teacher@njuasco.edu.gh"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Phone</label><input class="finp" id="smf-phone" value="${v("phone")}" placeholder="+233 XX XXX XXXX"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="active" ${item?.status === "active" ? "selected" : ""}>Active</option><option value="inactive" ${item?.status === "inactive" ? "selected" : ""}>Inactive</option></select></div>
+  </div>`;
+        else if (type === "gallery")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Photo title"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="events" ${item?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${item?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${item?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${item?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${item?.category === "campus" ? "selected" : ""}>Campus</option></select></div>
+    ${saMediaField(item?.image, '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>')}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><input class="finp" id="smf-desc" value="${v("description")}" placeholder="Brief description"></div>
+    ${colorPickerField("smf-color", item?.color || "linear-gradient(135deg,#1e40af,#4f46e5)", { mode: "gradient", label: "Background Colour" })}
+  </div>`;
+        else if (type === "doc")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Document Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="School prospectus"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><input class="finp" id="smf-cat" value="${v("category", "General")}" placeholder="Admissions, Academics, Students"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-desc" placeholder="Short description">${v("description")}</textarea></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Upload PDF / Document</label><input class="finp" id="smf-doc-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,image/*"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">File / Link URL</label><input class="finp" id="smf-file-url" value="${v("file", "#")}" placeholder="https://... or uploaded file"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status !== "draft" ? "selected" : ""}>Published</option><option value="draft" ${item?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
+  </div>`;
+        else if (type === "slide")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Slide Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Campus front view"></div>
+    ${saMediaField(item?.image, "njb.jpg")}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="active" ${item?.status !== "inactive" ? "selected" : ""}>Active</option><option value="inactive" ${item?.status === "inactive" ? "selected" : ""}>Inactive</option></select></div>
+  </div>`;
+        else if (type === "notif")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Notification title"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Message</label><textarea class="finp fta" id="smf-message" placeholder="Message…">${v("message")}</textarea></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Audience</label><select class="finp" id="smf-audience"><option ${item?.audience === "All Users" ? "selected" : ""}>All Users</option><option ${item?.audience === "All Students" ? "selected" : ""}>All Students</option><option ${item?.audience === "Year 1 Students" ? "selected" : ""}>Year 1 Students</option><option ${item?.audience === "Year 2 Students" ? "selected" : ""}>Year 2 Students</option><option ${item?.audience === "Year 3 Students" ? "selected" : ""}>Year 3 Students</option><option ${item?.audience === "All Teachers" ? "selected" : ""}>All Teachers</option><option ${item?.audience === "Parents" ? "selected" : ""}>Parents</option><option ${item?.audience === "Alumni" ? "selected" : ""}>Alumni</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Priority</label><select class="finp" id="smf-priority"><option value="normal" ${item?.priority === "normal" ? "selected" : ""}>Normal</option><option value="high" ${item?.priority === "high" ? "selected" : ""}>High</option><option value="urgent" ${item?.priority === "urgent" ? "selected" : ""}>Urgent</option></select></div>
+  </div>`;
+        else if (type === "merch")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Product Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="Product name"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Price (GHS)</label><input class="finp" id="smf-price" type="number" value="${v("price", "0")}" placeholder="Price"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option ${item?.category === "Clothing" ? "selected" : ""}>Clothing</option><option ${item?.category === "Accessories" ? "selected" : ""}>Accessories</option><option ${item?.category === "Stationery" ? "selected" : ""}>Stationery</option><option ${!item?.category || item?.category === "Other" ? "selected" : ""}>Other</option></select></div>
+    ${saMediaField(item?.image, '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span>')}
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-description" placeholder="Product description…">${v("description")}</textarea></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Stock</label><select class="finp" id="smf-stock"><option value="true" ${item?.stock ? "selected" : ""}>In Stock</option><option value="false" ${!item || !item.stock ? "selected" : ""}>Out of Stock</option></select></div>
+  </div>`;
+        document.getElementById("sa-modal-body").innerHTML = body;
+        document.getElementById("sa-modal-footer").innerHTML =
+          `<button class="btn btn-g" onclick="closeSaModal()">Cancel</button><button class="btn btn-p" onclick="saveSaModal()">Save</button>`;
+        document.getElementById("sa-modal-ov").style.display = "flex";
+        bindColorPickers(document.getElementById("sa-modal-body"));
+        hydrateIcons(document.getElementById("sa-modal-body"));
+      }
+      function closeSaModal() {
+        document.getElementById("sa-modal-ov").style.display = "none";
+      }
+      function gsmv(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+      }
+      async function saveSaModal() {
+        const type = SA_MODAL_TYPE;
+        const id = SA_MODAL_ID;
+        let data = {};
+        if (type === "news") {
+          data = {
+            title: gsmv("smf-title"),
+            category: gsmv("smf-cat"),
+            excerpt: gsmv("smf-excerpt"),
+            content: gsmv("smf-content"),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>',
+            status: gsmv("smf-status"),
+            date: new Date().toISOString().split("T")[0],
+            color: "linear-gradient(135deg,#1e40af,#4f46e5)",
+          };
+          if (!data.title) {
+            saToast("Title required");
+            return;
+          }
+        } else if (type === "team") {
+          data = {
+            name: gsmv("smf-name"),
+            position: gsmv("smf-position"),
+            department: gsmv("smf-department"),
+            email: gsmv("smf-email"),
+            bio: gsmv("smf-bio"),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>',
+            color: "linear-gradient(135deg,#2563eb,#4338ca)",
+            order: id ? DB.getById("team", id)?.order || Date.now() : Date.now(),
+          };
+          if (!data.name) {
+            saToast("Name required");
+            return;
+          }
+        } else if (type === "facility") {
+          data = {
+            name: gsmv("smf-name"),
+            category: gsmv("smf-cat"),
+            description: gsmv("smf-desc"),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>',
+            color: "linear-gradient(135deg,#1e40af,#4f46e5)",
+            features: gsmv("smf-features")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            order: id ? DB.getById("facilities", id)?.order || Date.now() : Date.now(),
+          };
+          if (!data.name) {
+            saToast("Facility name required");
+            return;
+          }
+        } else if (type === "department") {
+          data = {
+            name: gsmv("smf-name"),
+            description: gsmv("smf-desc"),
+            subjects: gsmv("smf-tags")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
+            color: "rgba(37,99,235,.1)",
+            order: parseInt(gsmv("smf-order"), 10) || (id ? DB.getById("departments", id)?.order : Date.now()) || Date.now(),
+          };
+          if (!data.name) {
+            saToast("Department name required");
+            return;
+          }
+        } else if (type === "house") {
+          const existingHouse = id ? DB.getById("houses", id) : null;
+          const galleryFiles = Array.from(document.getElementById("smf-gallery-files")?.files || []);
+          const gallery = Array.isArray(existingHouse?.gallery) ? [...existingHouse.gallery] : [];
+          for (const file of galleryFiles) gallery.push(await saUploadImageAsset(file, "houses"));
+          data = {
+            name: gsmv("smf-name"),
+            gender: gsmv("smf-gender"),
+            color: gsmv("smf-color") || "#2563eb",
+            image:
+              (await saMediaValue(existingHouse?.image || "", "houses")) ||
+              '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>',
+            master: gsmv("smf-master"),
+            assistantMaster: gsmv("smf-assistantMaster"),
+            motto: gsmv("smf-motto"),
+            story: gsmv("smf-story"),
+            achievements: gsmv("smf-achievements"),
+            gallery,
+            order: id ? DB.getById("houses", id)?.order || Date.now() : Date.now(),
+          };
+          if (!data.name) {
+            saToast("House name required");
+            return;
+          }
+        } else if (type === "club") {
+          data = {
+            name: gsmv("smf-name"),
+            category: gsmv("smf-cat"),
+            coordinator: gsmv("smf-coordinator"),
+            meetingDays: gsmv("smf-meetingDays"),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-masks" data-ico="masks" aria-hidden="true"></span>',
+            description: gsmv("smf-description"),
+            achievements: gsmv("smf-achievements"),
+            color: "rgba(37,99,235,.1)",
+            colorText: "#2563eb",
+            order: id ? DB.getById("clubs", id)?.order || Date.now() : Date.now(),
+          };
+          if (!data.name) {
+            saToast("Club name required");
+            return;
+          }
+        } else if (type === "student") {
+          data = {
+            name: gsmv("smf-name"),
+            programme: gsmv("smf-programme"),
+            year: gsmv("smf-year"),
+            class: gsmv("smf-class"),
+            guardianPhone: gsmv("smf-guardianPhone"),
+            status: gsmv("smf-status"),
+            admissionDate:
+              (id && DB.getById("students", id)?.admissionDate) ||
+              new Date().toISOString().split("T")[0],
+            indexNo:
+              (id && DB.getById("students", id)?.indexNo) ||
+              "ST-" + Date.now().toString(36).toUpperCase(),
+          };
+          if (!data.name) {
+            saToast("Student name required");
+            return;
+          }
+        } else if (type === "teacher") {
+          data = {
+            name: gsmv("smf-name"),
+            subject: gsmv("smf-subject"),
+            department: gsmv("smf-department"),
+            email: gsmv("smf-email"),
+            phone: gsmv("smf-phone"),
+            status: gsmv("smf-status"),
+            formMaster: false,
+            formClass: "",
+            classes: [],
+          };
+          if (!data.name) {
+            saToast("Teacher name required");
+            return;
+          }
+        } else if (type === "gallery") {
+          data = {
+            title: gsmv("smf-title"),
+            category: gsmv("smf-cat"),
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
+            description: gsmv("smf-desc"),
+            color: gsmv("smf-color") || "linear-gradient(135deg,#1e40af,#4f46e5)",
+          };
+          if (!data.title) {
+            saToast("Title required");
+            return;
+          }
+        } else if (type === "doc") {
+          data = {
+            title: gsmv("smf-title"),
+            category: gsmv("smf-cat") || "General",
+            description: gsmv("smf-desc"),
+            file: await saDocFileValue(id ? DB.getById("documents", id)?.file || "#" : "#"),
+            order: parseInt(gsmv("smf-order"), 10) || Date.now(),
+            status: gsmv("smf-status") || "published",
+          };
+          if (!data.title) {
+            saToast("Document title required");
+            return;
+          }
+        } else if (type === "slide") {
+          data = {
+            title: gsmv("smf-title"),
+            image: (await saMediaValue()) || "njb.jpg",
+            order: parseInt(gsmv("smf-order"), 10) || Date.now(),
+            status: gsmv("smf-status") || "active",
+          };
+          if (!data.title) {
+            saToast("Slide title required");
+            return;
+          }
+        } else if (type === "notif") {
+          data = {
+            title: gsmv("smf-title"),
+            message: gsmv("smf-message"),
+            audience: gsmv("smf-audience"),
+            priority: gsmv("smf-priority"),
+            status: "delivered",
+            sentDate: new Date().toISOString().split("T")[0],
+            reads: 0,
+          };
+          if (!data.title || !data.message) {
+            saToast("Title and message required");
+            return;
+          }
+        } else if (type === "merch") {
+          data = {
+            name: gsmv("smf-name"),
+            price: parseFloat(gsmv("smf-price")) || 0,
+            currency: "GHS",
+            image:
+              (await saMediaValue()) ||
+              '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span>',
+            description: gsmv("smf-description"),
+            stock: gsmv("smf-stock") === "true",
+            category: gsmv("smf-cat") || "Other",
+          };
+          if (!data.name) {
+            saToast("Product name required");
+            return;
+          }
+        }
+        const dbKey = {
+          news: "news",
+          team: "team",
+          facility: "facilities",
+          department: "departments",
+          house: "houses",
+          club: "clubs",
+          student: "students",
+          teacher: "teachers",
+          gallery: "gallery",
+          doc: "documents",
+          slide: "homepageSlides",
+          notif: "notifications",
+          merch: "merchandise",
+        }[type];
+        if (!requireSaPerm(permForSaType(type))) return;
+        if (id) {
+          saUpdate(dbKey, id, data);
+        } else {
+          saAdd(dbKey, data);
+        }
+        saToast("Saved!");
+        closeSaModal();
+        loadSaPage(
+          type === "notif"
+            ? "notifications"
+            : type === "merch"
+              ? "merchandise"
+            : type === "doc"
+              ? "documents"
+            : type === "facility"
+              ? "facilities"
+            : type === "department"
+              ? "departments"
+              : type === "slide"
+                ? "slides"
+              : type === "house"
+                  ? "houses"
+                  : type === "club"
+                    ? "clubs"
+                    : type === "student"
+                      ? "students"
+                      : type === "teacher"
+                        ? "teachers"
+                        : type,
+        );
+        saSyncAfterChange("Saved!").then(() => loadSaPage(CURRENT_SA_PAGE));
+      }
+      function saToast(msg) {
+        let t = document.getElementById("sa-toast-el");
+        if (!t) {
+          t = document.createElement("div");
+          t.id = "sa-toast-el";
+          t.style.cssText =
+            "position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--g900);color:#fff;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center";
+          document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.opacity = "1";
+        t.style.transform = "translateX(-50%) translateY(0)";
+        clearTimeout(t._t);
+        t._t = setTimeout(() => {
+          t.style.opacity = "0";
+          t.style.transform = "translateX(-50%) translateY(20px)";
+        }, 3000);
+      }
+      // Check for existing session
+      document.addEventListener("DOMContentLoaded", async () => {
+        const refreshSubAdmin = () => {
+          if (CURRENT_SA) {
+            getFreshCurrentSa();
+            loadSaPage(CURRENT_SA_PAGE);
+          }
+        };
+        let subAdminRefreshTimer = null;
+        const scheduleSubAdminRefresh = () => {
+          clearTimeout(subAdminRefreshTimer);
+          subAdminRefreshTimer = setTimeout(refreshSubAdmin, 150);
+        };
+        if (DB?.syncRemoteAll) {
+          await DB.syncRemoteAll();
+          refreshSubAdmin();
+        }
+        setInterval(() => {
+          if (document.hidden || !DB?.syncRemoteAll) return;
+          DB.syncRemoteAll().then(scheduleSubAdminRefresh);
+        }, 30000);
+        if (DB?.subscribeRemoteInfo) {
+          DB.subscribeRemoteInfo(scheduleSubAdminRefresh);
+        }
+        if (DB?.subscribeRemoteContent) {
+          DB.subscribeRemoteContent(scheduleSubAdminRefresh);
+        }
+        document.getElementById("sa-user")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saContinueEmail();
+        });
+        document.getElementById("sa-pass")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saLogin();
+        });
+        document.getElementById("sa-confirm-pass")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saSavePassword();
+        });
+        hydrateIcons?.(document);
+        const shortcutEl = document.getElementById("sa-shortcut-url");
+        if (shortcutEl) {
+          shortcutEl.textContent = new URL("staff.html", window.location.href).pathname;
+        }
+        const saEmailWrap = document.getElementById("sa-user")?.closest(".sa-inp-wrap");
+        const saPassWrap = document.getElementById("sa-pass-wrap");
+        const saDivider = document.querySelector("#sa-login-screen .sa-login-divider");
+        const saContinueBtn = document.getElementById("sa-continue-btn");
+        const saLoginBtn = document.getElementById("sa-login-btn");
+        const saSetupWrap = document.getElementById("sa-setup-wrap");
+        const saSetupBtn = document.getElementById("sa-setup-btn");
+        const saBackBtn = document.getElementById("sa-back-btn");
+        if (saEmailWrap) saEmailWrap.style.display = "flex";
+        if (saPassWrap) saPassWrap.style.display = "flex";
+        if (saDivider) saDivider.style.display = "none";
+        if (saContinueBtn) saContinueBtn.style.display = "none";
+        if (saLoginBtn) saLoginBtn.style.display = "block";
+        if (saSetupWrap) saSetupWrap.style.display = "none";
+        if (saSetupBtn) saSetupBtn.style.display = "none";
+        if (saBackBtn) saBackBtn.style.display = "none";
+
+        const params = new URLSearchParams(location.search);
+        try {
+          await DB.completeAuthRedirect?.();
+        } catch (error) {
+          saToast(error?.message || "Sign-in could not be completed.");
+        }
+        try {
+          const restored = await tryRestoreSubAdminSession();
+          if (restored) {
+            if (params.toString()) history.replaceState(null, "", location.pathname);
+            return;
+          }
+        } catch (error) {
+          saToast(error?.message || "Could not sign you in. Check your sub-admin access.");
+        }
+      });
+      document.getElementById("sa-modal-ov").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("sa-modal-ov")) closeSaModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeSaModal();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e3a8a" />
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <title>Portal Maintenance | NJUASCO</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --blue: #1e40af;
+        --blue-light: #2563eb;
+        --navy: #0f172a;
+        --g50: #f8fafc;
+        --g100: #f1f5f9;
+        --g200: #e2e8f0;
+        --g400: #94a3b8;
+        --g500: #64748b;
+        --g700: #334155;
+        --g900: #0f172a;
+        --r: 12px;
+        --rl: 18px;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: var(--g700);
+        background: var(--g50);
+        min-height: 100vh;
+        min-height: 100dvh;
+        line-height: 1.6;
+      }
+      .cs-wrap {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      .cs-top {
+        padding: 16px 20px;
+        padding-top: max(16px, env(safe-area-inset-top));
+        border-bottom: 1px solid var(--g200);
+        background: #fff;
+      }
+      .cs-brand {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .cs-brand img {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+      .cs-brand-name {
+        font-family: "Playfair Display", serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--g900);
+        line-height: 1.2;
+      }
+      .cs-brand-sub {
+        font-size: 12px;
+        color: var(--g500);
+        font-weight: 500;
+      }
+      .cs-main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px 32px;
+        padding-bottom: max(32px, env(safe-area-inset-bottom));
+      }
+      .cs-card {
+        width: 100%;
+        max-width: 920px;
+        background: #fff;
+        border-radius: var(--rl);
+        border: 1px solid var(--g200);
+        box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 768px) {
+        .cs-card {
+          grid-template-columns: 280px 1fr;
+        }
+      }
+      @media (min-width: 900px) {
+        .cs-card {
+          grid-template-columns: 320px 1fr;
+        }
+      }
+      .cs-aside {
+        background: linear-gradient(165deg, #1e3a8a 0%, #1e40af 55%, #2563eb 100%);
+        color: #fff;
+        padding: 36px 28px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+      }
+      @media (max-width: 767px) {
+        .cs-aside {
+          padding: 28px 24px;
+        }
+      }
+      .cs-aside-logo {
+        width: 96px;
+        height: 96px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+      .cs-aside-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .cs-aside-school {
+        font-family: "Playfair Display", serif;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .cs-aside-meta {
+        font-size: 13px;
+        opacity: 0.85;
+        line-height: 1.5;
+      }
+      .cs-aside-meta strong {
+        display: block;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 11px;
+        margin-bottom: 4px;
+        opacity: 0.75;
+      }
+      .cs-body {
+        padding: 32px 24px;
+      }
+      @media (min-width: 768px) {
+        .cs-body {
+          padding: 40px 36px;
+        }
+      }
+      .cs-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--blue);
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        padding: 6px 12px;
+        border-radius: 100px;
+        margin-bottom: 18px;
+      }
+      .cs-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blue-light);
+        flex-shrink: 0;
+      }
+      .cs-body h1 {
+        font-family: "Playfair Display", serif;
+        font-size: clamp(26px, 4vw, 34px);
+        font-weight: 900;
+        color: var(--g900);
+        line-height: 1.15;
+        margin-bottom: 14px;
+      }
+      .cs-lead {
+        font-size: 15px;
+        color: var(--g500);
+        max-width: 52ch;
+        margin-bottom: 28px;
+      }
+      .cs-portals {
+        list-style: none;
+        display: grid;
+        gap: 10px;
+        margin-bottom: 32px;
+      }
+      @media (min-width: 540px) {
+        .cs-portals {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .cs-portals li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 14px;
+        background: var(--g50);
+        border: 1px solid var(--g200);
+        border-radius: var(--r);
+      }
+      .cs-portals li svg {
+        width: 20px;
+        height: 20px;
+        stroke: var(--blue);
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .cs-portals strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--g900);
+        margin-bottom: 2px;
+      }
+      .cs-portals span {
+        font-size: 12px;
+        color: var(--g500);
+        line-height: 1.45;
+      }
+      .cs-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .cs-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: var(--r);
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+      }
+      .cs-btn-primary {
+        background: var(--blue);
+        color: #fff;
+      }
+      .cs-btn-primary:hover {
+        background: #1d4ed8;
+      }
+      .cs-btn-secondary {
+        background: #fff;
+        color: var(--g700);
+        border: 1px solid var(--g200);
+      }
+      .cs-btn-secondary:hover {
+        background: var(--g50);
+        border-color: var(--g400);
+      }
+      @media (max-width: 479px) {
+        .cs-actions {
+          flex-direction: column;
+        }
+        .cs-btn {
+          width: 100%;
+        }
+      }
+      .cs-foot {
+        padding: 14px 20px;
+        padding-bottom: max(14px, env(safe-area-inset-bottom));
+        text-align: center;
+        font-size: 12px;
+        color: var(--g400);
+        border-top: 1px solid var(--g200);
+        background: #fff;
+      }
+      .cs-foot a {
+        color: var(--blue-light);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .cs-foot a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cs-wrap">
+      <header class="cs-top">
+        <div class="cs-brand">
+          <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+          <div>
+            <div class="cs-brand-name">New Juaben Senior High</div>
+            <div class="cs-brand-sub">NJUASCO · Est. 1953</div>
+          </div>
+        </div>
+      </header>
+
+      <main class="cs-main">
+        <div class="cs-card">
+          <aside class="cs-aside">
+            <div class="cs-aside-logo">
+              <img src="NJUASCO LOGO.png" alt="" />
+            </div>
+            <div class="cs-aside-school">NJUASCO Portal</div>
+            <p class="cs-aside-meta">
+              <strong>War Cry</strong>
+              DAASEBRE MMA!
+            </p>
+            <p class="cs-aside-meta">
+              Student, teacher, parent, and alumni portals are being prepared
+              for the 2025/2026 academic year.
+            </p>
+          </aside>
+
+          <div class="cs-body">
+            <div class="cs-status">
+              <span class="cs-status-dot" aria-hidden="true"></span>
+              Under development
+            </div>
+            <h1>Portal access is temporarily unavailable</h1>
+            <p class="cs-lead">
+              We are setting up secure online access for grades, timetables,
+              announcements, and school records. Please check back soon or use
+              the main website in the meantime.
+            </p>
+
+            <ul class="cs-portals">
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M22 10 12 5 2 10l10 5 10-5z" />
+                  <path d="M6 12v5c3 2 9 2 12 0v-5" />
+                </svg>
+                <div>
+                  <strong>Student Portal</strong>
+                  <span>Results, timetable, and notices</span>
+                </div>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path
+                    d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"
+                  />
+                </svg>
+                <div>
+                  <strong>Teacher Portal</strong>
+                  <span>Class lists and staff resources</span>
+                </div>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <div>
+                  <strong>Parent Portal</strong>
+                  <span>Ward progress and fee updates</span>
+                </div>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 21h18" />
+                  <path d="M5 21V10" />
+                  <path d="M19 21V10" />
+                  <path d="M12 3 3 8h18l-9-5z" />
+                </svg>
+                <div>
+                  <strong>Alumni Portal</strong>
+                  <span>Network and school updates</span>
+                </div>
+              </li>
+            </ul>
+
+            <div class="cs-actions">
+              <a class="cs-btn cs-btn-primary" href="index.html"
+                >Return to website</a
+              >
+              <a class="cs-btn cs-btn-secondary" href="contact.html"
+                >Contact the school</a
+              >
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="cs-foot">
+        Need help now?
+        <a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a>
+        &nbsp;·&nbsp;
+        <a href="admissions.html">Admissions</a>
+      </footer>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="shared.js"></script>
+  </body>
+</html>

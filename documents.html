@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1e40af" />
+    <link rel="icon" type="image/x-icon" href="NJUASCO LOGO.ico" />
+    <link rel="apple-touch-icon" href="NJUASCO LOGO.png" />
+    <title>Documents | NJUASCO</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="shared.js"></script>
+    <div id="ldr"></div>
+    <div id="toast" role="alert" aria-live="polite"></div>
+    <header id="hdr">
+      <div class="hi">
+        <div class="brand" onclick="go('home')">
+          <div class="logo">
+            <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+          </div>
+          <div>
+            <div class="sn">New Juaben Senior High</div>
+            <div class="sc">NJUASCO · Est. 1953</div>
+          </div>
+        </div>
+        <nav class="hnav">
+          <div class="ni"><button class="nl" onclick="go('home')">Home</button></div>
+          <div class="ni"><button class="nl" onclick="go('about')">About</button></div>
+          <div class="ni"><button class="nl" onclick="go('academics')">Academics</button></div>
+          <div class="ni"><button class="nl" onclick="go('admissions')">Admissions</button></div>
+          <div class="ni"><button class="nl active" onclick="go('documents')">Documents</button></div>
+          <div class="ni"><button class="nl" onclick="go('contact')">Contact</button></div>
+        </nav>
+        <div class="ha">
+          <button class="hb" onclick="osearch()">
+            <span class="ico ico-search" data-ico="search" aria-hidden="true"></span>
+          </button>
+          <button class="hb" onclick="tnotif()" id="nbtn">
+            <span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span>
+            <span class="nbadge" id="notif-count">0</span>
+          </button>
+          <button class="ham" onclick="omob()" id="hambtn" aria-expanded="false">
+            <span class="hl2"></span><span class="hl2"></span><span class="hl2"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div id="npanel">
+      <div class="nph">
+        <span class="npt">Notifications</span>
+        <button class="npm" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div id="notif-list"></div>
+    </div>
+    <div id="mob">
+      <div class="mp">
+        <div class="mh">
+          <div>
+            <div class="msn">New Juaben Senior High</div>
+            <div class="msc">NJUASCO · Est. 1953</div>
+          </div>
+          <button class="mx" onclick="cmob()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="mnav">
+          <div class="ml" onclick="go('home');cmob();"><div class="mli" style="background:rgba(37,99,235,.1)">🏠</div>Home</div>
+          <div class="ml" onclick="go('about');cmob();"><div class="mli" style="background:rgba(147,51,234,.1)">ℹ️</div>About NJUASCO</div>
+          <div class="ml" onclick="go('academics');cmob();"><div class="mli" style="background:rgba(16,185,129,.1)">📚</div>Academics</div>
+          <div class="ml" onclick="go('admissions');cmob();"><div class="mli" style="background:rgba(245,158,11,.1)">📋</div>Admissions</div>
+          <div class="msl">News & Community</div>
+          <div class="ml" onclick="go('news');cmob();"><div class="mli" style="background:rgba(37,99,235,.1)">📰</div>News & Events</div>
+          <div class="ml" onclick="go('gallery');cmob();"><div class="mli" style="background:rgba(147,51,234,.1)">🖼️</div>Gallery</div>
+          <div class="ml" onclick="go('facilities');cmob();"><div class="mli" style="background:rgba(16,185,129,.1)">🏛️</div>Facilities</div>
+          <div class="ml" onclick="go('clubs');cmob();"><div class="mli" style="background:rgba(245,158,11,.1)">🎭</div>Clubs & Societies</div>
+          <div class="ml" onclick="go('njosa');cmob();"><div class="mli" style="background:rgba(245,158,11,.1)">🎓</div>NJOSA Alumni</div>
+          <div class="ml active" onclick="go('documents');cmob();"><div class="mli" style="background:rgba(37,99,235,.1)">📄</div>Documents</div>
+          <div class="msl">Portals & Shop</div>
+          <div class="ml" onclick="go('portal-hub');cmob();"><div class="mli" style="background:rgba(37,99,235,.1)">💻</div>Portal Hub</div>
+          <div class="ml" onclick="go('shop');cmob();"><div class="mli" style="background:rgba(16,185,129,.1)">🛍️</div>School Shop</div>
+          <div class="ml" onclick="go('contact');cmob();"><div class="mli" style="background:rgba(6,182,212,.1)">📞</div>Contact Us</div>
+        </div>
+        <div class="mft">
+          <button class="mdb" onclick="go('donate');cmob();">❤️ Donate to NJUASCO</button>
+        </div>
+      </div>
+    </div>
+    <div id="sov">
+      <div class="scard">
+        <div class="shead">
+          <input
+            id="sinput"
+            placeholder="Search NJUASCO..."
+            oninput="dosearch(this.value)"
+          />
+          <button class="scl" onclick="csearch()">
+            <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="sres" id="sres"></div>
+      </div>
+    </div>
+    <main>
+      <div class="ph">
+        <div class="container phc">
+          <div class="bc">
+            <span onclick="go('home')">Home</span><span class="bcs">›</span>
+            <span class="bcc">Documents</span>
+          </div>
+          <h1 class="pht">School <span class="hl">Documents</span></h1>
+          <p class="phd">
+            Prospectus, forms, policies, calendars, and other official resources
+            for students, parents, alumni, and staff.
+          </p>
+        </div>
+      </div>
+      <section class="sec">
+        <div class="container">
+          <div class="documents-grid" id="documents-grid"></div>
+        </div>
+      </section>
+    </main>
+    <footer id="footer">
+      <div class="container">
+        <div class="fgrid">
+          <div>
+            <div class="flogo">
+              <img src="NJUASCO LOGO.png" alt="NJUASCO logo" />
+            </div>
+            <div class="fbn">New Juaben Senior High School</div>
+            <p class="fbd">
+              Providing quality secondary education in Koforidua, Eastern
+              Region, Ghana since 1953. HARDWORK.
+            </p>
+            <div class="fcode">
+              <span class="ico ico-clipboard" data-ico="clipboard" aria-hidden="true"></span>
+              Code: 0020103
+            </div>
+          </div>
+          <div>
+            <div class="fh">Quick Links</div>
+            <ul class="flinks">
+              <li><a onclick="go('home')">Home</a></li>
+              <li><a onclick="go('about')">About Us</a></li>
+              <li><a onclick="go('academics')">Academics</a></li>
+              <li><a onclick="go('admissions')">Admissions</a></li>
+              <li><a onclick="go('news')">News & Events</a></li>
+              <li><a onclick="go('contact')">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="fh">Community</div>
+            <ul class="flinks">
+              <li><a onclick="go('njosa')">NJOSA Alumni</a></li>
+              <li><a onclick="go('shop')">School Shop</a></li>
+              <li><a onclick="go('donate')">Donate</a></li>
+              <li><a onclick="go('gallery')">Photo Gallery</a></li>
+              <li><a onclick="go('documents')">Documents</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="fbot">
+          <span>© 2025 New Juaben Senior High School. All rights reserved.</span>
+          <span>Created by NOVATech & Galaxy Design Studio</span>
+        </div>
+      </div>
+    </footer>
+    <script src="page-common.js"></script>
+  </body>
+</html>
