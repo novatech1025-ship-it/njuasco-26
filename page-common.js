@@ -752,7 +752,7 @@ function showAdminPasswordStep(email = "") {
     passwordInput.placeholder = "Admin password";
     passwordInput.focus();
   }
-  toast("Enter your admin email and password to continue.");
+  toast("Enter your admin email and password to continue. Your session stays active for 5 hours on this device.");
 }
 
 // ── APPLY WIZARD ───────────────────────────────────────────────

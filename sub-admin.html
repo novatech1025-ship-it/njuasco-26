@@ -600,7 +600,7 @@
     <div id="staff-otp-ov" role="dialog" aria-modal="true">
       <div class="staff-otp-box">
         <h2>Verify it's you</h2>
-        <p>SMS verification is currently disabled. Use your sub-admin email and password to sign in.</p>
+        <p>SMS verification is currently disabled. Use your sub-admin email and password to sign in. Your session stays active for 5 hours on this device.</p>
         <div class="fg"><label class="flbl">Mobile Number</label><input class="finp" id="staff-otp-phone" type="tel" placeholder="+233 XX XXX XXXX" /></div>
         <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-p" type="button" id="staff-otp-send">Send code</button></div>
         <div id="staff-otp-panel" style="display:none;margin-top:16px">
@@ -689,7 +689,7 @@
             />
           </div>
           <p style="font-size: 12px; color: rgba(255, 255, 255, 0.55); margin: 0 0 10px; line-height: 1.5">
-            Welcome! This is your first login. Create a password you will use next time.
+            Welcome! This is your first login. Create a password you will use next time. After that, your portal stays signed in for 5 hours on this device.
           </p>
         </div>
         <button class="sa-login-btn" id="sa-continue-btn" type="button" onclick="saContinueEmail()" style="display: none">
@@ -2214,6 +2214,11 @@
             user.identities.some((item) => item?.provider === "google"));
         let nextProfile = DB.findSubAdminByEmail?.(CURRENT_AUTH_EMAIL) || profile;
         if (nextProfile?.id && DB.subAdminNeedsPasswordSetup?.(nextProfile, user)) {
+          saToast("Create your password before entering the sub-admin portal.");
+          revealSubAdminPasswordStep(CURRENT_AUTH_EMAIL);
+          return false;
+        }
+        if (nextProfile?.id && !nextProfile.passwordSet && !nextProfile.staffPassword) {
           nextProfile = await DB.markSubAdminPasswordReady?.(
             nextProfile,
             isGoogle ? "— Google Sign-In —" : "Set",
@@ -2249,7 +2254,10 @@
         setSaLoginBusy(true, "Signing in...");
         try {
           const { user, profile } = await DB.signInSubAdmin(email, password);
-          await completeSaSession(user, profile);
+          const entered = await completeSaSession(user, profile);
+          if (entered === false) {
+            return;
+          }
         } catch (error) {
           saToast(error?.message || "Could not sign in to the sub-admin dashboard.");
         } finally {
@@ -2307,7 +2315,10 @@
         if (portalMatch && portalMatch.email !== DB._email(user.email)) return false;
         if (!portalMatch) return false;
         const profile = await DB.getSubAdminProfileForUser(user);
-        await completeSaSession(user, profile);
+        const entered = await completeSaSession(user, profile);
+        if (entered === false) {
+          return false;
+        }
         return true;
       }
 
