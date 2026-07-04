@@ -21,6 +21,10 @@
           return d || "";
         }
       }
+      function itemLabel(value) {
+        const text = String(value || "").trim();
+        return text || "Untitled question";
+      }
       let toastTimer;
       function toast(msg, type = "") {
         const t = document.getElementById("toast");
@@ -1139,8 +1143,36 @@
       function renderAIFaqEditor(items = []) {
         const wrap = document.getElementById("ai-faq-editor");
         if (!wrap) return;
-        wrap.innerHTML = (items.length ? items : []).map((item, i) => faqRowHtml(item, i)).join("") ||
-          '<p style="padding:12px 0;color:var(--g400);font-size:13px">No Q&amp;A entries yet. Add common questions students and parents ask.</p>';
+        const rows = (items.length ? items : []).map((item, i) => faqRowHtml(item, i)).join("");
+        wrap.innerHTML = rows || '<p style="padding:12px 0;color:var(--g400);font-size:13px">No Q&amp;A entries yet. Add common questions students and parents ask.</p>';
+        wrap.querySelectorAll(".repeater-row").forEach((row, index) => {
+          row.style.marginBottom = "10px";
+          const head = row.querySelector(".repeater-head");
+          if (head) {
+            head.style.paddingBottom = "8px";
+            head.style.marginBottom = "8px";
+          }
+          const fields = row.querySelectorAll(".fg, .form-grid");
+          fields.forEach((field) => {
+            field.style.display = "none";
+          });
+          const summary = document.createElement("div");
+          summary.className = "ai-faq-summary";
+          summary.style.cssText = "font-size:13px;color:var(--g700);line-height:1.5;padding:6px 0 2px;cursor:pointer";
+          summary.textContent = `${index + 1}. ${itemLabel(items[index]?.q || "Untitled question")}`;
+          summary.onclick = () => {
+            const details = row.querySelectorAll(".fg, .form-grid");
+            const visible = summary.dataset.open === "1";
+            details.forEach((field) => {
+              field.style.display = visible ? "none" : "block";
+            });
+            summary.dataset.open = visible ? "0" : "1";
+            summary.textContent = visible
+              ? `${index + 1}. ${itemLabel(items[index]?.q || "Untitled question")}`
+              : `${index + 1}. ${itemLabel(items[index]?.q || "Untitled question")} · click to collapse`;
+          };
+          row.insertBefore(summary, row.firstChild);
+        });
       }
 
       function collectTimelineFromEditor() {
@@ -1503,7 +1535,7 @@
                 (item, index) => `<div class="repeater-row" style="align-items:flex-start">
                   <div style="flex:1">
                     <div style="font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Point ${index + 1}</div>
-                    <div style="font-size:14px;color:var(--g800);line-height:1.6;white-space:pre-wrap">${esc(item.text || "")}</div>
+                    <div style="font-size:14px;color:var(--g800);line-height:1.5;white-space:pre-wrap">${esc(item.text || "")}</div>
                     <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.createdAt ? fmtDate(item.createdAt) : ""}</div>
                   </div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1581,10 +1613,20 @@
         renderAIKnowledgePoints(points);
       }
 
+      function toggleAITrainingPanel(force) {
+        const panel = document.getElementById("ai-training-panel");
+        const btn = document.getElementById("ai-training-toggle");
+        if (!panel || !btn) return;
+        const shouldShow = typeof force === "boolean" ? force : panel.style.display === "none";
+        panel.style.display = shouldShow ? "block" : "none";
+        btn.textContent = shouldShow ? "Hide AI training" : "Show AI training";
+      }
+
       function loadAIKnowledge() {
         const i = DB.getInfo();
         renderAIKnowledgePoints(i.aiKnowledgePoints || []);
         renderAIFaqEditor(i.aiFaqs || []);
+        toggleAITrainingPanel(false);
       }
 
       async function saveAIKnowledge() {
@@ -1600,6 +1642,7 @@
       window.editAIKnowledgePoint = editAIKnowledgePoint;
       window.removeAIKnowledgePoint = removeAIKnowledgePoint;
       window.saveAIKnowledge = saveAIKnowledge;
+      window.toggleAITrainingPanel = toggleAITrainingPanel;
 
       // ── NEWS ───────────────────────────────────────────────────
       function renderNews() {

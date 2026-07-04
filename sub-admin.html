@@ -903,6 +903,33 @@
                   </div>
                   <div id="sa-recent-logs"></div>
                 </div>
+                <div
+                  style="
+                    background: #fff;
+                    border-radius: var(--rl);
+                    padding: 22px;
+                    box-shadow: var(--sh1);
+                  "
+                >
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+                    <div>
+                      <div style="font-size:15px;font-weight:700;color:var(--g900);margin-bottom:4px">AI Assistant Setup</div>
+                      <div style="font-size:13px;color:var(--g500)">A compact summary of the official AI facts and answers available to the site.</div>
+                    </div>
+                    <button class="btn btn-g" type="button" onclick="toggleSaAiPanel()" id="sa-ai-toggle">Show details</button>
+                  </div>
+                  <div id="sa-ai-panel" style="display:none;display:grid;gap:12px">
+                    <div style="padding:12px 14px;border:1px solid var(--g100);border-radius:12px;background:var(--g50)">
+                      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin-bottom:4px">Official facts</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--g900)"><span id="sa-ai-points-count">0</span> knowledge points</div>
+                    </div>
+                    <div style="padding:12px 14px;border:1px solid var(--g100);border-radius:12px;background:var(--g50)">
+                      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin-bottom:4px">Quick answers</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--g900)"><span id="sa-ai-faq-count">0</span> Q&amp;A entries</div>
+                    </div>
+                    <div style="font-size:13px;color:var(--g500)">These details are managed from the admin side. The sub-admin view keeps them short and grouped for quick review.</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2601,8 +2628,30 @@
         requestAnimationFrame(() => hydrateIcons(document));
       }
 
+      function toggleSaAiPanel(force) {
+        const panel = document.getElementById("sa-ai-panel");
+        const btn = document.getElementById("sa-ai-toggle");
+        if (!panel || !btn) return;
+        const shouldShow = typeof force === "boolean" ? force : panel.style.display === "none";
+        panel.style.display = shouldShow ? "grid" : "none";
+        btn.textContent = shouldShow ? "Hide details" : "Show details";
+      }
+
+      function refreshSaAiSummary() {
+        const points = document.getElementById("sa-ai-points-count");
+        const faqs = document.getElementById("sa-ai-faq-count");
+        if (!points || !faqs) return;
+        const info = DB.getInfo?.() || {};
+        const knowledgePoints = Array.isArray(info.aiKnowledgePoints) ? info.aiKnowledgePoints : [];
+        const faqEntries = Array.isArray(info.aiFaqs) ? info.aiFaqs : [];
+        points.textContent = knowledgePoints.length;
+        faqs.textContent = faqEntries.length;
+      }
+
       function loadSaDashboard() {
         const perms = CURRENT_SA?.permissions || [];
+        refreshSaAiSummary();
+        toggleSaAiPanel(false);
         // Stats based on what they can see
         let html = "";
         if (perms.includes("news")) {
