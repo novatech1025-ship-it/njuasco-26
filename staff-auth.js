@@ -1,6 +1,8 @@
 // Staff portal SMS step-up auth.
 (function () {
-  const STAFF_OTP_ENABLED = false;
+  // Allow deployments to toggle staff OTP via the global config `window.NJUASCO_SUPABASE.staffOtpEnabled`.
+  // Fallback to false when the config isn't present.
+  const STAFF_OTP_ENABLED = Boolean((typeof window !== 'undefined' && window.NJUASCO_SUPABASE && window.NJUASCO_SUPABASE.staffOtpEnabled) || false);
   const TRUST_MS = 5 * 60 * 60 * 1000;
   const REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
 

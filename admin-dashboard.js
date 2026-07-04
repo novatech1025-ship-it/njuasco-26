@@ -1529,24 +1529,61 @@
       function renderAIKnowledgePoints(items = []) {
         const wrap = document.getElementById("ai-knowledge-points");
         if (!wrap) return;
-        wrap.innerHTML = items.length
-          ? items
-              .map(
-                (item, index) => `<div class="repeater-row" style="align-items:flex-start">
-                  <div style="flex:1">
-                    <div style="font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Point ${index + 1}</div>
-                    <div style="font-size:14px;color:var(--g800);line-height:1.5;white-space:pre-wrap">${esc(item.text || "")}</div>
-                    <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.createdAt ? fmtDate(item.createdAt) : ""}</div>
-                  </div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn btn-sm btn-g" type="button" onclick="editAIKnowledgePoint('${item.id}')">Edit</button>
-                    <button class="btn btn-sm btn-r" type="button" title="Delete knowledge point" aria-label="Delete knowledge point" onclick="removeAIKnowledgePoint('${item.id}')"><span class="ico ico-x" data-ico="x" aria-hidden="true"></span></button>
-                  </div>
-                </div>`,
-              )
-              .join("")
-          : '<p style="padding:12px 0;color:var(--g400);font-size:13px">No knowledge points yet. Add your first official fact above.</p>';
+        // Group by category and render compact cards with an expand toggle.
+        if (!items || !items.length) {
+          wrap.innerHTML = '<p style="padding:12px 0;color:var(--g400);font-size:13px">No knowledge points yet. Add your first official fact above.</p>';
+          return;
+        }
+        const byCat = items.reduce((acc, it) => {
+          const cat = it.category || "General";
+          acc[cat] = acc[cat] || [];
+          acc[cat].push(it);
+          return acc;
+        }, {});
+        const cats = Object.keys(byCat).sort();
+        wrap.innerHTML = cats
+          .map(
+            (cat) => {
+              const pts = byCat[cat];
+              return `<div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <div style="font-weight:700">${esc(cat)} <span style="font-weight:400;color:var(--g400);font-size:13px">(${pts.length})</span></div>
+                  <div style="font-size:12px;color:var(--g500)">Click an item to show details</div>
+                </div>
+                <div class="ai-knowledge-cat" data-cat="${esc(cat)}">${pts
+                  .map((item, index) => {
+                    const short = String(item.text || "").slice(0, 140);
+                    const needsEllipsis = (item.text || "").length > 140;
+                    return `<div class="ai-knowledge-card repeater-row" data-point-id="${item.id}" style="display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:10px;background:var(--g50);margin-bottom:8px">
+                      <div style="flex:1">
+                        <div style="font-size:13px;color:var(--g800);line-height:1.4;white-space:pre-wrap">${esc(short)}${needsEllipsis? '...':''}</div>
+                        <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.createdAt?fmtDate(item.createdAt):''}</div>
+                        <div class="ai-knowledge-full" style="display:none;margin-top:8px;font-size:14px;color:var(--g800);white-space:pre-wrap">${esc(item.text||"")}</div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <button class="btn btn-sm btn-g" type="button" onclick="toggleKnowledgeDetails('${item.id}')">Show</button>
+                        <button class="btn btn-sm btn-w" type="button" onclick="editAIKnowledgePoint('${item.id}')">Edit</button>
+                        <button class="btn btn-sm btn-r" type="button" title="Delete knowledge point" aria-label="Delete knowledge point" onclick="removeAIKnowledgePoint('${item.id}')"><span class="ico ico-x" data-ico="x" aria-hidden="true"></span></button>
+                      </div>
+                    </div>`;
+                  })
+                  .join("")}
+                </div>
+              </div>`;
+            },
+          )
+          .join("");
         hydrateIcons(wrap);
+      }
+
+      function toggleKnowledgeDetails(id) {
+        const card = document.querySelector(`.ai-knowledge-card[data-point-id="${id}"]`);
+        if (!card) return;
+        const full = card.querySelector('.ai-knowledge-full');
+        const btn = card.querySelector('button');
+        const visible = full.style.display !== 'none';
+        full.style.display = visible ? 'none' : 'block';
+        if (btn) btn.textContent = visible ? 'Show' : 'Hide';
       }
 
       function getAIKnowledgePoints() {
@@ -1556,12 +1593,13 @@
 
       async function addAIKnowledgePoint() {
         const text = document.getElementById("ai-knowledge-input")?.value.trim() || "";
+        const category = document.getElementById('ai-knowledge-category')?.value || 'General';
         if (!text) {
           toast("Enter a knowledge point before saving");
           return;
         }
         const points = getAIKnowledgePoints();
-        points.push({ id: DB._id(), text, createdAt: new Date().toISOString() });
+        points.push({ id: DB._id(), text, category, createdAt: new Date().toISOString() });
         const info = {
           ...DB.getInfo(),
           aiKnowledgePoints: points,
@@ -1569,6 +1607,7 @@
         };
         await persistSiteInfo(info, "Knowledge point saved!", "ai-sync-note");
         document.getElementById("ai-knowledge-input").value = "";
+        document.getElementById('ai-knowledge-category').value = 'General';
         renderAIKnowledgePoints(points);
       }
 
@@ -1583,11 +1622,13 @@
           toast("Knowledge point cannot be empty");
           return;
         }
+        const newCategory = prompt('Category for this point (leave blank to keep current):', current.category || 'General');
         const updatedPoints = points.map((point) =>
           point.id === id
             ? {
                 ...point,
                 text: trimmed,
+                category: newCategory && String(newCategory).trim() ? String(newCategory).trim() : point.category || 'General',
                 updatedAt: new Date().toISOString(),
               }
             : point,
