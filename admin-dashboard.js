@@ -1529,35 +1529,39 @@
       function renderAIKnowledgePoints(items = []) {
         const wrap = document.getElementById("ai-knowledge-points");
         if (!wrap) return;
-        // Group by category and render compact cards with an expand toggle.
+        // Fast client-side search + recent 10 view.
+        const searchEl = document.getElementById('ai-knowledge-search');
+        const showAllEl = document.getElementById('ai-knowledge-show-all');
+        const query = (searchEl?.value || '').trim().toLowerCase();
+        const showAll = !!(showAllEl && showAllEl.checked);
         if (!items || !items.length) {
           wrap.innerHTML = '<p style="padding:12px 0;color:var(--g400);font-size:13px">No knowledge points yet. Add your first official fact above.</p>';
           return;
         }
-        const byCat = items.reduce((acc, it) => {
-          const cat = it.category || "General";
-          acc[cat] = acc[cat] || [];
-          acc[cat].push(it);
-          return acc;
-        }, {});
-        const cats = Object.keys(byCat).sort();
-        wrap.innerHTML = cats
-          .map(
-            (cat) => {
-              const pts = byCat[cat];
-              return `<div style="margin-bottom:12px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                  <div style="font-weight:700">${esc(cat)} <span style="font-weight:400;color:var(--g400);font-size:13px">(${pts.length})</span></div>
-                  <div style="font-size:12px;color:var(--g500)">Click an item to show details</div>
-                </div>
-                <div class="ai-knowledge-cat" data-cat="${esc(cat)}">${pts
-                  .map((item, index) => {
-                    const short = String(item.text || "").slice(0, 140);
-                    const needsEllipsis = (item.text || "").length > 140;
-                    return `<div class="ai-knowledge-card repeater-row" data-point-id="${item.id}" style="display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:10px;background:var(--g50);margin-bottom:8px">
+        // Filter by query across text and category
+        let filtered = items.filter((it) => {
+          if (!query) return true;
+          const text = (it.text || '').toLowerCase();
+          const cat = (it.category || '').toLowerCase();
+          return text.includes(query) || cat.includes(query);
+        });
+        // Sort by newest first using createdAt/updatedAt fallback
+        filtered.sort((a, b) => {
+          const ta = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const tb = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return tb - ta;
+        });
+        const totalMatches = filtered.length;
+        const MAX = 10;
+        const toShow = showAll ? filtered : filtered.slice(0, MAX);
+        wrap.innerHTML = toShow
+          .map((item) => {
+            const short = String(item.text || '').slice(0, 140);
+            const needsEllipsis = (item.text || '').length > 140;
+            return `<div class="ai-knowledge-card repeater-row" data-point-id="${item.id}" style="display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:10px;background:var(--g50);margin-bottom:8px">
                       <div style="flex:1">
                         <div style="font-size:13px;color:var(--g800);line-height:1.4;white-space:pre-wrap">${esc(short)}${needsEllipsis? '...':''}</div>
-                        <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.createdAt?fmtDate(item.createdAt):''}</div>
+                        <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.category?esc(item.category)+' · ':''}${item.createdAt?fmtDate(item.createdAt):''}</div>
                         <div class="ai-knowledge-full" style="display:none;margin-top:8px;font-size:14px;color:var(--g800);white-space:pre-wrap">${esc(item.text||"")}</div>
                       </div>
                       <div style="display:flex;flex-direction:column;gap:8px">
@@ -1566,13 +1570,19 @@
                         <button class="btn btn-sm btn-r" type="button" title="Delete knowledge point" aria-label="Delete knowledge point" onclick="removeAIKnowledgePoint('${item.id}')"><span class="ico ico-x" data-ico="x" aria-hidden="true"></span></button>
                       </div>
                     </div>`;
-                  })
-                  .join("")}
-                </div>
-              </div>`;
-            },
-          )
-          .join("");
+          })
+          .join('') || '<p style="padding:12px 0;color:var(--g400);font-size:13px">No results.</p>';
+        // Show quick pager if there are more matches
+        if (!showAll && totalMatches > MAX) {
+          const more = document.createElement('div');
+          more.style.cssText = 'padding:8px 0;display:flex;justify-content:center';
+          more.innerHTML = `<button class="btn btn-sm btn-g" id="ai-knowledge-show-more">Show all ${totalMatches} results</button>`;
+          wrap.appendChild(more);
+          document.getElementById('ai-knowledge-show-more')?.addEventListener('click', () => {
+            if (document.getElementById('ai-knowledge-show-all')) document.getElementById('ai-knowledge-show-all').checked = true;
+            renderAIKnowledgePoints(items);
+          });
+        }
         hydrateIcons(wrap);
       }
 
@@ -1679,6 +1689,23 @@
         };
         await persistSiteInfo(info, "AI knowledge saved!", "ai-sync-note");
       }
+      // Bind simple search input and show-all checkbox to re-render quickly
+      document.addEventListener('DOMContentLoaded', () => {
+        const search = document.getElementById('ai-knowledge-search');
+        const showAll = document.getElementById('ai-knowledge-show-all');
+        if (search) {
+          let t = null;
+          search.addEventListener('input', () => {
+            clearTimeout(t);
+            t = setTimeout(() => {
+              renderAIKnowledgePoints(getAIKnowledgePoints());
+            }, 160);
+          });
+        }
+        if (showAll) {
+          showAll.addEventListener('change', () => renderAIKnowledgePoints(getAIKnowledgePoints()));
+        }
+      });
       window.addAIKnowledgePoint = addAIKnowledgePoint;
       window.editAIKnowledgePoint = editAIKnowledgePoint;
       window.removeAIKnowledgePoint = removeAIKnowledgePoint;
