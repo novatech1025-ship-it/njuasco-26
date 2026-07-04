@@ -919,14 +919,11 @@
                     <button class="btn btn-g" type="button" onclick="toggleSaAiPanel()" id="sa-ai-toggle">Show details</button>
                   </div>
                   <div id="sa-ai-panel" style="display:none;display:grid;gap:12px">
-                    <div style="padding:12px 14px;border:1px solid var(--g100);border-radius:12px;background:var(--g50)">
-                      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin-bottom:4px">Official facts</div>
-                      <div style="font-size:15px;font-weight:700;color:var(--g900)"><span id="sa-ai-points-count">0</span> knowledge points</div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                      <input id="sa-ai-search" class="finp" placeholder="Search knowledge points..." style="flex:1;min-width:180px" />
+                      <label style="font-size:13px;color:var(--g500);white-space:nowrap;margin:0"><input type="checkbox" id="sa-ai-show-all" style="margin-right:8px"> Show all</label>
                     </div>
-                    <div style="padding:12px 14px;border:1px solid var(--g100);border-radius:12px;background:var(--g50)">
-                      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);margin-bottom:4px">Quick answers</div>
-                      <div style="font-size:15px;font-weight:700;color:var(--g900)"><span id="sa-ai-faq-count">0</span> Q&amp;A entries</div>
-                    </div>
+                    <div id="sa-ai-list" style="display:grid;gap:8px"></div>
                     <div style="font-size:13px;color:var(--g500)">These details are managed from the admin side. The sub-admin view keeps them short and grouped for quick review.</div>
                   </div>
                 </div>
@@ -2638,14 +2635,51 @@
       }
 
       function refreshSaAiSummary() {
-        const points = document.getElementById("sa-ai-points-count");
-        const faqs = document.getElementById("sa-ai-faq-count");
-        if (!points || !faqs) return;
+        // Render compact searchable list for sub-admins (recent 10 by default)
+        const listWrap = document.getElementById('sa-ai-list');
+        if (!listWrap) return;
+        const searchEl = document.getElementById('sa-ai-search');
+        const showAllEl = document.getElementById('sa-ai-show-all');
+        const query = (searchEl?.value || '').trim().toLowerCase();
+        const showAll = !!(showAllEl && showAllEl.checked);
         const info = DB.getInfo?.() || {};
-        const knowledgePoints = Array.isArray(info.aiKnowledgePoints) ? info.aiKnowledgePoints : [];
-        const faqEntries = Array.isArray(info.aiFaqs) ? info.aiFaqs : [];
-        points.textContent = knowledgePoints.length;
-        faqs.textContent = faqEntries.length;
+        const knowledgePoints = (Array.isArray(info.aiKnowledgePoints) ? info.aiKnowledgePoints : []).slice();
+        // Filter and sort newest first
+        let filtered = knowledgePoints.filter((it) => {
+          if (!query) return true;
+          return (it.text || '').toLowerCase().includes(query) || (it.category || '').toLowerCase().includes(query);
+        });
+        filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+        const total = filtered.length;
+        const MAX = 10;
+        const toShow = showAll ? filtered : filtered.slice(0, MAX);
+        listWrap.innerHTML = toShow.map((item) => {
+          const short = String(item.text || '').slice(0, 140);
+          const needsEllipsis = (item.text || '').length > 140;
+          return `<div class="ai-knowledge-card" data-id="${item.id}" style="padding:10px;border-radius:10px;background:#fff;border:1px solid var(--g100)">
+            <div style="font-size:13px;color:var(--g800);line-height:1.4">${esc(short)}${needsEllipsis? '...':''}</div>
+            <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.category?esc(item.category)+' · ':''}${item.createdAt?fmtDate(item.createdAt):''}</div>
+          </div>`;
+        }).join('') || '<div style="padding:12px;color:var(--g400)">No knowledge points.</div>';
+        if (!showAll && total > MAX) {
+          const more = document.createElement('div');
+          more.style.cssText = 'padding:8px 0;display:flex;justify-content:center';
+          more.innerHTML = `<button class="btn btn-sm btn-g" id="sa-ai-show-more">Show all ${total} results</button>`;
+          listWrap.appendChild(more);
+          document.getElementById('sa-ai-show-more')?.addEventListener('click', () => {
+            if (document.getElementById('sa-ai-show-all')) document.getElementById('sa-ai-show-all').checked = true;
+            refreshSaAiSummary();
+          });
+        }
+        // bind quick interactions
+        if (searchEl) {
+          let t = null;
+          searchEl.addEventListener('input', () => {
+            clearTimeout(t);
+            t = setTimeout(() => refreshSaAiSummary(), 160);
+          });
+        }
+        if (showAllEl) showAllEl.addEventListener('change', () => refreshSaAiSummary());
       }
 
       function loadSaDashboard() {
