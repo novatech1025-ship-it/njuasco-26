@@ -475,18 +475,22 @@ const DB = {
     return null;
   },
   findSubAdminByEmail(email) {
-    const normalized = this._email(email);
-    return (
-      this._get("subadmins").find(
-        (admin) => admin?.active !== false && this._subAdminEmail(admin) === normalized,
-      ) || null
-    );
+    return this.getSubAdminProfileByEmail(email);
   },
   subAdminNeedsPasswordSetup(profile) {
     if (!profile) return true;
     if (profile.passwordSet === true) return false;
     if (String(profile.staffPassword || "").trim()) return false;
     return true;
+  },
+  getSubAdminProfileByEmail(email) {
+    const normalized = this._email(email);
+    if (!normalized) return null;
+    return (
+      this._get("subadmins").find(
+        (admin) => admin?.active !== false && this._subAdminEmail(admin) === normalized,
+      ) || null
+    );
   },
   async markSubAdminPasswordReady(profile, passwordLabel = "Set") {
     if (!profile?.id) return profile;
@@ -526,7 +530,7 @@ const DB = {
     }
     await this.syncRemoteAll();
     const normalized = this._email(email);
-    const profile = this.findSubAdminByEmail(normalized);
+    const profile = this.getSubAdminProfileByEmail(normalized);
     if (!profile) {
       throw new Error("This email is not assigned to an active sub-admin profile.");
     }
@@ -570,7 +574,7 @@ const DB = {
 
     await this.markSubAdminPasswordReady(profile, password);
     await this._flushPendingRemoteWrites();
-    const updatedProfile = this.findSubAdminByEmail(normalized);
+    const updatedProfile = this.getSubAdminProfileByEmail(normalized);
     return { user, profile: updatedProfile || profile };
   },
   async signInSubAdmin(email, password) {
@@ -585,9 +589,7 @@ const DB = {
       await this.signOut();
       throw new Error("This email is not authorized to access the sub-admin dashboard.");
     }
-    const profile = this._get("subadmins").find(
-      (admin) => admin?.active !== false && this._subAdminEmail(admin) === normalized,
-    );
+    const profile = this.getSubAdminProfileByEmail(normalized);
     if (!profile) {
       await this.signOut();
       throw new Error("This email is not assigned to an active sub-admin profile.");

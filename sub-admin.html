@@ -1747,6 +1747,7 @@
       let CURRENT_SA_PAGE = "dashboard";
       let CURRENT_AUTH_EMAIL = "";
       let SA_EDIT_ID = null;
+      let SA_EMAIL_VERIFIED = false;
       const SA_SESSION_KEY = "nj_sa_session";
       const SA_SESSION_MS = DB?.PORTAL_SESSION_MS || 5 * 60 * 60 * 1000;
 
@@ -1880,6 +1881,7 @@
       }
 
       function saResetLoginForm() {
+        SA_EMAIL_VERIFIED = false;
         document.getElementById("sa-user").disabled = false;
         document.getElementById("sa-pass-wrap").style.display = "none";
         document.getElementById("sa-setup-wrap").style.display = "none";
@@ -1892,6 +1894,7 @@
         document.getElementById("sa-confirm-pass").value = "";
         if (document.getElementById("sa-user")) {
           document.getElementById("sa-user").value = "";
+          document.getElementById("sa-user").focus();
         }
         setSaLoginBusy(false);
       }
@@ -1910,6 +1913,7 @@
         }
         const existingUser = (await DB.getAuthUser?.()) || null;
         const freshProfile = DB.findSubAdminByEmail?.(email) || profile;
+        SA_EMAIL_VERIFIED = true;
         document.getElementById("sa-user").disabled = true;
         document.getElementById("sa-continue-btn").style.display = "none";
         document.getElementById("sa-back-btn").style.display = "block";
@@ -1925,6 +1929,10 @@
       }
 
       async function saSavePassword() {
+        if (!SA_EMAIL_VERIFIED) {
+          saToast("Verify your sub-admin email first.");
+          return;
+        }
         const email = document.getElementById("sa-user").value.trim();
         const password = document.getElementById("sa-new-pass").value;
         const confirm = document.getElementById("sa-confirm-pass").value;
@@ -2212,6 +2220,7 @@
       }
 
       async function completeSaSession(user, profile, password) {
+        SA_EMAIL_VERIFIED = true;
         CURRENT_AUTH_EMAIL = String(user?.email || "").trim().toLowerCase();
         if (!CURRENT_AUTH_EMAIL) {
           saToast("Unable to determine your authenticated email.");
@@ -2257,6 +2266,10 @@
       }
 
       async function saLogin() {
+        if (!SA_EMAIL_VERIFIED) {
+          saToast("Verify your sub-admin email first.");
+          return;
+        }
         const email = document.getElementById("sa-user").value.trim().toLowerCase();
         const password = document.getElementById("sa-pass").value;
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -2341,6 +2354,7 @@
       }
 
       async function revealSubAdminPasswordStep(email) {
+        SA_EMAIL_VERIFIED = true;
         const emailInput = document.getElementById("sa-user");
         const emailWrap = emailInput?.closest(".sa-inp-wrap");
         const passWrap = document.getElementById("sa-pass-wrap");
