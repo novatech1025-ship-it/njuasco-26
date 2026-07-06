@@ -1181,10 +1181,7 @@
           document.getElementById('co-otp-panel').style.display='block';
           toast(data.message||'Verification code sent');
         }catch(error){
-          const code=String(Math.floor(100000+Math.random()*900000));
-          checkoutLocalOtp={phone:DB._normalizeCheckoutPhone(phone),code,expiresAt:Date.now()+10*60*1000};
-          document.getElementById('co-otp-panel').style.display='block';
-          toast('SMS service is unavailable. Use verification code '+code+' to continue.');
+          toast(error.message||'SMS verification failed. Try again.');
         }finally{
           if(btn){btn.disabled=false;btn.textContent='Send verification code';}
         }

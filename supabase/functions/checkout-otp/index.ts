@@ -1,4 +1,11 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+declare namespace Deno {
+  export const env: {
+    get(key: string): string | undefined;
+  };
+}
+
+// @deno-types="https://esm.sh/@supabase/supabase-js@2/dist/module.d.ts"
+// @ts-ignore - Remote esm.sh module, works on Supabase Edge Runtime
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -121,37 +128,64 @@ export default {
 };
 
 async function sendSms(phone: string, body: string) {
-  const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
-  const token = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const from = Deno.env.get("TWILIO_FROM_NUMBER");
-  const serviceSid = Deno.env.get("TWILIO_MESSAGING_SERVICE_SID");
-  if (!sid || !token || (!serviceSid && !from)) return false;
+  try {
+    const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const token = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const from = Deno.env.get("TWILIO_FROM_NUMBER");
+    const serviceSid = Deno.env.get("TWILIO_MESSAGING_SERVICE_SID");
+    
+    // Validate Twilio credentials
+    if (!sid || !token || (!serviceSid && !from)) {
+      console.error("Missing Twilio credentials:", { sid: !!sid, token: !!token, from: !!from, serviceSid: !!serviceSid });
+      return false;
+    }
 
-  const to = phone.startsWith("+") ? phone : `+${phone}`;
-  const auth = btoa(`${sid}:${token}`);
-  const params = new URLSearchParams({ To: to, Body: body });
-  if (serviceSid) {
-    params.set("MessagingServiceSid", serviceSid);
-  } else if (from) {
-    params.set("From", from);
+    // Ensure phone is in E.164 format
+    const to = phone.startsWith("+") ? phone : `+${phone}`;
+    const auth = btoa(`${sid}:${token}`);
+    const params = new URLSearchParams({ To: to, Body: body });
+    
+    if (serviceSid) {
+      params.set("MessagingServiceSid", serviceSid);
+    } else if (from) {
+      params.set("From", from);
+    }
+
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+    
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("Twilio SMS failed:", res.status, errText);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("SMS sendSms error:", error instanceof Error ? error.message : error);
+    return false;
   }
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params,
-  });
-  return res.ok;
 }
 
 function normalizePhone(value: string) {
   let digits = value.replace(/\D/g, "");
   if (!digits) return "";
+  // Remove leading 00
   if (digits.startsWith("00")) digits = digits.slice(2);
+  // If starts with 0, replace with 233 (Ghana country code)
   if (digits.startsWith("0")) digits = `233${digits.slice(1)}`;
+  // If 9 digits and starts with 2, 4, or 5, add 233
   if (digits.length === 9 && /^[245]/.test(digits)) digits = `233${digits}`;
+  // If already has country code at the start, ensure it's 12 digits total
+  if (digits.startsWith("233") && digits.length >= 12) return digits;
+  // Ensure we have exactly 12 digits (country code + 9 digits)
+  if (digits.length !== 12) return "";
   return digits;
 }
 
