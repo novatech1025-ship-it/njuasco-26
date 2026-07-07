@@ -1178,8 +1178,18 @@
         if(btn){btn.disabled=true;btn.textContent='Sending code...';}
         try{
           const data=await checkoutOtpRequest({action:'send',phone});
+          if (data?.devCode) {
+            checkoutLocalOtp = {
+              phone: DB._normalizeCheckoutPhone(phone),
+              code: String(data.devCode),
+              expiresAt: Date.now() + ((data.expiresIn || 300) * 1000),
+            };
+          }
           document.getElementById('co-otp-panel').style.display='block';
-          toast(data.message||'Verification code sent');
+          toast(
+            data.message ||
+              `Verification code sent${data?.devCode ? ` (dev code: ${data.devCode})` : ''}`
+          );
         }catch(error){
           toast(error.message||'SMS verification failed. Try again.');
         }finally{
@@ -1214,6 +1224,9 @@
             return;
           }
           const data=await checkoutOtpRequest({action:'verify',phone,code});
+          if(!data?.verificationToken){
+            throw new Error('Verification failed. Please request a new code.');
+          }
           const fields=getCheckoutCustomerFields();
           const customer=DB.findOrCreateShopCustomer({
             name:[fields.fname,fields.lname].filter(Boolean).join(' '),
