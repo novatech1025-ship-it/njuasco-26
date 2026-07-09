@@ -223,25 +223,38 @@ async function sendCheckoutSms(phone, message) {
     !TWILIO_AUTH_TOKEN ||
     (!TWILIO_MESSAGING_SERVICE_SID && !TWILIO_FROM_NUMBER)
   ) {
+    console.log("SMS: Missing Twilio credentials");
     return false;
   }
-  const to = phone.startsWith("+") ? phone : `+${phone}`;
-  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
-  const params = new URLSearchParams({ To: to, Body: message });
-  if (TWILIO_MESSAGING_SERVICE_SID) {
-    params.set("MessagingServiceSid", TWILIO_MESSAGING_SERVICE_SID);
-  } else if (TWILIO_FROM_NUMBER) {
-    params.set("From", TWILIO_FROM_NUMBER);
+  try {
+    const to = phone.startsWith("+") ? phone : `+${phone}`;
+    const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
+    const params = new URLSearchParams({ To: to, Body: message });
+    if (TWILIO_MESSAGING_SERVICE_SID) {
+      params.set("MessagingServiceSid", TWILIO_MESSAGING_SERVICE_SID);
+    } else if (TWILIO_FROM_NUMBER) {
+      params.set("From", TWILIO_FROM_NUMBER);
+    }
+    console.log(`SMS: Sending to ${to} via Twilio...`);
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.log(`SMS: Twilio error ${res.status}: ${errText}`);
+      return false;
+    }
+    console.log("SMS: Sent successfully");
+    return true;
+  } catch (err) {
+    console.error("SMS: Fetch error:", err.message);
+    return false;
   }
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params,
-  });
-  return res.ok;
 }
 
 async function handleCheckoutOtp(req, res) {
