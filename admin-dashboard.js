@@ -1382,7 +1382,7 @@
         set("si-first-welcome-title", firstWelcome.title || "Welcome to NJB City");
         set("si-first-welcome-text", firstWelcome.text || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.");
         set("si-first-welcome-button", firstWelcome.buttonText || "Enter NJB City");
-        set("si-first-welcome-image", firstWelcome.image || "njb.jpg");
+        set("si-first-welcome-image", firstWelcome.image || "njb.png");
         set("si-first-welcome-logo", firstWelcome.logo || "njuasco-logo.png");
         set("si-footer-copy", i.footerCopyright);
         set("si-nova-name", i.novaTechName || "NOVATech");
