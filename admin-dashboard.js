@@ -1383,7 +1383,7 @@
         set("si-first-welcome-text", firstWelcome.text || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.");
         set("si-first-welcome-button", firstWelcome.buttonText || "Enter NJB City");
         set("si-first-welcome-image", firstWelcome.image || "njb.jpg");
-        set("si-first-welcome-logo", firstWelcome.logo || "NJUASCO LOGO.png");
+        set("si-first-welcome-logo", firstWelcome.logo || "njuasco-logo.png");
         set("si-footer-copy", i.footerCopyright);
         set("si-nova-name", i.novaTechName || "NOVATech");
         set("si-nova-url", i.novaTechUrl);
@@ -1462,7 +1462,7 @@
             text: g("si-first-welcome-text") || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
             buttonText: g("si-first-welcome-button") || "Enter NJB City",
             image: firstWelcomeImage || "njb.jpg",
-            logo: g("si-first-welcome-logo") || "NJUASCO LOGO.png",
+            logo: g("si-first-welcome-logo") || "njuasco-logo.png",
           },
           footerCopyright: g("si-footer-copy"),
           novaTechName: g("si-nova-name"),
@@ -2229,7 +2229,7 @@
           img{width:64px;height:64px;object-fit:contain}.school{font-size:22px;font-weight:800}.sub{font-size:12px;color:#6b7280;margin-top:3px}
           table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;background:#eff6ff;color:#1d4ed8;padding:10px;border:1px solid #dbeafe}td{padding:9px;border:1px solid #e5e7eb}
           .meta{font-size:12px;color:#4b5563;margin-bottom:16px}.foot{margin-top:20px;font-size:11px;color:#6b7280}
-        </style></head><body><div class="head"><img src="NJUASCO LOGO.png"><div><div class="school">New Juaben Senior High School</div><div class="sub">Admission Applications Export</div></div></div><div class="meta">Generated ${new Date().toLocaleString()} · ${apps.length} application(s)</div><table><thead><tr><th>Reference</th><th>Applicant</th><th>Programme</th><th>Aggregate</th><th>Status</th><th>Applied</th><th>Files</th></tr></thead><tbody>${rows}</tbody></table><div class="foot">NJUASCO Admissions Office · HARDWORK</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+        </style></head><body><div class="head"><img src="njuasco-logo.png"><div><div class="school">New Juaben Senior High School</div><div class="sub">Admission Applications Export</div></div></div><div class="meta">Generated ${new Date().toLocaleString()} · ${apps.length} application(s)</div><table><thead><tr><th>Reference</th><th>Applicant</th><th>Programme</th><th>Aggregate</th><th>Status</th><th>Applied</th><th>Files</th></tr></thead><tbody>${rows}</tbody></table><div class="foot">NJUASCO Admissions Office · HARDWORK</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
         w.document.close();
       }
 
@@ -2783,3 +2783,4 @@
         const iconObserver = new MutationObserver(() => hydrateIcons(document));
         iconObserver.observe(document.body, { childList: true, subtree: true });
       });
+

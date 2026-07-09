@@ -1,4 +1,4 @@
-ï»¿const ICON_PATHS = {
+const ICON_PATHS = {
         home: '<path d="m3 11 9-8 9 8"/><path d="M5 10v11h14V10"/><path d="M9 21v-6h6v6"/>',
         school:
           '<path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01"/><path d="M15 10h.01"/>',
@@ -817,7 +817,7 @@
           /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|gif|svg)(\?.*)?$)/i.test(
             String(src || ""),
           );
-        const broken = (src) => /[\uFFFD]|Ã¢|Ã‚|Ã°Å¸|Ã¯Â¸|\?{2,}/.test(String(src || ""));
+        const broken = (src) => /[\uFFFD]|â|Â|ðŸ|ï¸|\?{2,}/.test(String(src || ""));
         const icon = (name) =>
           `<span class="ico ico-${name}" data-ico="${name}" aria-hidden="true"></span>`;
         const icons = {
@@ -857,3 +857,4 @@
         });
       };
       DB.migrateEmojiIcons();
+

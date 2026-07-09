@@ -121,3 +121,4 @@ function updateCartBadge() {
 }
 
 document.addEventListener("DOMContentLoaded", updateCartBadge);
+

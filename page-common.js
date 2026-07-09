@@ -122,7 +122,7 @@ function safeHref(url) {
 function applyFooterContent() {
   const info = DB.getInfo();
   if (info.maintenanceMode && !location.pathname.endsWith("admin.html") && !location.pathname.endsWith("sub-admin.html")) {
-    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="NJUASCO LOGO.png" alt="NJUASCO logo"><div><strong>New Juaben Senior High</strong><span>NJUASCO · Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
+    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="NJUASCO logo"><div><strong>New Juaben Senior High</strong><span>NJUASCO · Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
     return;
   }
   const schoolName = info.name || "New Juaben Senior High School";
@@ -168,7 +168,7 @@ function initAIChrome() {
     hydrateIcons(button);
   });
   document.querySelectorAll(".cav").forEach((avatar) => {
-    avatar.innerHTML = '<img src="NJUASCO LOGO.png" alt=""><span class="ico ico-message" data-ico="message" aria-hidden="true"></span>';
+    avatar.innerHTML = '<img src="njuasco-logo.png" alt=""><span class="ico ico-message" data-ico="message" aria-hidden="true"></span>';
     hydrateIcons(avatar);
   });
   document.querySelectorAll(".cn").forEach((el) => (el.textContent = "NJB City AI"));
@@ -639,7 +639,7 @@ function showFirstVisitWelcome() {
       <div class="njb-welcome-media">
         <img class="njb-welcome-photo" src="${esc(welcome.image || "njb.jpg")}" alt="New Juaben Senior High School campus" />
         <div class="njb-welcome-shine"></div>
-        <img class="njb-welcome-logo" src="${esc(welcome.logo || "NJUASCO LOGO.png")}" alt="NJUASCO logo" />
+        <img class="njb-welcome-logo" src="${esc(welcome.logo || "njuasco-logo.png")}" alt="NJUASCO logo" />
       </div>
       <div class="njb-welcome-body">
         <div class="njb-welcome-kicker">${esc(welcome.kicker || "New Juaben Senior High School")}</div>
@@ -2508,3 +2508,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 30000);
   hydrateIcons();
 });
+

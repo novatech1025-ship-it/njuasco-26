@@ -1959,7 +1959,7 @@ const DB = {
         text: "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
         buttonText: "Enter NJB City",
         image: "njb.jpg",
-        logo: "NJUASCO LOGO.png",
+        logo: "njuasco-logo.png",
       },
       principalEmoji: "👨‍🏫",
       aboutFoundedDesc:
@@ -2181,7 +2181,7 @@ DB.migrateAboutContent = function () {
     text: "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
     buttonText: "Enter NJB City",
     image: "njb.jpg",
-    logo: "NJUASCO LOGO.png",
+    logo: "njuasco-logo.png",
   };
   if (!info.firstVisitWelcome || typeof info.firstVisitWelcome !== "object") {
     info.firstVisitWelcome = { ...welcomeDefaults };
@@ -2443,3 +2443,4 @@ DB.cartTotal = function () {
 DB.clearCart = function () {
   localStorage.removeItem("nj_cart");
 };
+

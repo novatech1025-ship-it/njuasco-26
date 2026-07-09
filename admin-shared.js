@@ -324,3 +324,4 @@ window.selectAll = selectAll;
 window.bulkArrange = bulkArrange;
 window.colorPickerField = colorPickerField;
 window.bindColorPickers = bindColorPickers;
+

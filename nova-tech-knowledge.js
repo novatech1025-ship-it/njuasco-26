@@ -107,3 +107,4 @@ Official Social Media (NOVA Tech)
 
 Galaxy Design Studio
 Galaxy Design Studio is a creative brand owned by Emmanuel Yirenkyi-Amoyaw. It focuses on graphic design, branding, digital media, and web design, and partnered with NOVA Tech on the NJUASCO school website project.`;
+
