@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 // Load .env file
 const envPath = path.join(__dirname, '..', '.env');
@@ -77,8 +78,16 @@ async function setSsecrets() {
 
     console.log('\n✓ Secrets deployed successfully!');
     console.log('\nNow deploying checkout-otp function...');
-    
-    // Next: deploy the function
+
+    try {
+      execSync(`npx supabase functions deploy checkout-otp --project-ref ${projectRef}`, {
+        stdio: 'inherit',
+      });
+      console.log('\n✓ checkout-otp function deployed successfully!');
+    } catch (deployErr) {
+      console.error('Function deploy failed:', deployErr.message || deployErr);
+      process.exit(1);
+    }
   } catch (err) {
     console.error('ERROR:', err.message);
     process.exit(1);
