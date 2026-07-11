@@ -96,7 +96,7 @@
         if (error.message && !/fetch|network|failed to fetch/i.test(error.message)) lastError = error;
       }
     }
-    throw lastError || new Error("SMS verification is unavailable. Configure Twilio or run node server.js.");
+    throw lastError || new Error("SMS verification is unavailable. Configure Arkesel or run node server.js.");
   }
 
   async function sendOtp(phone) {

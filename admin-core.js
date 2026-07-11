@@ -817,7 +817,7 @@ const ICON_PATHS = {
           /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|gif|svg)(\?.*)?$)/i.test(
             String(src || ""),
           );
-        const broken = (src) => /[\uFFFD]|â|Â|ðŸ|ï¸|\?{2,}/.test(String(src || ""));
+        const broken = (src) => /[\uFFFD]|ï¿½|ï¿½|ï¿½|ï¿½|\?{2,}/.test(String(src || ""));
         const icon = (name) =>
           `<span class="ico ico-${name}" data-ico="${name}" aria-hidden="true"></span>`;
         const icons = {

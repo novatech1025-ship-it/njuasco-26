@@ -14,10 +14,8 @@ const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || "2026-02-25.clover";
 const CHECKOUT_VERIFY_SECRET = process.env.CHECKOUT_VERIFY_SECRET || process.env.GROQ_API_KEY || "njuasco-dev-checkout-secret";
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
-const TWILIO_MESSAGING_SERVICE_SID = process.env.TWILIO_MESSAGING_SERVICE_SID;
+const ARKESEL_API_KEY = process.env.ARKESEL_API_KEY;
+const ARKESEL_SENDER_ID = process.env.ARKESEL_SENDER_ID || "NJUASCO";
 const CHECKOUT_OTP_DEV_MODE = process.env.CHECKOUT_OTP_DEV_MODE === "true";
 
 const OTP_STORE = new Map();
@@ -218,41 +216,35 @@ function verifyVerificationToken(token) {
 }
 
 async function sendCheckoutSms(phone, message) {
-  if (
-    !TWILIO_ACCOUNT_SID ||
-    !TWILIO_AUTH_TOKEN ||
-    (!TWILIO_MESSAGING_SERVICE_SID && !TWILIO_FROM_NUMBER)
-  ) {
-    console.log("SMS: Missing Twilio credentials");
+  if (!ARKESEL_API_KEY) {
+    console.log("SMS: Missing Arkesel API key");
     return false;
   }
   try {
     const to = phone.startsWith("+") ? phone : `+${phone}`;
-    const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
-    const params = new URLSearchParams({ To: to, Body: message });
-    if (TWILIO_MESSAGING_SERVICE_SID) {
-      params.set("MessagingServiceSid", TWILIO_MESSAGING_SERVICE_SID);
-    } else if (TWILIO_FROM_NUMBER) {
-      params.set("From", TWILIO_FROM_NUMBER);
-    }
-    console.log(`SMS: Sending to ${to} via Twilio...`);
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+    const payload = {
+      sender: ARKESEL_SENDER_ID,
+      message,
+      recipients: [to],
+    };
+    console.log(`SMS: Sending to ${to} via Arkesel...`);
+    const res = await fetch("https://sms.arkesel.com/api/v2/sms/send", {
       method: "POST",
       headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+        "api-key": ARKESEL_API_KEY,
+        "Content-Type": "application/json",
       },
-      body: params,
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.log(`SMS: Twilio error ${res.status}: ${errText}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.status !== "success") {
+      console.log(`SMS: Arkesel error ${res.status}: ${JSON.stringify(data)}`);
       return false;
     }
     console.log("SMS: Sent successfully");
     return true;
   } catch (err) {
-    console.error("SMS: Fetch error:", err.message);
+    console.error("SMS: Fetch error:", err.message || err);
     return false;
   }
 }
@@ -294,10 +286,8 @@ async function handleCheckoutOtp(req, res) {
       if (!smsSent && !CHECKOUT_OTP_DEV_MODE) {
         OTP_STORE.delete(phone);
         const senderIssue =
-          !TWILIO_ACCOUNT_SID ||
-          !TWILIO_AUTH_TOKEN ||
-          (!TWILIO_MESSAGING_SERVICE_SID && !TWILIO_FROM_NUMBER)
-            ? "Twilio sender settings are incomplete. Add a Messaging Service SID or a valid From number."
+          !ARKESEL_API_KEY
+            ? "Arkesel API key is missing. Set ARKESEL_API_KEY."
             : "Could not send SMS. Check your number and try again.";
         send(res, 503, JSON.stringify({ error: senderIssue }));
         return;

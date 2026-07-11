@@ -81,15 +81,15 @@ The current static admin page prepares local email/SMS drafts. This Edge Functio
 
 ## Deploy SMS OTP
 
-The shop checkout and staff step-up login use the `checkout-otp` Edge Function. Set the same Twilio secrets, then deploy it:
+The shop checkout and staff step-up login use the `checkout-otp` Edge Function. Set the verification secret and Arkesel API key, then deploy it:
 
 ```bash
 supabase secrets set CHECKOUT_VERIFY_SECRET=... SUPABASE_URL=https://gkzuzugokctccfadzqwf.supabase.co SUPABASE_SERVICE_ROLE_KEY=...
-supabase secrets set TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... TWILIO_MESSAGING_SERVICE_SID=...
+supabase secrets set ARKESEL_API_KEY=... ARKESEL_SENDER_ID=NJUASCO
 supabase functions deploy checkout-otp
 ```
 
-If you use a direct Twilio sender instead of a Messaging Service, set `TWILIO_FROM_NUMBER=+...` instead of `TWILIO_MESSAGING_SERVICE_SID`.
+If you need a different sender ID, set `ARKESEL_SENDER_ID` to the approved value from your Arkesel account.
 
 ## Deploy Stripe payments
 

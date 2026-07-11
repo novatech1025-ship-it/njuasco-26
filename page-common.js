@@ -637,7 +637,7 @@ function showFirstVisitWelcome() {
         <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
       </button>
       <div class="njb-welcome-media">
-        <img class="njb-welcome-photo" src="${esc(welcome.image || "njb.jpg")}" alt="New Juaben Senior High School campus" />
+        <img class="njb-welcome-photo" src="${esc(welcome.image || "njb.png")}" alt="New Juaben Senior High School campus" />
         <div class="njb-welcome-shine"></div>
         <img class="njb-welcome-logo" src="${esc(welcome.logo || "njuasco-logo.png")}" alt="NJUASCO logo" />
       </div>

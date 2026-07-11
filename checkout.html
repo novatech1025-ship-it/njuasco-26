@@ -1168,7 +1168,7 @@
             if(error.message && !/fetch|network|failed to fetch/i.test(error.message)) lastError=error;
           }
         }
-        throw lastError||new Error('SMS verification is unavailable. Run node server.js locally or configure Twilio on Supabase.');
+        throw lastError||new Error('SMS verification is unavailable. Run node server.js locally or configure Arkesel on Supabase.');
       }
 
       async function sendCheckoutOtp(){

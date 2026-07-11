@@ -62,10 +62,8 @@ export default {
         if (!smsSent && Deno.env.get("CHECKOUT_OTP_DEV_MODE") !== "true") {
           await supabase.from("checkout_otp_challenges").delete().eq("phone_hash", phoneHash);
           const senderIssue =
-            !Deno.env.get("TWILIO_ACCOUNT_SID") ||
-            !Deno.env.get("TWILIO_AUTH_TOKEN") ||
-            (!Deno.env.get("TWILIO_MESSAGING_SERVICE_SID") && !Deno.env.get("TWILIO_FROM_NUMBER"))
-              ? "Twilio sender settings are incomplete. Add a Messaging Service SID or a valid From number."
+            !Deno.env.get("ARKESEL_API_KEY")
+              ? "Arkesel API key is missing. Set ARKESEL_API_KEY."
               : "Could not send SMS. Check your number and try again.";
           return json({ error: senderIssue }, 503);
         }
@@ -129,43 +127,34 @@ export default {
 
 async function sendSms(phone: string, body: string) {
   try {
-    const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const token = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const from = Deno.env.get("TWILIO_FROM_NUMBER");
-    const serviceSid = Deno.env.get("TWILIO_MESSAGING_SERVICE_SID");
-    
-    // Validate Twilio credentials
-    if (!sid || !token || (!serviceSid && !from)) {
-      console.error("Missing Twilio credentials:", { sid: !!sid, token: !!token, from: !!from, serviceSid: !!serviceSid });
+    const apiKey = Deno.env.get("ARKESEL_API_KEY");
+    const sender = Deno.env.get("ARKESEL_SENDER_ID") ?? "NJUASCO";
+    if (!apiKey) {
+      console.error("Missing Arkesel API key");
       return false;
     }
 
-    // Ensure phone is in E.164 format
     const to = phone.startsWith("+") ? phone : `+${phone}`;
-    const auth = btoa(`${sid}:${token}`);
-    const params = new URLSearchParams({ To: to, Body: body });
-    
-    if (serviceSid) {
-      params.set("MessagingServiceSid", serviceSid);
-    } else if (from) {
-      params.set("From", from);
-    }
+    const payload = {
+      sender,
+      message: body,
+      recipients: [to],
+    };
 
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    const res = await fetch("https://sms.arkesel.com/api/v2/sms/send", {
       method: "POST",
       headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+        "api-key": apiKey,
+        "Content-Type": "application/json",
       },
-      body: params,
+      body: JSON.stringify(payload),
     });
-    
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Twilio SMS failed:", res.status, errText);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.status !== "success") {
+      console.error("Arkesel SMS failed:", res.status, JSON.stringify(data));
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error("SMS sendSms error:", error instanceof Error ? error.message : error);

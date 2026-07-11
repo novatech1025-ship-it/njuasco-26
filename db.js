@@ -1958,7 +1958,7 @@ const DB = {
         title: "Welcome to NJB City",
         text: "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
         buttonText: "Enter NJB City",
-        image: "njb.jpg",
+        image: "njb.png",
         logo: "njuasco-logo.png",
       },
       principalEmoji: "👨‍🏫",
