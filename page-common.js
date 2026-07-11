@@ -2040,7 +2040,7 @@ function renderHomeSlides() {
   const slides = DB.getAll("homepageSlides")
     .filter((s) => (s.status || "active") === "active" && s.image)
     .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-  const usable = slides.length ? slides : [{ title: "New Juaben Senior High School", image: "njb.jpg" }];
+  const usable = slides.length ? slides : [{ title: "New Juaben Senior High School", image: "njb.png" }];
   wrap.innerHTML = usable
     .map(
       (s, i) =>

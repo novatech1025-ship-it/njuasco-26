@@ -64,34 +64,28 @@ serve(async (req) => {
       });
     }
 
-    if (
-      app.guardian_phone &&
-      Deno.env.get("TWILIO_ACCOUNT_SID") &&
-      Deno.env.get("TWILIO_AUTH_TOKEN") &&
-      Deno.env.get("TWILIO_FROM_NUMBER")
-    ) {
-      const sid = Deno.env.get("TWILIO_ACCOUNT_SID") ?? "";
-      const token = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
-      const smsRes = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${btoa(`${sid}:${token}`)}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            From: Deno.env.get("TWILIO_FROM_NUMBER") ?? "",
-            To: app.guardian_phone,
-            Body: message,
-          }),
+    const smsPhone = app.guardian_phone;
+    const arkeselKey = Deno.env.get("ARKESEL_API_KEY");
+    const arkeselSender = Deno.env.get("ARKESEL_SENDER_ID") ?? "NJUASCO";
+
+    if (smsPhone && arkeselKey) {
+      const smsRes = await fetch("https://sms.arkesel.com/api/v2/sms/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": arkeselKey,
         },
-      );
+        body: JSON.stringify({
+          sender: arkeselSender,
+          to: smsPhone,
+          message,
+        }),
+      });
       results.sms = await smsRes.json().catch(() => ({ ok: smsRes.ok }));
       await supabase.from("admission_notifications").insert({
         application_id: app.id,
         channel: "sms",
-        recipient: app.guardian_phone,
+        recipient: smsPhone,
         subject,
         message,
         provider_status: smsRes.ok ? "sent" : "failed",

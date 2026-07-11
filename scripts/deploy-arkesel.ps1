@@ -1,5 +1,5 @@
-# Deploy Twilio SMS credentials to Supabase Edge Functions
-# Reads TWILIO credentials from .env in project root
+# Deploy Arkesel SMS credentials to Supabase Edge Functions
+# Reads ARKESEL credentials from .env in project root
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -19,15 +19,12 @@ if (Test-Path $envFile) {
   }
 }
 
-# Validate Twilio credentials
-if (-not $env:TWILIO_ACCOUNT_SID) {
-  Write-Error "TWILIO_ACCOUNT_SID not found in .env"
+# Validate Arkesel credentials
+if (-not $env:ARKESEL_API_KEY) {
+  Write-Error "ARKESEL_API_KEY not found in .env"
 }
-if (-not $env:TWILIO_AUTH_TOKEN) {
-  Write-Error "TWILIO_AUTH_TOKEN not found in .env"
-}
-if (-not $env:TWILIO_FROM_NUMBER -and -not $env:TWILIO_MESSAGING_SERVICE_SID) {
-  Write-Error "Either TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID must be set in .env"
+if (-not $env:ARKESEL_SENDER_ID) {
+  Write-Error "ARKESEL_SENDER_ID not found in .env"
 }
 
 if (-not $env:SUPABASE_ACCESS_TOKEN) {
@@ -43,20 +40,18 @@ SUPABASE_ACCESS_TOKEN is required.
 
 $projectRef = "gkzuzugokctccfadzqwf"
 
-Write-Host "Setting Twilio secrets in Supabase..."
+Write-Host "Setting Arkesel secrets in Supabase..."
 $secrets = @(
-  "TWILIO_ACCOUNT_SID=$($env:TWILIO_ACCOUNT_SID)"
-  "TWILIO_AUTH_TOKEN=$($env:TWILIO_AUTH_TOKEN)"
+  "ARKESEL_API_KEY=$($env:ARKESEL_API_KEY)"
+  "ARKESEL_SENDER_ID=$($env:ARKESEL_SENDER_ID)"
 )
 
-if ($env:TWILIO_FROM_NUMBER) {
-  $secrets += "TWILIO_FROM_NUMBER=$($env:TWILIO_FROM_NUMBER)"
-  Write-Host "  ✓ Using FROM_NUMBER: $($env:TWILIO_FROM_NUMBER)"
+if ($env:CHECKOUT_VERIFY_SECRET) {
+  $secrets += "CHECKOUT_VERIFY_SECRET=$($env:CHECKOUT_VERIFY_SECRET)"
 }
 
-if ($env:TWILIO_MESSAGING_SERVICE_SID) {
-  $secrets += "TWILIO_MESSAGING_SERVICE_SID=$($env:TWILIO_MESSAGING_SERVICE_SID)"
-  Write-Host "  ✓ Using SERVICE_SID: $($env:TWILIO_MESSAGING_SERVICE_SID)"
+if ($env:CHECKOUT_OTP_DEV_MODE) {
+  $secrets += "CHECKOUT_OTP_DEV_MODE=$($env:CHECKOUT_OTP_DEV_MODE)"
 }
 
 $secrets += "CHECKOUT_VERIFY_SECRET=$($env:CHECKOUT_VERIFY_SECRET)"

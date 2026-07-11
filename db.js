@@ -1540,7 +1540,7 @@ const DB = {
       {
         id: "hs1",
         title: "Campus View",
-        image: "njb.jpg",
+        image: "njb.png",
         status: "active",
         order: 1,
       },
@@ -2180,7 +2180,7 @@ DB.migrateAboutContent = function () {
     title: "Welcome to NJB City",
     text: "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
     buttonText: "Enter NJB City",
-    image: "njb.jpg",
+    image: "njb.png",
     logo: "njuasco-logo.png",
   };
   if (!info.firstVisitWelcome || typeof info.firstVisitWelcome !== "object") {

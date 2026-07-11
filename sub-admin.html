@@ -3246,7 +3246,7 @@
         else if (type === "slide")
           body = `<div style="display:flex;flex-direction:column;gap:14px">
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Slide Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Campus front view"></div>
-    ${saMediaField(item?.image, "njb.jpg")}
+    ${saMediaField(item?.image, "njb.png")}
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="active" ${item?.status !== "inactive" ? "selected" : ""}>Active</option><option value="inactive" ${item?.status === "inactive" ? "selected" : ""}>Inactive</option></select></div>
   </div>`;
@@ -3463,7 +3463,7 @@
         } else if (type === "slide") {
           data = {
             title: gsmv("smf-title"),
-            image: (await saMediaValue()) || "njb.jpg",
+            image: (await saMediaValue()) || "njb.png",
             order: parseInt(gsmv("smf-order"), 10) || Date.now(),
             status: gsmv("smf-status") || "active",
           };

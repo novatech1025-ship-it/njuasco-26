@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Deploy Twilio secrets to Supabase using the Management API
+ * Deploy Arkesel secrets to Supabase using the Management API
  * Requires: SUPABASE_ACCESS_TOKEN environment variable
  */
 
@@ -35,15 +35,13 @@ if (!accessToken) {
 }
 
 const secrets = {
-  TWILIO_ACCOUNT_SID: envVars.TWILIO_ACCOUNT_SID,
-  TWILIO_AUTH_TOKEN: envVars.TWILIO_AUTH_TOKEN,
-  TWILIO_FROM_NUMBER: envVars.TWILIO_FROM_NUMBER,
-  TWILIO_MESSAGING_SERVICE_SID: envVars.TWILIO_MESSAGING_SERVICE_SID,
+  ARKESEL_API_KEY: envVars.ARKESEL_API_KEY,
+  ARKESEL_SENDER_ID: envVars.ARKESEL_SENDER_ID,
   CHECKOUT_VERIFY_SECRET: envVars.CHECKOUT_VERIFY_SECRET,
   CHECKOUT_OTP_DEV_MODE: envVars.CHECKOUT_OTP_DEV_MODE,
 };
 
-console.log('Setting Twilio secrets in Supabase...');
+console.log('Setting Arkesel secrets in Supabase...');
 console.log(`Project: ${projectRef}`);
 console.log(`Secrets to deploy:`);
 Object.entries(secrets).forEach(([key, value]) => {

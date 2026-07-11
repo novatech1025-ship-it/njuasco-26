@@ -967,7 +967,7 @@ ul {
       rgba(9, 14, 29, 0.72) 44%,
       rgba(9, 14, 29, 0.52) 100%
     ),
-    var(--home-hero-image, url("njb.jpg")) center center / cover no-repeat;
+    var(--home-hero-image, url("njb.png")) center center / cover no-repeat;
   opacity: 1;
   filter: saturate(1.08) contrast(1.08);
 }
@@ -1047,7 +1047,7 @@ ul {
         rgba(9, 14, 29, 0.66) 44%,
         rgba(9, 14, 29, 0.96) 100%
       ),
-      var(--home-hero-image, url("njb.jpg")) center center / cover no-repeat;
+      var(--home-hero-image, url("njb.png")) center center / cover no-repeat;
     opacity: 1;
   }
 

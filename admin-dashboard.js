@@ -331,7 +331,7 @@
         if (type === "slide")
           return `<div style="display:flex;flex-direction:column;gap:14px">
     <div class="fg"><label class="flbl">Slide Title</label><input class="finp" id="mf-title" value="${v("title")}" placeholder="e.g. Campus Front View"></div>
-    ${mediaField("Slide Image Upload", "njb.jpg")}
+    ${mediaField("Slide Image Upload", "njb.png")}
     <div class="fg"><label class="flbl">Overlay Text (Optional)</label><input class="finp" id="mf-overlay-text" value="${v("overlayText", "")}" placeholder="Text to display over image"></div>
     <div class="fg" style="display:flex;gap:8px;align-items:center"><label class="flbl" style="margin:0;flex:1">Show Text Overlay</label><input type="checkbox" id="mf-show-text" ${v("showText") ? "checked" : ""} style="width:18px;height:18px;cursor:pointer"></div>
     <div class="fg"><label class="flbl">Order</label><input class="finp" id="mf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
@@ -558,7 +558,7 @@
         } else if (type === "slide") {
           data = {
             title: gv("mf-title"),
-            image: (await mediaValue()) || "njb.jpg",
+            image: (await mediaValue()) || "njb.png",
             overlayText: gv("mf-overlay-text") || "",
             showText: document.getElementById("mf-show-text")?.checked || false,
             order: parseInt(gv("mf-order"), 10) || Date.now(),
@@ -1366,10 +1366,10 @@
         const hi = document.getElementById("si-hero-image");
         const hf = document.getElementById("si-hero-file");
         const paintHero = (src) => {
-          if (hp) hp.innerHTML = src ? mediaMarkup(src) : mediaMarkup("njb.jpg");
+          if (hp) hp.innerHTML = src ? mediaMarkup(src) : mediaMarkup("njb.png");
         };
-        paintHero(i.heroImage || "njb.jpg");
-        hi?.addEventListener("input", () => paintHero(hi.value.trim() || "njb.jpg"));
+        paintHero(i.heroImage || "njb.png");
+        hi?.addEventListener("input", () => paintHero(hi.value.trim() || "njb.png"));
         hf?.addEventListener("change", async () => {
           const f = hf.files?.[0];
           if (f) paintHero(await fileToDataURL(f));
@@ -1461,7 +1461,7 @@
             title: g("si-first-welcome-title") || "Welcome to NJB City",
             text: g("si-first-welcome-text") || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
             buttonText: g("si-first-welcome-button") || "Enter NJB City",
-            image: firstWelcomeImage || "njb.jpg",
+            image: firstWelcomeImage || "njb.png",
             logo: g("si-first-welcome-logo") || "njuasco-logo.png",
           },
           footerCopyright: g("si-footer-copy"),

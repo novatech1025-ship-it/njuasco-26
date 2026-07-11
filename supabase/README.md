@@ -73,7 +73,7 @@ Set secrets first:
 
 ```bash
 supabase secrets set RESEND_API_KEY=... EMAIL_FROM=admissions@njuasco.edu.gh
-supabase secrets set TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... TWILIO_MESSAGING_SERVICE_SID=...
+supabase secrets set ARKESEL_API_KEY=... ARKESEL_SENDER_ID=NJUASCO
 supabase functions deploy send-admission-notification
 ```
 
@@ -129,12 +129,7 @@ Recommended shared email body:
 <p>If you did not request this, you can ignore this message.</p>
 ```
 
-For Authentication > Providers > Phone with Twilio, fill:
-
-- Twilio Account SID: your `AC...` Account SID
-- Twilio Auth Token: your Twilio auth token
-- Twilio Message Service SID: your `MG...` Messaging Service SID
-- SMS OTP Expiry: `60` seconds, or longer if users need more time
+For Authentication > Providers > Phone, configure your provider as needed in Supabase. This website uses the hosted `checkout-otp` Edge Function with Arkesel for SMS delivery rather than Supabase's built-in Twilio provider.
 
 ## Deploy NJB City AI
 
