@@ -2044,16 +2044,22 @@ function renderHomeSlides() {
   wrap.innerHTML = usable
     .map(
       (s, i) =>
-        `<div style="position:relative;width:100%;height:100%">
-          <img class="wimg ${i === 0 ? "active" : ""}" src="${esc(s.image)}" alt="${esc(s.title || "New Juaben Senior High School")}" style="width:100%;height:100%;object-fit:cover;display:block">
-          ${s.showText && s.overlayText ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:#fff;text-align:center;padding:20px;z-index:1"><div style="font-size:clamp(16px,4vw,32px);font-weight:700;font-family:'Playfair Display',serif;line-height:1.2;max-width:80%">${esc(s.overlayText)}</div></div>` : ""}
+        `<div class="slide-container" data-slide-index="${i}">
+          <img 
+            class="wimg ${i === 0 ? "active" : ""}" 
+            src="${esc(s.image)}" 
+            alt="${esc(s.title || "New Juaben Senior High School")}" 
+            loading="${i === 0 ? "eager" : "lazy"}"
+            decoding="async"
+          />
+          ${s.showText && s.overlayText ? `<div class="slide-overlay"><div class="slide-text">${esc(s.overlayText)}</div></div>` : ""}
         </div>`,
     )
     .join("");
   clearInterval(homeSlideTimer);
   if (usable.length < 2) return;
   let idx = 0;
-  const containers = [...wrap.querySelectorAll("div[style*='position:relative']")];
+  const containers = [...wrap.querySelectorAll(".slide-container")];
   homeSlideTimer = setInterval(() => {
     containers.forEach((c) => {
       const img = c.querySelector(".wimg");
