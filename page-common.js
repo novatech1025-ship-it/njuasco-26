@@ -19,6 +19,27 @@ window.NJUASCO_SUPABASE = {
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/stripe-checkout",
 };
 
+function setPublicPageHydrationState(isHydrating = true) {
+  const root = document.documentElement;
+  const body = document.body;
+  if (!root || !body) return;
+  root.classList.toggle("nj-hydrating", isHydrating);
+  body.classList.toggle("nj-hydrating", isHydrating);
+  const loader = document.getElementById("ldr");
+  if (!loader) return;
+  loader.style.opacity = isHydrating ? "1" : "0";
+  loader.style.width = isHydrating ? "70%" : "0";
+}
+
+async function waitForPublicPageHydration(timeoutMs = 3500) {
+  if (typeof DB?.syncRemoteAll !== "function") return;
+  const syncPromise = DB.syncRemoteAll().catch(() => null);
+  const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs));
+  await Promise.race([syncPromise, timeoutPromise]);
+}
+
+setPublicPageHydrationState(true);
+
 const ICON_PATHS = {
   lock: '<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
@@ -1798,23 +1819,47 @@ function renderAboutTeam() {
   setTimeout(initRv, 50);
 }
 
+function normalizeDepartmentList(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(/\n|,/) 
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 function renderAcademicDepartments() {
   const grid = document.getElementById("academic-departments-grid");
   if (!grid) return;
   const items = DB.getAll("departments").sort((a, b) => (a.order || 0) - (b.order || 0));
   if (!items.length) return;
   grid.innerHTML = items
-    .map(
-      (d, i) => `
+    .map((d, i) => {
+      const tags = normalizeDepartmentList(d.tags || d.subjects || []);
+      const hods = normalizeDepartmentList(d.hods || []);
+      const assistantHods = normalizeDepartmentList(d.assistantHods || []);
+      const members = normalizeDepartmentList(d.members || []);
+      const peopleSections = [];
+      if (hods.length) {
+        peopleSections.push(`<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g500)">HODs</div><div style="display:flex;flex-wrap:wrap;gap:6px">${hods.map((person) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(37,99,235,.08);color:var(--b6);font-size:12px;font-weight:600">${esc(person)}</span>`).join("")}</div></div>`);
+      }
+      if (assistantHods.length) {
+        peopleSections.push(`<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g500)">Assistant HODs</div><div style="display:flex;flex-wrap:wrap;gap:6px">${assistantHods.map((person) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(245,158,11,.12);color:#b45309;font-size:12px;font-weight:600">${esc(person)}</span>`).join("")}</div></div>`);
+      }
+      if (members.length) {
+        peopleSections.push(`<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g500)">Members</div><div style="display:flex;flex-wrap:wrap;gap:6px">${members.map((person) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;font-size:12px;font-weight:600">${esc(person)}</span>`).join("")}</div></div>`);
+      }
+      return `
     <div class="dcard rv${i ? ` rv${Math.min(i, 2)}` : ""}">
       <div class="dic" style="${d.color ? `background:${esc(d.color)};color:#fff` : ""}">${mediaMarkup(d.image || "")}</div>
       <div class="dn">${esc(d.name)}</div>
       <div class="dd">${esc(d.description)}</div>
-      <div class="dtags">
-        ${(d.tags || []).map((tag) => `<span class="stag">${esc(tag)}</span>`).join("")}
-      </div>
-    </div>`,
-    )
+      ${tags.length ? `<div class="dtags">${tags.map((tag) => `<span class="stag">${esc(tag)}</span>`).join("")}</div>` : ""}
+      ${peopleSections.length ? `<div style="display:grid;gap:10px;margin-top:10px">${peopleSections.join("")}</div>` : ""}
+    </div>`;
+    })
     .join("");
   hydrateIcons(grid);
   setTimeout(initRv, 50);
@@ -2433,7 +2478,7 @@ subapp = async function () {
   }, 1600);
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   if (document.getElementById("ai-status")) refreshAIStatus();
   hydrateIcons();
   showFirstVisitWelcome();
@@ -2491,8 +2536,17 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (path === "admission-status.html") checkStatusFromURL();
     hydrateIcons();
   };
+  try {
+    await waitForPublicPageHydration();
+  } catch {
+    // Keep the page visible even if the remote sync fails or times out.
+  } finally {
+    setPublicPageHydrationState(false);
+  }
   if (DB?.syncRemoteAll) {
-    DB.syncRemoteAll().then(renderCurrentPage);
+    DB.syncRemoteAll().then(() => {
+      renderCurrentPage();
+    });
   } else {
     renderCurrentPage();
   }

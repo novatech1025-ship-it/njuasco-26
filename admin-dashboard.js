@@ -295,9 +295,10 @@
         if (type === "team")
           return `<div style="display:flex;flex-direction:column;gap:14px">
     <div class="fg"><label class="flbl">Full Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="Staff full name"></div>
-    <div class="fg"><label class="flbl">Position</label><input class="finp" id="mf-position" value="${v("position")}" placeholder="e.g. Head of Department"></div>
+    <div class="fg"><label class="flbl">Position</label><input class="finp" id="mf-position" value="${v("position")}" placeholder="e.g. Headmistress, Deputy Head"></div>
     <div class="fg"><label class="flbl">Department</label><input class="finp" id="mf-department" value="${v("department")}" placeholder="e.g. Science"></div>
     <div class="fg"><label class="flbl">Email</label><input class="finp" id="mf-email" type="email" value="${v("email")}" placeholder="staff@njuasco.edu.gh"></div>
+    <div class="fg"><label class="flbl">Display Order</label><input class="finp" id="mf-order" type="number" min="1" value="${v("order", "1")}" placeholder="1 = first to display" title="Set 1 for Headmistress, 2 for Deputy, etc."></div>
     <div class="fg"><label class="flbl">Bio</label><textarea class="finp fta" id="mf-bio" placeholder="Brief biography…">${v("bio")}</textarea></div>
     ${mediaField("Photo Upload / Icon", '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>')}
   </div>`;

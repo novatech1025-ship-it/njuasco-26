@@ -3180,7 +3180,10 @@
           body = `<div style="display:flex;flex-direction:column;gap:14px">
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Science Department"></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-desc" placeholder="Short department description">${v("description")}</textarea></div>
-    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Subjects / Tags</label><input class="finp" id="smf-tags" value="${esc((item?.subjects || item?.tags || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Subjects / Tags</label><input class="finp" id="smf-tags" value="${esc((item?.tags || item?.subjects || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Head of Department (HODs)</label><input class="finp" id="smf-hods" value="${esc((item?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Assistant HODs</label><input class="finp" id="smf-assistant-hods" value="${esc((item?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department Members</label><textarea class="finp fta" id="smf-members" placeholder="Add one member per line or comma separated">${esc((item?.members || []).join("\n"))}</textarea></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Display Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
     ${saMediaField(item?.image, '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
   </div>`;
@@ -3338,13 +3341,20 @@
             return;
           }
         } else if (type === "department") {
+          const parsePersonList = (value) =>
+            String(value || "")
+              .split(/\n|,/) 
+              .map((s) => s.trim())
+              .filter(Boolean);
+          const tagValue = gsmv("smf-tags");
           data = {
             name: gsmv("smf-name"),
             description: gsmv("smf-desc"),
-            subjects: gsmv("smf-tags")
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
+            tags: parsePersonList(tagValue),
+            subjects: parsePersonList(tagValue),
+            hods: parsePersonList(gsmv("smf-hods")),
+            assistantHods: parsePersonList(gsmv("smf-assistant-hods")),
+            members: parsePersonList(gsmv("smf-members")),
             image:
               (await saMediaValue()) ||
               '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
