@@ -2005,6 +2005,11 @@
         return fresh;
       }
 
+      function getSaPerms() {
+        const fresh = getFreshCurrentSa();
+        return Array.isArray(fresh?.permissions) ? fresh.permissions : [];
+      }
+
       function permForSaType(type) {
         return {
           news: "news",
@@ -2520,23 +2525,24 @@
       }
 
       async function showDashboard() {
-        if (!getFreshCurrentSa()) return;
+        const fresh = getFreshCurrentSa();
+        if (!fresh) return;
         document.getElementById("sa-login-screen").style.display = "none";
         document.getElementById("sa-dashboard").style.display = "block";
         document.body.classList.add("sa-portal");
         // Set user info
-        document.getElementById("sa-sb-name").textContent = CURRENT_SA.name;
-        document.getElementById("sa-sb-role").textContent = CURRENT_SA.role;
-        document.getElementById("sa-footer-name").textContent = CURRENT_SA.name;
-        document.getElementById("sa-footer-role").textContent = CURRENT_SA.role;
-        document.getElementById("sa-av-initials").textContent = CURRENT_SA.name
+        document.getElementById("sa-sb-name").textContent = fresh.name;
+        document.getElementById("sa-sb-role").textContent = fresh.role;
+        document.getElementById("sa-footer-name").textContent = fresh.name;
+        document.getElementById("sa-footer-role").textContent = fresh.role;
+        document.getElementById("sa-av-initials").textContent = fresh.name
           .split(" ")
           .map((n) => n[0])
           .join("")
           .slice(0, 2)
           .toUpperCase();
         document.getElementById("sa-welcome-title").innerHTML =
-          CURRENT_SA.name.split(" ")[0] +
+          fresh.name.split(" ")[0] +
           "'s <span class='gt'>Dashboard</span>";
         buildSaSidebar();
         loadSaPage("dashboard");
@@ -2544,13 +2550,17 @@
       }
 
       function buildSaSidebar() {
-        const perms = CURRENT_SA.permissions || [];
+        const perms = getSaPerms();
         const nav = document.getElementById("sa-nav-items");
-        nav.innerHTML = `<div class="sa-item active" onclick="showSaPage('dashboard',this)"><span class="sa-ic"><span class="ico ico-home" data-ico="home" aria-hidden="true"></span></span>Dashboard</div>`;
+        if (!nav) return;
+        const items = [
+          `<div class="sa-item active" onclick="showSaPage('dashboard',this)"><span class="sa-ic"><span class="ico ico-home" data-ico="home" aria-hidden="true"></span></span>Dashboard</div>`,
+        ];
         Object.entries(ALL_PERMS).forEach(([key, info]) => {
           const has = perms.includes(key);
-          nav.innerHTML += `<div class="sa-item ${has ? "" : "locked"}" onclick="${has ? `showSaPage('${key}',this)` : `saToast('You don\'t have permission for this section')`}"><span class="sa-ic">${info.icon}</span>${info.label}${has ? "" : '<span class="sa-lock"><span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span></span>'}</div>`;
+          items.push(`<div class="sa-item ${has ? "" : "locked"}" onclick="${has ? `showSaPage('${key}',this)` : `saToast('You don\'t have permission for this section')`}"><span class="sa-ic">${info.icon}</span>${info.label}${has ? "" : '<span class="sa-lock"><span class="ico ico-lock" data-ico="lock" aria-hidden="true"></span></span>'}</div>`);
         });
+        nav.innerHTML = items.join("");
         hydrateIcons(nav);
       }
 
@@ -2563,6 +2573,8 @@
 
       function showSaPage(key, el) {
         CURRENT_SA_PAGE = key;
+        const fresh = getFreshCurrentSa();
+        const perms = fresh ? getSaPerms() : [];
         if (key !== "dashboard" && !requireSaPerm(key)) {
           document
             .querySelectorAll(".sa-page")
@@ -2587,7 +2599,6 @@
               : null;
         if (pageId) {
           document.getElementById(pageId).classList.add("active");
-          const perms = CURRENT_SA?.permissions || [];
           if (key !== "dashboard" && !perms.includes(key)) {
             document.getElementById("sap-denied").classList.add("active");
             document.getElementById(pageId).classList.remove("active");
@@ -2683,7 +2694,7 @@
       }
 
       function loadSaDashboard() {
-        const perms = CURRENT_SA?.permissions || [];
+        const perms = getSaPerms();
         refreshSaAiSummary();
         toggleSaAiPanel(false);
         // Stats based on what they can see
@@ -2823,14 +2834,23 @@
         const items = DB.getAll("departments").sort((a, b) => (a.order || 0) - (b.order || 0));
         document.getElementById("sa-departments-list").innerHTML =
           items
-            .map(
-              (d) => `
+            .map((d) => {
+              const tags = (d.tags || d.subjects || []).filter(Boolean);
+              const hods = (d.hods || []).filter(Boolean);
+              const assistantHods = (d.assistantHods || []).filter(Boolean);
+              const members = (d.members || []).filter(Boolean);
+              const personChips = [];
+              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>HOD:</strong> ${esc(hods.join(", "))}</div>`);
+              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant HOD:</strong> ${esc(assistantHods.join(", "))}</div>`);
+              if (members.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Members:</strong> ${esc(members.slice(0, 6).join(", "))}${members.length > 6 ? "…" : ""}</div>`);
+              const personSection = personChips.length ? `<div style="display:grid;gap:2px;margin-top:6px">${personChips.join("")}</div>` : "";
+              return `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
       <div style="width:56px;height:56px;border-radius:12px;background:${d.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(d.image || '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(d.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc(d.description || "")}</div><div style="font-size:11px;color:var(--g400);margin-top:4px">${esc((d.subjects || []).join(", "))}</div></div>
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(d.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc(d.description || "")}</div>${tags.length ? `<div style="font-size:11px;color:var(--g400);margin-top:4px">${esc(tags.join(", "))}</div>` : ""}${personSection}</div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('department','${d.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete department?'))saDelete('departments','${d.id}','departments')">Delete</button></div>
-    </div>`,
-            )
+    </div>`;
+            })
             .join("") ||
           '<div style="padding:30px;text-align:center;color:var(--g400)">No departments yet.</div>';
       }

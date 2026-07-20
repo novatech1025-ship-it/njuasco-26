@@ -306,7 +306,10 @@
           return `<div style="display:flex;flex-direction:column;gap:14px">
     <div class="fg"><label class="flbl">Department Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="e.g. Science Department"></div>
     <div class="fg"><label class="flbl">Description</label><textarea class="finp fta" id="mf-desc" placeholder="Short department description">${v("description")}</textarea></div>
-    <div class="fg"><label class="flbl">Subjects / Tags (comma-separated)</label><input class="finp" id="mf-tags" value="${esc((d?.tags || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
+    <div class="fg"><label class="flbl">Subjects / Tags (comma-separated)</label><input class="finp" id="mf-tags" value="${esc((d?.tags || d?.subjects || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
+    <div class="fg"><label class="flbl">Head of Department (HODs)</label><input class="finp" id="mf-hods" value="${esc((d?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
+    <div class="fg"><label class="flbl">Assistant HODs</label><input class="finp" id="mf-assistant-hods" value="${esc((d?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
+    <div class="fg"><label class="flbl">Department Members</label><textarea class="finp fta" id="mf-members" placeholder="Add one member per line or comma separated">${esc((d?.members || []).join("\n"))}</textarea></div>
     ${mediaField("Icon / Image", '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
     ${colorPickerField("mf-color", d?.color || "linear-gradient(135deg,#2563eb,#4f46e5)", { mode: "gradient", label: "Department Colour" })}
     <div class="fg"><label class="flbl">Display Order</label><input class="finp" id="mf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
@@ -420,6 +423,8 @@
               '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span> Leadership',
             facilities:
               '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span> Facilities',
+            departments:
+              '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span> Departments',
             houses:
               '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span> Houses',
             clubs:
@@ -512,13 +517,20 @@
           }
         } else if (type === "department") {
           const existing = id ? DB.getById("departments", id) : null;
+          const parsePersonList = (value) =>
+            String(value || "")
+              .split(/\n|,/) 
+              .map((s) => s.trim())
+              .filter(Boolean);
+          const tagValue = gv("mf-tags");
           data = {
             name: gv("mf-name"),
             description: gv("mf-desc"),
-            tags: gv("mf-tags")
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
+            tags: parsePersonList(tagValue),
+            subjects: parsePersonList(tagValue),
+            hods: parsePersonList(gv("mf-hods")),
+            assistantHods: parsePersonList(gv("mf-assistant-hods")),
+            members: parsePersonList(gv("mf-members")),
             image:
               (await mediaValue()) ||
               '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
@@ -1792,18 +1804,28 @@
         const items = DB.getAll("departments").sort((a, b) => (a.order || 0) - (b.order || 0));
         document.getElementById("dept-list").innerHTML =
           items
-            .map(
-              (d) => `
+            .map((d) => {
+              const tags = (d.tags || d.subjects || []).filter(Boolean);
+              const hods = (d.hods || []).filter(Boolean);
+              const assistantHods = (d.assistantHods || []).filter(Boolean);
+              const members = (d.members || []).filter(Boolean);
+              const personChips = [];
+              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>HOD:</strong> ${esc(hods.join(", "))}</div>`);
+              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant HOD:</strong> ${esc(assistantHods.join(", "))}</div>`);
+              if (members.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Members:</strong> ${esc(members.slice(0, 6).join(", "))}${members.length > 6 ? "…" : ""}</div>`);
+              const personSection = personChips.length ? `<div style="display:grid;gap:2px;margin-top:6px">${personChips.join("")}</div>` : "";
+              return `
     <div style="background:#fff;border-radius:var(--r);padding:16px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
       <div style="width:52px;height:52px;border-radius:12px;background:${esc(d.color || "linear-gradient(135deg,#2563eb,#4f46e5)")};display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0;overflow:hidden">${mediaMarkup(d.image || "")}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:15px;font-weight:700;margin-bottom:3px">${esc(d.name)}</div>
         <div style="font-size:12px;color:var(--g500);margin-bottom:6px">${esc((d.description || "").slice(0, 120))}${(d.description || "").length > 120 ? "..." : ""}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">${(d.tags || []).map((tag) => `<span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px">${esc(tag)}</span>`).join("")}</div>
+        ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px">${tags.map((tag) => `<span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px">${esc(tag)}</span>`).join("")}</div>` : ""}
+        ${personSection}
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-sm btn-g" onclick="openModal('department','${d.id}')">Edit</button><button class="btn btn-sm btn-r" onclick="delItem('departments','${d.id}','departments-mgr')"><span class="ico ico-x" data-ico="x" aria-hidden="true"></span></button></div>
-    </div>`,
-            )
+    </div>`;
+            })
             .join("") ||
           '<div style="padding:24px;text-align:center;color:var(--g400)">No departments yet.</div>';
       }
