@@ -600,7 +600,7 @@
     <div id="staff-otp-ov" role="dialog" aria-modal="true">
       <div class="staff-otp-box">
         <h2>Verify it's you</h2>
-        <p>SMS verification is currently disabled. Use your sub-admin email and password to sign in. Your session stays active for 5 hours on this device.</p>
+        <p>SMS verification is currently disabled. Use your sub-admin email and password to sign in. Your session stays active for 2 hours on this device.</p>
         <div class="fg"><label class="flbl">Mobile Number</label><input class="finp" id="staff-otp-phone" type="tel" placeholder="+233 XX XXX XXXX" /></div>
         <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-p" type="button" id="staff-otp-send">Send code</button></div>
         <div id="staff-otp-panel" style="display:none;margin-top:16px">
@@ -689,7 +689,7 @@
             />
           </div>
           <p style="font-size: 12px; color: rgba(255, 255, 255, 0.55); margin: 0 0 10px; line-height: 1.5">
-            Welcome! This is your first login. Create a password you will use next time. After that, your portal stays signed in for 5 hours on this device.
+            Welcome! This is your first login. Create a password you will use next time. After that, your portal stays signed in for 2 hours on this device.
           </p>
         </div>
         <button class="sa-login-btn" id="sa-continue-btn" type="button" onclick="saContinueEmail()" style="display: none">
@@ -1631,14 +1631,9 @@
         this._set("subadmins", d);
       };
 
-      // Seed default sub-admins if none exist
+      // Seed default sub-admins if needed and preserve any existing profiles.
       (function seedSubAdmins() {
-        if (localStorage.getItem("nj_sa_seeded")) return;
-        if (DB._getSaAdmins().length) {
-          localStorage.setItem("nj_sa_seeded", "1");
-          return;
-        }
-        DB._saveSaAdmins([
+        const defaults = [
           {
             id: "sa1",
             username: "newseditor",
@@ -1679,7 +1674,21 @@
             active: true,
             color: "linear-gradient(135deg,#f59e0b,#d97706)",
           },
-        ]);
+        ];
+        const existing = DB._getSaAdmins() || [];
+        const existingEmails = new Set(
+          existing
+            .map((item) => String(item?.email || item?.username || "").trim().toLowerCase())
+            .filter(Boolean),
+        );
+        const missing = defaults.filter((item) => {
+          const email = String(item?.email || item?.username || "").trim().toLowerCase();
+          return !existingEmails.has(email);
+        });
+        if (!existing.length || missing.length) {
+          const merged = [...existing, ...missing];
+          DB._saveSaAdmins(merged);
+        }
         localStorage.setItem("nj_sa_seeded", "1");
       })();
 
@@ -1773,7 +1782,7 @@
       let SA_EDIT_ID = null;
       let SA_EMAIL_VERIFIED = false;
       const SA_SESSION_KEY = "nj_sa_session";
-      const SA_SESSION_MS = DB?.PORTAL_SESSION_MS || 5 * 60 * 60 * 1000;
+      const SA_SESSION_MS = DB?.SUBADMIN_SESSION_MS || DB?.PORTAL_SESSION_MS || 2 * 60 * 60 * 1000;
 
       function esc(s) {
         return String(s ?? "")
@@ -1924,23 +1933,38 @@
       }
 
       async function saContinueEmail() {
-        const email = document.getElementById("sa-user").value.trim();
+        const emailInput = document.getElementById("sa-user");
+        const email = String(emailInput?.value || "").trim();
         if (!email) {
           saToast("Enter your staff email first");
           return;
         }
-        if (DB?.syncRemoteAll) await DB.syncRemoteAll();
-        const profile = DB.findSubAdminByEmail?.(email);
+        const normalizedEmail = email.toLowerCase();
+        if (emailInput) {
+          emailInput.value = normalizedEmail;
+        }
+        setSaLoginBusy(true, "Verifying...");
+        try {
+          if (DB?.syncRemoteAll) await DB.syncRemoteAll();
+        } catch {
+          // Continue with the latest local copy if the network is temporarily unavailable.
+        }
+        const profile = DB.findSubAdminByEmail?.(normalizedEmail);
         if (!profile) {
+          setSaLoginBusy(false);
           saToast("This email is not assigned as a sub-admin. Contact the Super Admin.");
           return;
         }
         const existingUser = (await DB.getAuthUser?.()) || null;
-        const freshProfile = DB.findSubAdminByEmail?.(email) || profile;
+        const freshProfile = DB.findSubAdminByEmail?.(normalizedEmail) || profile;
         SA_EMAIL_VERIFIED = true;
-        document.getElementById("sa-user").disabled = true;
-        document.getElementById("sa-continue-btn").style.display = "none";
-        document.getElementById("sa-back-btn").style.display = "block";
+        if (emailInput) {
+          emailInput.disabled = true;
+        }
+        const continueBtn = document.getElementById("sa-continue-btn");
+        const backBtn = document.getElementById("sa-back-btn");
+        if (continueBtn) continueBtn.style.display = "none";
+        if (backBtn) backBtn.style.display = "block";
         if (DB.subAdminNeedsPasswordSetup?.(freshProfile, existingUser)) {
           document.getElementById("sa-setup-wrap").style.display = "block";
           document.getElementById("sa-setup-btn").style.display = "block";
@@ -1950,6 +1974,7 @@
           document.getElementById("sa-login-btn").style.display = "block";
           document.getElementById("sa-pass").focus();
         }
+        setSaLoginBusy(false);
       }
 
       async function saSavePassword() {
@@ -2434,6 +2459,34 @@
         }
       }
 
+      function applySaLoginScreenDefaults() {
+        const saEmailWrap = document.getElementById("sa-user")?.closest(".sa-inp-wrap");
+        const saPassWrap = document.getElementById("sa-pass-wrap");
+        const saDivider = document.querySelector("#sa-login-screen .sa-login-divider");
+        const saContinueBtn = document.getElementById("sa-continue-btn");
+        const saLoginBtn = document.getElementById("sa-login-btn");
+        const saSetupWrap = document.getElementById("sa-setup-wrap");
+        const saSetupBtn = document.getElementById("sa-setup-btn");
+        const saBackBtn = document.getElementById("sa-back-btn");
+        if (saEmailWrap) saEmailWrap.style.display = "flex";
+        if (saPassWrap) saPassWrap.style.display = "none";
+        if (saDivider) saDivider.style.display = "none";
+        if (saContinueBtn) {
+          saContinueBtn.style.display = "block";
+          saContinueBtn.disabled = false;
+        }
+        if (saLoginBtn) {
+          saLoginBtn.style.display = "none";
+          saLoginBtn.disabled = false;
+        }
+        if (saSetupWrap) saSetupWrap.style.display = "none";
+        if (saSetupBtn) {
+          saSetupBtn.style.display = "none";
+          saSetupBtn.disabled = false;
+        }
+        if (saBackBtn) saBackBtn.style.display = "none";
+      }
+
       function showDashboardPasswordModal(email) {
         const overlay = document.getElementById("dashboard-password-ov");
         const input = document.getElementById("dashboard-password-input");
@@ -2840,8 +2893,8 @@
               const assistantHods = (d.assistantHods || []).filter(Boolean);
               const members = (d.members || []).filter(Boolean);
               const personChips = [];
-              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>HOD:</strong> ${esc(hods.join(", "))}</div>`);
-              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant HOD:</strong> ${esc(assistantHods.join(", "))}</div>`);
+              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>H.O.D:</strong> ${esc(hods.join(", "))}</div>`);
+              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant H.O.D:</strong> ${esc(assistantHods.join(", "))}</div>`);
               if (members.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Members:</strong> ${esc(members.slice(0, 6).join(", "))}${members.length > 6 ? "…" : ""}</div>`);
               const personSection = personChips.length ? `<div style="display:grid;gap:2px;margin-top:6px">${personChips.join("")}</div>` : "";
               return `
@@ -3201,8 +3254,8 @@
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department Name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="e.g. Science Department"></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><textarea class="finp fta" id="smf-desc" placeholder="Short department description">${v("description")}</textarea></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Subjects / Tags</label><input class="finp" id="smf-tags" value="${esc((item?.tags || item?.subjects || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
-    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Head of Department (HODs)</label><input class="finp" id="smf-hods" value="${esc((item?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
-    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Assistant HODs</label><input class="finp" id="smf-assistant-hods" value="${esc((item?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">H.O.D</label><input class="finp" id="smf-hods" value="${esc((item?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Assistant H.O.D</label><input class="finp" id="smf-assistant-hods" value="${esc((item?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Department Members</label><textarea class="finp fta" id="smf-members" placeholder="Add one member per line or comma separated">${esc((item?.members || []).join("\n"))}</textarea></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Display Order</label><input class="finp" id="smf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
     ${saMediaField(item?.image, '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
@@ -3600,6 +3653,7 @@
       }
       // Check for existing session
       document.addEventListener("DOMContentLoaded", async () => {
+        applySaLoginScreenDefaults();
         const refreshSubAdmin = () => {
           if (CURRENT_SA) {
             getFreshCurrentSa();
@@ -3612,18 +3666,19 @@
           subAdminRefreshTimer = setTimeout(refreshSubAdmin, 150);
         };
         if (DB?.syncRemoteAll) {
-          await DB.syncRemoteAll();
+          DB.syncRemoteAll().catch(() => {}).finally(() => refreshSubAdmin());
+        } else {
           refreshSubAdmin();
         }
         setInterval(() => {
           if (document.hidden || !DB?.syncRemoteAll) return;
-          DB.syncRemoteAll().then(scheduleSubAdminRefresh);
+          DB.syncRemoteAll().then(scheduleSubAdminRefresh).catch(() => {});
         }, 30000);
         if (DB?.subscribeRemoteInfo) {
-          DB.subscribeRemoteInfo(scheduleSubAdminRefresh);
+          DB.subscribeRemoteInfo(scheduleSubAdminRefresh).catch(() => {});
         }
         if (DB?.subscribeRemoteContent) {
-          DB.subscribeRemoteContent(scheduleSubAdminRefresh);
+          DB.subscribeRemoteContent(scheduleSubAdminRefresh).catch(() => {});
         }
         document.getElementById("sa-user")?.addEventListener("keydown", (e) => {
           if (e.key === "Enter") saContinueEmail();
@@ -3639,22 +3694,6 @@
         if (shortcutEl) {
           shortcutEl.textContent = new URL("staff.html", window.location.href).pathname;
         }
-        const saEmailWrap = document.getElementById("sa-user")?.closest(".sa-inp-wrap");
-        const saPassWrap = document.getElementById("sa-pass-wrap");
-        const saDivider = document.querySelector("#sa-login-screen .sa-login-divider");
-        const saContinueBtn = document.getElementById("sa-continue-btn");
-        const saLoginBtn = document.getElementById("sa-login-btn");
-        const saSetupWrap = document.getElementById("sa-setup-wrap");
-        const saSetupBtn = document.getElementById("sa-setup-btn");
-        const saBackBtn = document.getElementById("sa-back-btn");
-        if (saEmailWrap) saEmailWrap.style.display = "flex";
-        if (saPassWrap) saPassWrap.style.display = "none";
-        if (saDivider) saDivider.style.display = "none";
-        if (saContinueBtn) saContinueBtn.style.display = "block";
-        if (saLoginBtn) saLoginBtn.style.display = "none";
-        if (saSetupWrap) saSetupWrap.style.display = "none";
-        if (saSetupBtn) saSetupBtn.style.display = "none";
-        if (saBackBtn) saBackBtn.style.display = "none";
 
         const params = new URLSearchParams(location.search);
         try {
@@ -3672,6 +3711,7 @@
           saToast(error?.message || "Could not sign you in. Check your sub-admin access.");
         }
       });
+      applySaLoginScreenDefaults();
       document.getElementById("sa-modal-ov").addEventListener("click", (e) => {
         if (e.target === document.getElementById("sa-modal-ov")) closeSaModal();
       });

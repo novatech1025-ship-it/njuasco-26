@@ -28,8 +28,10 @@ window.NJUASCO_SUPABASE = SUPABASE_CONFIG;
 })();
 
 const DB = {
-  PORTAL_SESSION_MS: 5 * 60 * 60 * 1000,
-  DASHBOARD_PASSWORD_MS: 5 * 60 * 60 * 1000,
+  ADMIN_SESSION_MS: 3 * 60 * 60 * 1000,
+  SUBADMIN_SESSION_MS: 2 * 60 * 60 * 1000,
+  PORTAL_SESSION_MS: 2 * 60 * 60 * 1000,
+  DASHBOARD_PASSWORD_MS: 3 * 60 * 60 * 1000,
   _remoteSyncReady: false,
   _pendingRemoteWrites: new Map(),
   _remoteContentSubscribers: [],
@@ -102,7 +104,7 @@ const DB = {
       app_metadata: { provider: "local-admin" },
       user_metadata: { name: "NJUASCO Admin" },
       signedInAt: new Date(now).toISOString(),
-      expiresAt: now + this.PORTAL_SESSION_MS,
+      expiresAt: now + this._portalSessionMs("admin"),
     };
     localStorage.setItem("nj_full_admin_session", JSON.stringify(user));
     this.savePortalSession("admin", email);
@@ -125,13 +127,16 @@ const DB = {
     localStorage.removeItem("nj_full_admin_session");
     this.clearPortalSession("admin");
   },
+  _portalSessionMs(role) {
+    return role === "admin" ? this.ADMIN_SESSION_MS : this.SUBADMIN_SESSION_MS;
+  },
   savePortalSession(role, email) {
     const key = `nj_portal_${role}`;
     localStorage.setItem(
       key,
       JSON.stringify({
         email: this._email(email),
-        expiresAt: Date.now() + this.PORTAL_SESSION_MS,
+        expiresAt: Date.now() + this._portalSessionMs(role),
       }),
     );
   },
@@ -156,11 +161,12 @@ const DB = {
   saveDashboardPasswordTrust(role, email) {
     const key = this._dashboardPasswordTrustKey(role, email);
     const now = Date.now();
+    const ttl = role === "admin" ? this.ADMIN_SESSION_MS : this.SUBADMIN_SESSION_MS;
     localStorage.setItem(
       key,
       JSON.stringify({
         verifiedAt: now,
-        expiresAt: now + this.DASHBOARD_PASSWORD_MS,
+        expiresAt: now + ttl,
       }),
     );
   },
@@ -2241,12 +2247,23 @@ DB.findOrCreateShopCustomer = function ({ name, email, phone }) {
 };
 
 DB.saveCheckoutSession = function (session) {
-  sessionStorage.setItem("nj_checkout_verify", JSON.stringify(session));
+  const now = Date.now();
+  const payload = {
+    ...session,
+    savedAt: now,
+    expiresAt: session?.expiresAt || now + 30 * 24 * 60 * 60 * 1000,
+  };
+  localStorage.setItem("nj_checkout_verify", JSON.stringify(payload));
 };
 
 DB.getCheckoutSession = function () {
   try {
-    return JSON.parse(sessionStorage.getItem("nj_checkout_verify") || "null");
+    const data = JSON.parse(localStorage.getItem("nj_checkout_verify") || "null");
+    if (!data?.verificationToken || !data?.expiresAt || Number(data.expiresAt) <= Date.now()) {
+      this.clearCheckoutSession();
+      return null;
+    }
+    return data;
   } catch {
     return null;
   }
@@ -2267,7 +2284,7 @@ DB.formatCheckoutPhone = function (phone) {
 };
 
 DB.clearCheckoutSession = function () {
-  sessionStorage.removeItem("nj_checkout_verify");
+  localStorage.removeItem("nj_checkout_verify");
 };
 
 DB.forceSyncContentKey = async function (key) {

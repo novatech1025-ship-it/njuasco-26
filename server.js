@@ -20,6 +20,7 @@ const CHECKOUT_OTP_DEV_MODE = process.env.CHECKOUT_OTP_DEV_MODE === "true";
 
 const OTP_STORE = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
+const VERIFY_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 
 const AI_SYSTEM_PROMPT =
@@ -331,9 +332,9 @@ async function handleCheckoutOtp(req, res) {
       const verificationToken = signVerificationToken({
         phone,
         customerId,
-        exp: Date.now() + 15 * 60 * 1000,
+        exp: Date.now() + VERIFY_TOKEN_TTL_MS,
       });
-      send(res, 200, JSON.stringify({ ok: true, verificationToken, customerId, expiresIn: 900 }));
+      send(res, 200, JSON.stringify({ ok: true, verificationToken, customerId, expiresIn: VERIFY_TOKEN_TTL_MS / 1000 }));
       return;
     }
 
@@ -460,4 +461,3 @@ http
   .listen(PORT, () => {
     console.log(`NJUASCO site running at http://localhost:${PORT}`);
   });
-

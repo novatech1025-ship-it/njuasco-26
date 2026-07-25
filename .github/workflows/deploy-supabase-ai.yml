@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "supabase/functions/njuasco-ai/**"
+      - "supabase/functions/checkout-otp/**"
       - ".github/workflows/deploy-supabase-ai.yml"
 
 jobs:
@@ -33,3 +34,9 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase functions deploy njuasco-ai --project-ref gkzuzugokctccfadzqwf
+
+      - name: Deploy checkout-otp function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy checkout-otp --project-ref gkzuzugokctccfadzqwf

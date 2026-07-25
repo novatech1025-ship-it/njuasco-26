@@ -1124,6 +1124,14 @@
       function continueToVerification(){
         const {fname,phone,wardName,wardClass}=getCheckoutCustomerFields();
         if(!fname||!phone||!wardName||!wardClass){toast('Please fill in all required fields');return;}
+        const saved=DB.getCheckoutSession();
+        if(saved?.verificationToken&&DB._normalizeCheckoutPhone(saved.phone)===DB._normalizeCheckoutPhone(phone)){
+          checkoutVerification=saved;
+          unlockCheckoutPayment();
+          showCheckoutStep('payment');
+          toast('Phone already verified on this device.');
+          return;
+        }
         const verifyPhone=document.getElementById('co-verify-phone');
         if(verifyPhone && !verifyPhone.value.trim()) verifyPhone.value=phone;
         showCheckoutStep('verify');
@@ -1263,6 +1271,13 @@
         if(!fname||!phone||!wardName||!wardClass){toast('Please fill in all required fields');return;}
         checkoutVerification=checkoutVerification||DB.getCheckoutSession();
         if(!checkoutVerification?.verificationToken){toast('Verify your mobile number before checkout');showCheckoutStep('verify');return;}
+        if(DB._normalizeCheckoutPhone(checkoutVerification.phone)!==DB._normalizeCheckoutPhone(phone)){
+          checkoutVerification=null;
+          DB.clearCheckoutSession();
+          toast('Verify this mobile number before checkout');
+          showCheckoutStep('verify');
+          return;
+        }
         const ref='NJ-ORD-'+crypto.randomUUID().slice(0,8).toUpperCase();
         const cart=DB.getCart();
         const paymentMethod=document.querySelector('[name="pay"]:checked')?.value||'stripe';
@@ -1295,19 +1310,15 @@
         }
         document.getElementById('order-ref').textContent='Order #'+ref;
         DB.clearCart();
-        DB.clearCheckoutSession();
         document.getElementById('order-success').style.display='flex';
         toast('Order placed! Ref: '+ref);
       }
       document.addEventListener('DOMContentLoaded',()=>{
         checkoutVerification=DB.getCheckoutSession();
-        if(checkoutVerification?.verificationToken) unlockCheckoutPayment();
         const params=new URLSearchParams(window.location.search);
         if(params.get('payment')==='success'){
           const ref=params.get('ref')||'';
           DB.clearCart();
-          DB.clearCheckoutSession();
-          checkoutVerification=null;
           if(ref){
             document.getElementById('order-ref').textContent='Order #'+ref;
             const orders=DB.getAll('orders');
@@ -1327,8 +1338,11 @@
           window.history.replaceState({},document.title,'checkout.html');
         }
         renderCheckoutSummary();
+        const fields=getCheckoutCustomerFields();
+        if(checkoutVerification?.verificationToken&&(!fields.phone||DB._normalizeCheckoutPhone(checkoutVerification.phone)===DB._normalizeCheckoutPhone(fields.phone))){
+          unlockCheckoutPayment();
+        }
       });
     </script>
   </body>
 </html>
-

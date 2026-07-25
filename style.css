@@ -1498,21 +1498,25 @@ ul {
 
 .wbadge {
   position: absolute;
-  bottom: -16px;
-  right: -8px;
-  background: #fff;
-  border-radius: var(--rl);
-  padding: 14px 18px;
-  box-shadow: var(--sh4);
+  left: 16px;
+  bottom: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
   display: flex;
   align-items: center;
   gap: 10px;
+  z-index: 3;
+  max-width: calc(100% - 32px);
+  backdrop-filter: blur(10px);
 }
 
 @media (min-width: 480px) {
   .wbadge {
-    bottom: -20px;
-    right: -20px;
+    left: 18px;
+    bottom: 18px;
   }
 }
 
@@ -3085,6 +3089,59 @@ ul {
   border-radius: 100px;
   font-size: 11px;
   font-weight: 600;
+}
+
+.dept-people {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--g100);
+}
+
+.dept-people-row {
+  display: grid;
+  gap: 7px;
+}
+
+.dept-people-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--g600);
+}
+
+.dept-people-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dept-person-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.dept-person-hod {
+  background: rgba(37, 99, 235, 0.09);
+  color: var(--b6);
+}
+
+.dept-person-assistant {
+  background: rgba(245, 158, 11, 0.13);
+  color: #92400e;
+}
+
+.dept-person-member {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════

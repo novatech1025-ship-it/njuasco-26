@@ -15,6 +15,7 @@ const corsHeaders = {
 };
 
 const OTP_TTL_MS = 5 * 60 * 1000;
+const VERIFY_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
 export default {
@@ -112,10 +113,10 @@ export default {
         await supabase.from("checkout_otp_challenges").delete().eq("id", row.id);
         const customerId = crypto.randomUUID();
         const verificationToken = await signToken(
-          { phone, customerId, exp: Date.now() + 15 * 60 * 1000 },
+          { phone, customerId, exp: Date.now() + VERIFY_TOKEN_TTL_MS },
           secret,
         );
-        return json({ ok: true, verificationToken, customerId, expiresIn: 900 });
+        return json({ ok: true, verificationToken, customerId, expiresIn: VERIFY_TOKEN_TTL_MS / 1000 });
       }
 
       return json({ error: "Unknown action" }, 400);

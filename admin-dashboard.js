@@ -307,8 +307,8 @@
     <div class="fg"><label class="flbl">Department Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="e.g. Science Department"></div>
     <div class="fg"><label class="flbl">Description</label><textarea class="finp fta" id="mf-desc" placeholder="Short department description">${v("description")}</textarea></div>
     <div class="fg"><label class="flbl">Subjects / Tags (comma-separated)</label><input class="finp" id="mf-tags" value="${esc((d?.tags || d?.subjects || []).join(", "))}" placeholder="Biology, Chemistry, Physics"></div>
-    <div class="fg"><label class="flbl">Head of Department (HODs)</label><input class="finp" id="mf-hods" value="${esc((d?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
-    <div class="fg"><label class="flbl">Assistant HODs</label><input class="finp" id="mf-assistant-hods" value="${esc((d?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
+    <div class="fg"><label class="flbl">H.O.D</label><input class="finp" id="mf-hods" value="${esc((d?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
+    <div class="fg"><label class="flbl">Assistant H.O.D</label><input class="finp" id="mf-assistant-hods" value="${esc((d?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
     <div class="fg"><label class="flbl">Department Members</label><textarea class="finp fta" id="mf-members" placeholder="Add one member per line or comma separated">${esc((d?.members || []).join("\n"))}</textarea></div>
     ${mediaField("Icon / Image", '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
     ${colorPickerField("mf-color", d?.color || "linear-gradient(135deg,#2563eb,#4f46e5)", { mode: "gradient", label: "Department Colour" })}
@@ -732,6 +732,7 @@
             "school",
             "team",
             "facilities",
+            "departments",
             "houses",
             "clubs",
             "teachers",
@@ -1810,8 +1811,8 @@
               const assistantHods = (d.assistantHods || []).filter(Boolean);
               const members = (d.members || []).filter(Boolean);
               const personChips = [];
-              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>HOD:</strong> ${esc(hods.join(", "))}</div>`);
-              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant HOD:</strong> ${esc(assistantHods.join(", "))}</div>`);
+              if (hods.length) personChips.push(`<div style="font-size:11px;color:var(--g500);margin-top:6px"><strong>H.O.D:</strong> ${esc(hods.join(", "))}</div>`);
+              if (assistantHods.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Assistant H.O.D:</strong> ${esc(assistantHods.join(", "))}</div>`);
               if (members.length) personChips.push(`<div style="font-size:11px;color:var(--g500)"><strong>Members:</strong> ${esc(members.slice(0, 6).join(", "))}${members.length > 6 ? "…" : ""}</div>`);
               const personSection = personChips.length ? `<div style="display:grid;gap:2px;margin-top:6px">${personChips.join("")}</div>` : "";
               return `
@@ -2603,6 +2604,8 @@
             '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span> Leadership',
           facilities:
             '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span> Facilities',
+          departments:
+            '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span> Departments',
           houses:
             '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span> Houses',
           clubs:
@@ -2806,4 +2809,3 @@
         const iconObserver = new MutationObserver(() => hydrateIcons(document));
         iconObserver.observe(document.body, { childList: true, subtree: true });
       });
-
