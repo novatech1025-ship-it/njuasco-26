@@ -92,6 +92,64 @@ const DB = {
   _email(value) {
     return String(value || "").trim().toLowerCase();
   },
+  async _sha256(value) {
+    if (!crypto?.subtle) throw new Error("Secure password storage is not available in this browser.");
+    const data = new TextEncoder().encode(String(value || ""));
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hash))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  },
+  _randomToken(length = 24) {
+    const bytes = new Uint8Array(length);
+    if (crypto?.getRandomValues) {
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes)
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+  },
+  _makeSubAdminUser(email, profile = {}) {
+    const normalized = this._email(email);
+    return {
+      id: profile.id || `local-subadmin-${normalized}`,
+      email: normalized,
+      role: "subadmin",
+      app_metadata: { provider: "local-subadmin" },
+      user_metadata: {
+        name: profile.name || profile.username || normalized,
+        subAdminId: profile.id || "",
+      },
+    };
+  },
+  async _subAdminPasswordHash(email, password, salt) {
+    if (!crypto?.subtle) throw new Error("Secure password storage is not available in this browser.");
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(String(password || "")),
+      "PBKDF2",
+      false,
+      ["deriveBits"],
+    );
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: encoder.encode(`njuasco-subadmin:v2:${this._email(email)}:${salt}`),
+        iterations: 120000,
+        hash: "SHA-256",
+      },
+      key,
+      256,
+    );
+    return Array.from(new Uint8Array(bits))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  },
+  async _subAdminPasswordHashV1(email, password, salt) {
+    return this._sha256(`njuasco-subadmin:v1:${this._email(email)}:${salt}:${password}`);
+  },
   _isLocalFullAdminCredential(email, password) {
     return this._email(email) === "novatech1025@gmail.com" && String(password || "") === "admin123";
   },
@@ -500,7 +558,11 @@ const DB = {
   },
   async markSubAdminPasswordReady(profile, passwordLabel = "Set") {
     if (!profile?.id) return profile;
-    this._saveSubAdminStaffPassword(profile.id, passwordLabel, { syncRemote: true });
+    if (passwordLabel && !/^Set$|^—/.test(String(passwordLabel))) {
+      await this._saveSubAdminPasswordCredential(profile.id, profile.email || profile.username, passwordLabel);
+    } else {
+      this._saveSubAdminStaffPassword(profile.id, "Set", { syncRemote: true });
+    }
     try {
       const client = await this._ensureSupabase();
       await client.auth.updateUser({
@@ -530,6 +592,52 @@ const DB = {
     }
     return true;
   },
+  async _saveSubAdminPasswordCredential(profileId, email, password, options = {}) {
+    const admins = this._get("subadmins");
+    const index = admins.findIndex((a) => a.id === profileId);
+    if (index === -1) return null;
+    const normalized = this._email(email || admins[index].email || admins[index].username);
+    const salt = this._randomToken(18);
+    const hash = await this._subAdminPasswordHash(normalized, password, salt);
+    admins[index] = {
+      ...admins[index],
+      email: normalized || admins[index].email,
+      staffPassword: "Set",
+      staffPasswordHash: hash,
+      passwordHashVersion: 2,
+      passwordSalt: salt,
+      passwordSet: true,
+      passwordSetAt: new Date().toISOString().split("T")[0],
+    };
+    this._set("subadmins", admins);
+    if (options.syncRemote !== false) {
+      this._pushRemoteContent("subadmins", admins);
+    }
+    return admins[index];
+  },
+  async verifySubAdminPassword(profile, password) {
+    if (!profile || !password) return false;
+    const email = this._subAdminEmail(profile);
+    if (profile.staffPasswordHash && profile.passwordSalt) {
+      const hash =
+        Number(profile.passwordHashVersion || 1) >= 2
+          ? await this._subAdminPasswordHash(email, password, profile.passwordSalt)
+          : await this._subAdminPasswordHashV1(email, password, profile.passwordSalt);
+      if (hash === profile.staffPasswordHash) {
+        if (Number(profile.passwordHashVersion || 1) < 2) {
+          await this._saveSubAdminPasswordCredential(profile.id, email, password);
+        }
+        return true;
+      }
+      return false;
+    }
+    const legacyPassword = String(profile.staffPassword || "");
+    if (legacyPassword && legacyPassword !== "Set" && legacyPassword === String(password)) {
+      await this._saveSubAdminPasswordCredential(profile.id, email, password);
+      return true;
+    }
+    return false;
+  },
   async setupSubAdminPassword(email, password) {
     if (String(password || "").length < 8) {
       throw new Error("Password must be at least 8 characters.");
@@ -543,50 +651,34 @@ const DB = {
     if (profile.passwordSet) {
       throw new Error("Password already set. Sign in with your password instead.");
     }
-
-    const client = await this._ensureSupabase();
-    let user = null;
-    const { data: signUpData, error: signUpError } = await client.auth.signUp({
-      email: normalized,
-      password,
-    });
-
-    if (signUpError) {
-      const msg = String(signUpError.message || "");
-      if (/already registered|already exists|duplicate/i.test(msg)) {
-        user = await this.signInWithEmail(normalized, password);
-      } else {
-        throw new Error(signUpError.message || "Could not create your account.");
-      }
-    } else {
-      user = signUpData?.user || signUpData?.session?.user || null;
-      if (!signUpData?.session) {
-        try {
-          user = await this.signInWithEmail(normalized, password);
-        } catch {
-          user = signUpData?.user || null;
-        }
-      }
-    }
-
-    if (!user?.email) {
-      user = await this.getSupabaseAuthUser();
-    }
-    if (!user?.email) {
-      throw new Error(
-        "Account created. If Supabase requires email confirmation, confirm your email then sign in.",
-      );
-    }
-
-    await this.markSubAdminPasswordReady(profile, password);
+    const updatedProfile = await this._saveSubAdminPasswordCredential(profile.id, normalized, password);
     await this._flushPendingRemoteWrites();
-    const updatedProfile = this.getSubAdminProfileByEmail(normalized);
-    return { user, profile: updatedProfile || profile };
+    return {
+      user: this._makeSubAdminUser(normalized, updatedProfile || profile),
+      profile: updatedProfile || this.getSubAdminProfileByEmail(normalized) || profile,
+    };
   },
   async signInSubAdmin(email, password) {
-    const user = await this.signInWithEmail(email, password);
-    const profile = await this.getSubAdminProfileForUser(user);
-    return { user, profile };
+    await this.syncRemoteAll();
+    const normalized = this._email(email);
+    const profile = this.getSubAdminProfileByEmail(normalized);
+    if (!profile) {
+      throw new Error("This email is not assigned to an active sub-admin profile.");
+    }
+    if (await this.verifySubAdminPassword(profile, password)) {
+      return { user: this._makeSubAdminUser(normalized, profile), profile };
+    }
+    try {
+      const user = await this.signInWithEmail(normalized, password);
+      const freshProfile = await this.getSubAdminProfileForUser(user);
+      return { user, profile: freshProfile };
+    } catch (error) {
+      const msg = String(error?.message || "");
+      if (/email rate limit/i.test(msg)) {
+        throw new Error("Supabase email rate limit was reached. Use the password you created for this sub-admin account.");
+      }
+      throw error;
+    }
   },
   async getSubAdminProfileForUser(user) {
     await this.syncRemoteAll();
