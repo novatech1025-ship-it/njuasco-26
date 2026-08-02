@@ -1419,14 +1419,69 @@ ul {
 .wgrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 40px;
+  gap: clamp(28px, 5vw, 64px);
   align-items: center;
+}
+
+.welcome-redesign {
+  position: relative;
+}
+
+.welcome-media {
+  position: relative;
+  min-width: 0;
+}
+
+.welcome-copy {
+  max-width: 620px;
+  min-width: 0;
+}
+
+.welcome-copy .sdesc {
+  margin-bottom: 18px;
+}
+
+.welcome-note {
+  margin: 0 0 24px;
+  padding: 16px 18px;
+  border-left: 4px solid #f2cc00;
+  border-radius: 0 16px 16px 0;
+  background: linear-gradient(90deg, rgba(242, 204, 0, 0.16), transparent);
+  color: var(--g700);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 @media (min-width: 768px) {
   .wgrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
+    grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+  }
+
+  .wbox {
+    aspect-ratio: auto;
+    min-height: clamp(350px, 32vw, 480px);
+    width: 100%;
+  }
+
+  .wbox .wimg {
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--g100), var(--g50));
+  }
+}
+
+@media (min-width: 1180px) {
+  .wgrid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(500px, 1.1fr);
+  }
+
+  .welcome-copy {
+    padding-left: 8px;
   }
 }
 
@@ -1441,6 +1496,8 @@ ul {
   align-items: center;
   justify-content: center;
   position: relative;
+  isolation: isolate;
+  max-width: 100%;
 }
 
 .wslides {
@@ -1448,6 +1505,8 @@ ul {
   inset: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
 .slide-container {
@@ -1523,24 +1582,24 @@ ul {
 
 .wbadge {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: clamp(150px, 16vw, 205px);
-  min-height: clamp(118px, 12.7vw, 162px);
-  background: #0b55ad;
+  left: clamp(10px, 2.2vw, 18px);
+  bottom: clamp(10px, 2.2vw, 18px);
+  width: min(170px, calc(100% - 20px));
+  min-height: auto;
+  background: rgba(11, 85, 173, 0.94);
   border-right: 4px solid #f2cc00;
-  border-bottom: 4px solid #f2cc00;
-  border-radius: 0 0 clamp(36px, 4vw, 55px) 0;
-  padding: clamp(24px, 4vw, 58px) 18px 16px clamp(22px, 3vw, 40px);
-  box-shadow: none;
+  border-bottom: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.2);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 0;
+  gap: 4px;
   z-index: 3;
   max-width: none;
-  backdrop-filter: none;
+  backdrop-filter: blur(10px);
   overflow: hidden;
 }
 
@@ -1556,18 +1615,23 @@ ul {
 .wbn,
 .wbt {
   font-family: "DM Sans", sans-serif;
-  font-size: clamp(15px, 2.2vw, 23px);
   font-weight: 900;
   color: #fff;
-  line-height: 1.22;
+  line-height: 1.1;
   letter-spacing: 0;
   position: relative;
   z-index: 1;
   text-transform: uppercase;
 }
 
+.wbn {
+  font-size: clamp(24px, 3vw, 34px);
+}
+
 .wbt {
+  font-size: clamp(10px, 1vw, 13px);
   margin-top: 0;
+  color: rgba(255, 255, 255, 0.86);
 }
 
 @media (max-width: 479px) {
@@ -1577,39 +1641,36 @@ ul {
   }
 
   .wbadge {
-    width: min(126px, 36%);
-    min-height: 94px;
-    padding: 24px 10px 10px 14px;
+    width: min(158px, calc(100% - 24px));
+    padding: 12px 14px;
     border-right-width: 3px;
-    border-bottom-width: 3px;
-    border-radius: 0 0 30px 0;
+    border-radius: 16px;
   }
 
-  .wbn,
-  .wbt {
-    font-size: 14px;
-    line-height: 1.18;
+  .wbn {
+    font-size: 24px;
   }
 
   .wbt {
-    margin-top: 0;
+    font-size: 11px;
   }
 }
 .fgrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   margin-bottom: 28px;
 }
 
 .fitem {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 18px;
   background: var(--g50);
   border-radius: var(--r);
   transition: var(--tr);
+  min-width: 0;
 }
 
 .fitem:hover {
@@ -1617,29 +1678,40 @@ ul {
   transform: translateY(-2px);
 }
 
+@media (max-width: 640px) {
+  .fgrid {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-actions .btn {
+    width: 100%;
+  }
+}
+
 .fic {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   background: var(--gp);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
 .ftt {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--g800);
-  margin-bottom: 2px;
+  margin-bottom: 6px;
+  line-height: 1.35;
 }
 
 .ftd {
-  font-size: 11px;
-  color: var(--g500);
-  line-height: 1.5;
+  font-size: 13px;
+  color: var(--g600);
+  line-height: 1.55;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -6176,3 +6248,4 @@ body.nj-hydrating #ldr {
   font-size: 11px;
   font-weight: 600;
 }
+
