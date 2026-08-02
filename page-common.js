@@ -2127,38 +2127,17 @@ let homeSlideTimer = null;
 function renderHomeSlides() {
   const wrap = document.getElementById("home-slides");
   if (!wrap) return;
-  const slides = DB.getAll("homepageSlides")
-    .filter((s) => (s.status || "active") === "active" && s.image)
-    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-  const usable = slides.length ? slides : [{ title: "New Juaben Senior High School", image: "njb.png" }];
-  wrap.innerHTML = usable
-    .map(
-      (s, i) =>
-        `<div class="slide-container" data-slide-index="${i}">
-          <img 
-            class="wimg ${i === 0 ? "active" : ""}" 
-            src="${esc(s.image)}" 
-            alt="${esc(s.title || "New Juaben Senior High School")}" 
-            loading="${i === 0 ? "eager" : "lazy"}"
-            decoding="async"
-          />
-          ${s.showText && s.overlayText ? `<div class="slide-overlay"><div class="slide-text">${esc(s.overlayText)}</div></div>` : ""}
-        </div>`,
-    )
-    .join("");
   clearInterval(homeSlideTimer);
-  if (usable.length < 2) return;
-  let idx = 0;
-  const containers = [...wrap.querySelectorAll(".slide-container")];
-  homeSlideTimer = setInterval(() => {
-    containers.forEach((c) => {
-      const img = c.querySelector(".wimg");
-      if (img) img.classList.remove("active");
-    });
-    idx = (idx + 1) % containers.length;
-    const nextImg = containers[idx]?.querySelector(".wimg");
-    if (nextImg) nextImg.classList.add("active");
-  }, 4500);
+  homeSlideTimer = null;
+  wrap.innerHTML = `<div class="slide-container" data-slide-index="0">
+    <img
+      class="wimg active"
+      src="70-years-of-excellence.png"
+      alt="70+ years of excellence"
+      loading="eager"
+      decoding="async"
+    />
+  </div>`;
 }
 
 // ── PORTAL ANNOUNCEMENTS ───────────────────────────────────────
