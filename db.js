@@ -1638,7 +1638,7 @@ const DB = {
       {
         id: "hs1",
         title: "Campus View",
-        image: "70-years-of-excellence.png",
+        image: "njb.png",
         status: "active",
         order: 1,
       },
