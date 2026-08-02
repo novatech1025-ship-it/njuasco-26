@@ -2031,11 +2031,11 @@ function renderHomePage() {
   }
   if (info.homeBadgeTitle) {
     const el = document.getElementById("home-badge-title");
-    if (el) el.textContent = info.homeBadgeTitle;
+    if (el) el.textContent = info.homeBadgeTitle === "70+" ? "70+ YEARS OF" : info.homeBadgeTitle;
   }
   if (info.homeBadgeSubtitle) {
     const el = document.getElementById("home-badge-sub");
-    if (el) el.textContent = info.homeBadgeSubtitle;
+    if (el) el.textContent = info.homeBadgeSubtitle === "Years of Excellence" ? "EXCELLENCE" : info.homeBadgeSubtitle;
   }
   const stats = info.heroStats || { years: 71, students: 3000, programmes: 7, staff: 200 };
   const statMap = [

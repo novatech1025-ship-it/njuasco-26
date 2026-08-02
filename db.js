@@ -2039,8 +2039,8 @@ const DB = {
       founded: "1953",
       code: "0020103",
       category: "B",
-      homeBadgeTitle: "70+",
-      homeBadgeSubtitle: "Years of Excellence",
+      homeBadgeTitle: "70+ YEARS OF",
+      homeBadgeSubtitle: "EXCELLENCE",
       heroStats: {
         years: 71,
         students: 3000,
@@ -2152,8 +2152,8 @@ DB.migrateAboutContent = function () {
   const defaults = {
     name: "New Juaben Senior High School",
     shortName: "NJUASCO",
-    homeBadgeTitle: "70+",
-    homeBadgeSubtitle: "Years of Excellence",
+    homeBadgeTitle: "70+ YEARS OF",
+    homeBadgeSubtitle: "EXCELLENCE",
     principalEmoji: "👨‍🏫",
     welcomeText:
       "Founded in 1953, New Juaben Senior High School has stood as a pillar of quality education in Koforidua, Eastern Region. We nurture every student through a rich curriculum, vibrant extracurriculars, and a disciplined environment focused on holistic development.",
