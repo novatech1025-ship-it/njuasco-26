@@ -1021,6 +1021,8 @@ function sendmsg() {
 
 // AI CHAT - Groq-powered via local API proxy or Supabase Edge Function
 let AI_TYPING = false;
+let AI_CHAT_HISTORY = [];
+const AI_CHAT_HISTORY_LIMIT = 10;
 
 function getNovaTechContext() {
   return window.NOVA_TECH_AI_KNOWLEDGE || "";
@@ -1267,6 +1269,35 @@ Phone: ${info.phone || ""}`.trim(),
   return LIVE_SITE_CONTEXT;
 }
 
+function rememberAIChat(role, content) {
+  const clean = String(content || "").trim();
+  if (!clean) return;
+  AI_CHAT_HISTORY.push({ role, content: clean.slice(0, 1200) });
+  if (AI_CHAT_HISTORY.length > AI_CHAT_HISTORY_LIMIT) {
+    AI_CHAT_HISTORY = AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT);
+  }
+}
+
+function getAIChatHistoryText() {
+  if (!AI_CHAT_HISTORY.length) return "";
+  return AI_CHAT_HISTORY
+    .slice(-AI_CHAT_HISTORY_LIMIT)
+    .map((turn) => `${turn.role === "assistant" ? "Assistant" : "User"}: ${turn.content}`)
+    .join("\n");
+}
+
+function buildAIMessageWithHistory(userMsg) {
+  const historyText = getAIChatHistoryText();
+  if (!historyText) return userMsg;
+  return `Recent conversation:
+${historyText}
+
+Current user message:
+${userMsg}
+
+Answer the current user message naturally. Use the recent conversation only to understand follow-up questions, references like "that", "it", "them", or "tell me more", and the topic already being discussed.`;
+}
+
 function fetchWithTimeout(url, options = {}, ms = 20000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
@@ -1286,7 +1317,9 @@ async function callAIEndpoint(apiUrl, userMsg, siteContext) {
       method: "POST",
       headers,
       body: JSON.stringify({
-        message: userMsg,
+        message: buildAIMessageWithHistory(userMsg),
+        currentMessage: userMsg,
+        history: AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT),
         siteContext: String(siteContext || "").slice(0, 18000),
       }),
     },
@@ -1365,7 +1398,13 @@ function getAIEndpointCandidates() {
 }
 
 function getFallbackResponse(msg) {
-  msg = msg.toLowerCase();
+  const rawMsg = String(msg || "");
+  const previousTopic =
+    [...AI_CHAT_HISTORY]
+      .reverse()
+      .find((turn) => turn.role === "user" && turn.content !== rawMsg)?.content || "";
+  const isFollowUp = /\b(it|that|this|they|them|those|he|she|his|her|their|more|again|also|what about|how about|tell me more|explain|why|who are they)\b/i.test(rawMsg);
+  msg = `${rawMsg}${isFollowUp && previousTopic ? ` ${previousTopic}` : ""}`.toLowerCase();
   const nova = getNovaTechContext();
   if (/admin|dashboard|sub[- ]?admin|login|password|credential|permission|source code|api key|supabase key|prompt|internal|localstorage|storage key/.test(msg)) {
     return "I can help with public NJUASCO information like admissions, programmes, departments, facilities, contacts, news, and school history. I can't share admin-only details, credentials, source code, or private records.";
@@ -1476,6 +1515,7 @@ async function scmsg(msg) {
 
   // Add user message
   b.innerHTML += `<div class="cmsg user"><div class="cbb">${esc(msg)}</div></div>`;
+  rememberAIChat("user", msg);
 
   // Typing indicator
   const typingId = "typing-" + Date.now();
@@ -1492,6 +1532,7 @@ async function scmsg(msg) {
 
   const response = await getAIResponse(msg);
   AI_TYPING = false;
+  rememberAIChat("assistant", response);
 
   // Replace typing indicator with response
   const typingEl = document.getElementById(typingId);
