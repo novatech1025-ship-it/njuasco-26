@@ -24,7 +24,7 @@ if (-not $env:GROQ_API_KEY) {
 }
 
 $projectRef = "gkzuzugokctccfadzqwf"
-$model = if ($env:GROQ_MODEL) { $env:GROQ_MODEL } else { "llama-3.1-8b-instant" }
+$model = if ($env:GROQ_MODEL) { $env:GROQ_MODEL } else { "openai/gpt-oss-20b" }
 
 if (-not $env:SUPABASE_ACCESS_TOKEN) {
   Write-Error @"

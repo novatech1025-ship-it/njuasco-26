@@ -153,7 +153,7 @@ npx supabase login
 Or with npm (after `npx supabase login` and with `GROQ_API_KEY` in `.env`):
 
 ```bash
-npx supabase secrets set GROQ_API_KEY=... GROQ_MODEL=llama-3.1-8b-instant --project-ref gkzuzugokctccfadzqwf
+npx supabase secrets set GROQ_API_KEY=... GROQ_MODEL=openai/gpt-oss-20b --project-ref gkzuzugokctccfadzqwf
 npx supabase functions deploy njuasco-ai --project-ref gkzuzugokctccfadzqwf
 ```
 

@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: Deno.env.get("GROQ_MODEL") || "llama-3.1-8b-instant",
+        model: Deno.env.get("GROQ_MODEL") || "openai/gpt-oss-20b",
         temperature: 0.4,
         max_tokens: 450,
         messages: [

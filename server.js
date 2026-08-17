@@ -10,7 +10,7 @@ const ROOT = __dirname;
 loadEnvFile();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || "2026-02-25.clover";
 const CHECKOUT_VERIFY_SECRET = process.env.CHECKOUT_VERIFY_SECRET || process.env.GROQ_API_KEY || "njuasco-dev-checkout-secret";
