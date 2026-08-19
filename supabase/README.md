@@ -91,22 +91,22 @@ supabase functions deploy checkout-otp
 
 If you need a different sender ID, set `ARKESEL_SENDER_ID` to the approved value from your Arkesel account.
 
-## Deploy Stripe payments
+## Deploy Paystack payments
 
-The donation page and shop checkout first try the local Node server endpoint, then fall back to the hosted `stripe-checkout` Supabase Edge Function. Set your Stripe secret key and live site URL, then deploy:
+The donation page and shop checkout first try the local Node server endpoint, then fall back to the hosted `paystack-checkout` Supabase Edge Function. Set your Paystack secret key and live site URL, then deploy:
 
 ```bash
-supabase secrets set STRIPE_SECRET_KEY=sk_test_or_live_... SITE_URL=https://your-live-njuasco-site.example
-supabase functions deploy stripe-checkout
+supabase secrets set PAYSTACK_SECRET_KEY=sk_test_or_live_... SITE_URL=https://your-live-njuasco-site.example
+supabase functions deploy paystack-checkout
 ```
 
 For this project reference you can also run:
 
 ```bash
-npm run deploy:stripe
+npm run deploy:paystack
 ```
 
-Use Stripe Dashboard > Developers > API keys for `STRIPE_SECRET_KEY`. Use a test key while testing and a live key only when the shop and donation pages are ready for real payments.
+Use Paystack Dashboard > Settings > API Keys & Webhooks for `PAYSTACK_SECRET_KEY`. Use a test key while testing and a live key only when the shop and donation pages are ready for real payments.
 
 ## Supabase Auth branding
 

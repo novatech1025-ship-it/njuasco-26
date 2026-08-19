@@ -15,8 +15,8 @@ window.NJUASCO_SUPABASE = {
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/checkout-otp",
   staffOtpFunctionUrl:
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/checkout-otp",
-  stripeCheckoutFunctionUrl:
-    "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/stripe-checkout",
+  paystackCheckoutFunctionUrl:
+    "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/paystack-checkout",
 };
 
 function setPublicPageHydrationState(isHydrating = true) {
@@ -33,7 +33,7 @@ function setPublicPageHydrationState(isHydrating = true) {
 
 async function waitForPublicPageHydration(timeoutMs = 3500) {
   if (typeof DB?.syncRemoteAll !== "function") return;
-  const syncPromise = DB.syncRemoteAll().catch(() => null);
+  const syncPromise = DB.syncRemoteAll({ preferRemote: true }).catch(() => null);
   const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs));
   await Promise.race([syncPromise, timeoutPromise]);
 }
@@ -212,7 +212,7 @@ async function createCheckoutSession(payload = {}) {
   };
   const errors = [];
   try {
-    const localRes = await fetch("/api/create-checkout-session", {
+    const localRes = await fetch("/api/create-paystack-transaction", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -225,8 +225,8 @@ async function createCheckoutSession(payload = {}) {
       errors.push(error.message);
     }
   }
-  if (cfg.stripeCheckoutFunctionUrl) {
-    const res = await fetch(cfg.stripeCheckoutFunctionUrl, {
+  if (cfg.paystackCheckoutFunctionUrl) {
+    const res = await fetch(cfg.paystackCheckoutFunctionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -237,9 +237,9 @@ async function createCheckoutSession(payload = {}) {
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data?.url) return data;
-    throw new Error(data?.error || errors[0] || "Stripe Checkout is unavailable.");
+    throw new Error(data?.error || errors[0] || "Paystack checkout is unavailable.");
   }
-  throw new Error(errors[0] || "Stripe Checkout is not configured.");
+  throw new Error(errors[0] || "Paystack checkout is not configured.");
 }
 
 function initFooterStaffPortalShortcut() {

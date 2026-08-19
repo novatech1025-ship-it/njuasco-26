@@ -8,8 +8,8 @@ const SUPABASE_CONFIG = {
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/checkout-otp",
   staffOtpFunctionUrl:
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/checkout-otp",
-  stripeCheckoutFunctionUrl:
-    "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/stripe-checkout",
+  paystackCheckoutFunctionUrl:
+    "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/paystack-checkout",
   adminEmails: ["info@njuasco.edu.gh", "novatech1025@gmail.com"],
 };
 const DASHBOARD_PASSWORDS = {
@@ -875,7 +875,7 @@ const DB = {
       return false;
     }
   },
-  async syncRemoteContent() {
+  async syncRemoteContent(options = {}) {
     const rows = await this.fetchRemoteContent();
     if (!Array.isArray(rows)) {
       this._remoteSyncReady = true;
@@ -889,7 +889,7 @@ const DB = {
         localStorage.setItem("nj_" + row.key, JSON.stringify(deduped));
         this._notifyRemoteContentSubscribers(row.key, deduped);
       });
-    } else if (await this.isSupabaseAuthenticated()) {
+    } else if (!options.preferRemote && await this.isSupabaseAuthenticated()) {
       await Promise.all(
         this._siteContentKeys.map((key) => this.saveRemoteContent(key, this._dedupeById(this._get(key)))),
       );
@@ -898,10 +898,10 @@ const DB = {
     await this._flushPendingRemoteWrites();
     return true;
   },
-  async syncRemoteAll() {
+  async syncRemoteAll(options = {}) {
     const [info, contentChanged, applicationsChanged] = await Promise.all([
       this.syncRemoteInfo(),
-      this.syncRemoteContent(),
+      this.syncRemoteContent(options),
       this.syncRemoteApplications(),
     ]);
     await Promise.all([

@@ -11,8 +11,7 @@ loadEnvFile();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || "2026-02-25.clover";
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const CHECKOUT_VERIFY_SECRET = process.env.CHECKOUT_VERIFY_SECRET || process.env.GROQ_API_KEY || "njuasco-dev-checkout-secret";
 const ARKESEL_API_KEY = process.env.ARKESEL_API_KEY;
 const ARKESEL_SENDER_ID = process.env.ARKESEL_SENDER_ID || "NJUASCO";
@@ -153,22 +152,6 @@ function moneyToMinorUnits(amount) {
   const value = Number(amount);
   if (!Number.isFinite(value) || value <= 0) return 0;
   return Math.round(value * 100);
-}
-
-function appendLineItem(params, index, item) {
-  const name = String(item.name || item.title || "NJUASCO item").slice(0, 120);
-  const currency = String(item.currency || "GHS").toLowerCase();
-  const unitAmount = moneyToMinorUnits(item.amount || item.price);
-  const quantity = Math.max(1, Math.min(99, Number.parseInt(item.quantity || item.qty || 1, 10) || 1));
-  if (!unitAmount) throw new Error("Each Stripe line item must have a valid amount.");
-
-  params.append(`line_items[${index}][quantity]`, String(quantity));
-  params.append(`line_items[${index}][price_data][currency]`, currency);
-  params.append(`line_items[${index}][price_data][unit_amount]`, String(unitAmount));
-  params.append(`line_items[${index}][price_data][product_data][name]`, name);
-  if (/^https?:\/\//i.test(item.image || "")) {
-    params.append(`line_items[${index}][price_data][product_data][images][0]`, item.image);
-  }
 }
 
 function normalizeCheckoutPhone(value) {
@@ -344,14 +327,14 @@ async function handleCheckoutOtp(req, res) {
   }
 }
 
-async function handleStripeCheckout(req, res) {
+async function handlePaystackCheckout(req, res) {
   if (req.method !== "POST") {
     send(res, 405, JSON.stringify({ error: "Method not allowed" }));
     return;
   }
 
-  if (!STRIPE_SECRET_KEY) {
-    send(res, 500, JSON.stringify({ error: "STRIPE_SECRET_KEY is not set" }));
+  if (!PAYSTACK_SECRET_KEY) {
+    send(res, 500, JSON.stringify({ error: "PAYSTACK_SECRET_KEY is not set" }));
     return;
   }
 
@@ -369,51 +352,57 @@ async function handleStripeCheckout(req, res) {
       }
     }
     const origin = String(body.origin || requestOrigin(req)).replace(/\/+$/, "");
-    const params = new URLSearchParams();
-
-    params.append("mode", "payment");
     const encodedRef = encodeURIComponent(reference);
-    const successPath =
+    const callbackPath =
       type === "donation"
-        ? `/donate.html?payment=success&ref=${encodedRef}&session_id={CHECKOUT_SESSION_ID}`
-        : `/checkout.html?payment=success&ref=${encodedRef}&session_id={CHECKOUT_SESSION_ID}`;
-    params.append("success_url", `${origin}${successPath}`);
-    params.append("cancel_url", `${origin}/${type === "donation" ? "donate.html" : "checkout.html"}?payment=cancelled`);
-    params.append("metadata[type]", type);
-    if (reference) params.append("metadata[reference]", reference);
-    if (customerEmail) params.append("customer_email", customerEmail);
+        ? `/donate.html?payment=success&ref=${encodedRef}`
+        : `/checkout.html?payment=success&ref=${encodedRef}`;
 
+    let amount = 0;
+    let currency = String(body.currency || "GHS").toUpperCase();
     if (type === "donation") {
-      appendLineItem(params, 0, {
-        name: `NJUASCO Donation - ${body.purpose || "General Fund"}`,
-        amount: body.amount,
-        currency: body.currency || "GHS",
-        quantity: 1,
-      });
-      params.append("metadata[purpose]", String(body.purpose || "General Fund").slice(0, 120));
+      amount = moneyToMinorUnits(body.amount);
     } else {
       const items = Array.isArray(body.items) ? body.items : [];
       if (!items.length) throw new Error("Cart is empty.");
-      items.slice(0, 50).forEach((item, index) => appendLineItem(params, index, item));
+      amount = moneyToMinorUnits(
+        items
+          .slice(0, 50)
+          .reduce((sum, item) => sum + (Number(item.amount ?? item.price) || 0) * (Number(item.quantity || item.qty || 1) || 1), 0),
+      );
+      currency = String(items[0]?.currency || body.currency || "GHS").toUpperCase();
     }
+    if (!customerEmail) throw new Error("Customer email is required for Paystack checkout.");
+    if (!amount || amount < 1) throw new Error("A valid payment amount is required.");
 
-    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Stripe-Version": STRIPE_API_VERSION,
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: params,
+      body: JSON.stringify({
+        email: customerEmail,
+        amount,
+        currency,
+        reference,
+        callback_url: `${origin}${callbackPath}`,
+        channels: ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
+        metadata: {
+          type,
+          reference,
+          purpose: String(body.purpose || "").slice(0, 120),
+        },
+      }),
     });
-    const data = await stripeRes.json();
-    if (!stripeRes.ok) {
-      send(res, stripeRes.status, JSON.stringify({ error: data.error?.message || "Stripe Checkout failed" }));
+    const data = await paystackRes.json();
+    if (!paystackRes.ok || !data?.status) {
+      send(res, paystackRes.status || 400, JSON.stringify({ error: data?.message || "Paystack checkout failed" }));
       return;
     }
-    send(res, 200, JSON.stringify({ id: data.id, url: data.url }));
+    send(res, 200, JSON.stringify({ reference: data.data?.reference || reference, url: data.data?.authorization_url }));
   } catch (error) {
-    send(res, 400, JSON.stringify({ error: error.message || "Unable to create Stripe Checkout session" }));
+    send(res, 400, JSON.stringify({ error: error.message || "Unable to create Paystack checkout transaction" }));
   }
 }
 
@@ -452,8 +441,8 @@ http
       handleCheckoutOtp(req, res);
       return;
     }
-    if (req.url.startsWith("/api/create-checkout-session")) {
-      handleStripeCheckout(req, res);
+    if (req.url.startsWith("/api/create-paystack-transaction")) {
+      handlePaystackCheckout(req, res);
       return;
     }
     serveStatic(req, res);

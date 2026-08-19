@@ -658,8 +658,8 @@
             <div><label for="donation-purpose">Donation Purpose *</label><select id="donation-purpose" required><option>General Fund</option><option>Infrastructure</option><option>Scholarships</option><option>Sports & Athletics</option><option>STEM Projects</option><option>ICT Equipment</option></select></div>
             <div><label for="donation-notes">Additional Notes (Optional)</label><textarea id="donation-notes" placeholder="Any specific instructions or dedication"></textarea></div>
             <label class="anon-row"><input id="donation-anonymous" type="checkbox" /> Make this donation anonymous</label>
-            <div class="donation-note"><strong>Note:</strong> After submitting this form, our team will contact you with payment instructions and details for completing your donation.</div>
-            <button class="btn btn-p" type="submit" style="width:100%;justify-content:center">❤️ Submit Donation</button>
+            <div class="donation-note"><strong>Secure payment:</strong> Donations are processed online through Paystack. You can pay with supported card, bank, transfer, USSD, QR, or mobile money options.</div>
+            <button class="btn btn-p" type="submit" style="width:100%;justify-content:center">❤️ Donate with Paystack</button>
           </form>
         </div>
         </div>
@@ -798,7 +798,7 @@
           purpose: dg("donation-purpose"),
           notes: dg("donation-notes"),
           anonymous: document.getElementById("donation-anonymous")?.checked || false,
-          method: "Stripe Checkout",
+          method: "Paystack Checkout",
           reference: "DON-" + Date.now().toString(36).toUpperCase(),
           status: "pending_payment",
           date: new Date().toISOString().split("T")[0],
@@ -825,7 +825,7 @@
           window.location.href = data.url;
         } catch (error) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span class="ico ico-heart" data-ico="heart" aria-hidden="true"></span>Submit Donation';
+          submitBtn.innerHTML = '<span class="ico ico-heart" data-ico="heart" aria-hidden="true"></span>Donate with Paystack';
           hydrateIcons(submitBtn);
           toast(error.message || "Donation saved. Payment checkout is not available yet.");
         }

@@ -732,7 +732,7 @@
                   <input
                     type="radio"
                     name="pay"
-                    value="stripe"
+                    value="paystack"
                     checked
                     style="accent-color: var(--b6); width: 18px; height: 18px"
                   />
@@ -741,7 +741,7 @@
                       Secure Card / Wallet Checkout
                     </div>
                     <div style="font-size: 12px; color: var(--g500)">
-                      Pay online through Stripe
+                      Pay online through Paystack
                     </div>
                   </div>
                 </label>
@@ -891,7 +891,7 @@
                   color: var(--g600);
                 "
               >
-                Your payment information is handled securely through Stripe. Phone verification protects confidential order details.
+                Your payment information is handled securely through Paystack. Phone verification protects confidential order details.
               </div>
             </div>
           </div>
@@ -1280,14 +1280,14 @@
         }
         const ref='NJ-ORD-'+crypto.randomUUID().slice(0,8).toUpperCase();
         const cart=DB.getCart();
-        const paymentMethod=document.querySelector('[name="pay"]:checked')?.value||'stripe';
+        const paymentMethod=document.querySelector('[name="pay"]:checked')?.value||'paystack';
         const customer=DB.findOrCreateShopCustomer({name:fname,email,phone});
         const localVerified=String(checkoutVerification.verificationToken||'').startsWith('local-');
-        const order={id:DB._id(),ref,customerId:checkoutVerification.customerId||customer.id,customer:fname,email,phone,wardName,wardClass,pickupMethod:'school',items:cart,total:DB.cartTotal(),paymentMethod,status:paymentMethod==='stripe'&&!localVerified?'pending_payment':'pending',verified:true,date:new Date().toISOString().split("T")[0]};
+        const order={id:DB._id(),ref,customerId:checkoutVerification.customerId||customer.id,customer:fname,email,phone,wardName,wardClass,pickupMethod:'school',items:cart,total:DB.cartTotal(),paymentMethod,status:paymentMethod==='paystack'&&!localVerified?'pending_payment':'pending',verified:true,date:new Date().toISOString().split("T")[0]};
         DB.add('orders',order);
         DB.saveRemoteContent?.('orders',DB.getAll('orders'));
         DB.saveRemoteContent?.('logs',DB.getAll('logs'));
-        if(paymentMethod==='stripe'&&!localVerified){
+        if(paymentMethod==='paystack'&&!localVerified){
           const btn=document.getElementById('co-place-order-btn');
           if(btn){btn.disabled=true;btn.textContent='Opening secure checkout...';}
           try{
