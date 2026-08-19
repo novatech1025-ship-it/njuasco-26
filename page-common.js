@@ -31,11 +31,12 @@ function setPublicPageHydrationState(isHydrating = true) {
   loader.style.width = isHydrating ? "70%" : "0";
 }
 
-async function waitForPublicPageHydration(timeoutMs = 3500) {
-  if (typeof DB?.syncRemoteAll !== "function") return;
-  const syncPromise = DB.syncRemoteAll({ preferRemote: true }).catch(() => null);
-  const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeoutMs));
-  await Promise.race([syncPromise, timeoutPromise]);
+async function waitForPublicPageHydration() {
+  // Do not make visitors wait for private admissions data before drawing a
+  // public page.  On a new device the browser has no local cache, so showing
+  // the seeded demo content here caused a visible flash before Supabase won.
+  if (typeof DB?.syncRemotePublic !== "function") return;
+  await DB.syncRemotePublic();
 }
 
 setPublicPageHydrationState(true);

@@ -898,6 +898,16 @@ const DB = {
     await this._flushPendingRemoteWrites();
     return true;
   },
+  async syncRemotePublic() {
+    // Public pages only need the site settings and published site content.
+    // Keep this separate from applications, which can be slow and is not part
+    // of a visitor's initial page render.
+    const [info, content] = await Promise.all([
+      this.syncRemoteInfo(),
+      this.syncRemoteContent({ preferRemote: true }),
+    ]);
+    return { info, content };
+  },
   async syncRemoteAll(options = {}) {
     const [info, contentChanged, applicationsChanged] = await Promise.all([
       this.syncRemoteInfo(),
