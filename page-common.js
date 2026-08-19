@@ -1022,7 +1022,7 @@ function sendmsg() {
 // AI CHAT - Groq-powered via local API proxy or Supabase Edge Function
 let AI_TYPING = false;
 let AI_CHAT_HISTORY = [];
-const AI_CHAT_HISTORY_LIMIT = 10;
+const AI_CHAT_HISTORY_LIMIT = 4;
 
 function getNovaTechContext() {
   return window.NOVA_TECH_AI_KNOWLEDGE || "";
@@ -1173,16 +1173,6 @@ function getLiveSiteContext(force = false, userMsg = "") {
     ],
     12,
   );
-  const students = compactAdminItems(
-    "students",
-    [
-      ["name", "Student"],
-      ["programme", "Programme"],
-      ["class", "Class"],
-      ["status", "Status"],
-    ],
-    12,
-  );
   const teachers = compactAdminItems(
     "teachers",
     [
@@ -1192,7 +1182,7 @@ function getLiveSiteContext(force = false, userMsg = "") {
       ["formClass", "Form class"],
       ["status", "Status"],
     ],
-    12,
+    6,
   );
   const slides = compactAdminItems(
     "homepageSlides",
@@ -1211,7 +1201,7 @@ function getLiveSiteContext(force = false, userMsg = "") {
       ["price", "Price"],
       ["description", "Description"],
     ],
-    10,
+    6,
   );
 
   const schoolValues = formatSchoolCoreValues(info);
@@ -1265,14 +1255,15 @@ Phone: ${info.phone || ""}`.trim(),
     merchandise.length ? `Shop/merchandise from admin:\n- ${merchandise.join("\n- ")}` : "",
   ]
     .filter(Boolean)
-    .join("\n\n");
+    .join("\n\n")
+    .slice(0, 8000);
   return LIVE_SITE_CONTEXT;
 }
 
 function rememberAIChat(role, content) {
   const clean = String(content || "").trim();
   if (!clean) return;
-  AI_CHAT_HISTORY.push({ role, content: clean.slice(0, 1200) });
+  AI_CHAT_HISTORY.push({ role, content: clean.slice(0, 600) });
   if (AI_CHAT_HISTORY.length > AI_CHAT_HISTORY_LIMIT) {
     AI_CHAT_HISTORY = AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT);
   }
@@ -1320,7 +1311,7 @@ async function callAIEndpoint(apiUrl, userMsg, siteContext) {
         message: buildAIMessageWithHistory(userMsg),
         currentMessage: userMsg,
         history: AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT),
-        siteContext: String(siteContext || "").slice(0, 18000),
+        siteContext: String(siteContext || "").slice(0, 8000),
       }),
     },
     20000,
@@ -1331,16 +1322,7 @@ async function callAIEndpoint(apiUrl, userMsg, siteContext) {
 }
 
 async function pingAI() {
-  const apiUrls = getAIEndpointCandidates();
-  for (const apiUrl of apiUrls) {
-    try {
-      const reply = await callAIEndpoint(apiUrl, "ping", "NJUASCO");
-      if (reply) return true;
-    } catch {
-      // Try next endpoint.
-    }
-  }
-  return false;
+  return getAIEndpointCandidates().length > 0;
 }
 
 function setAIStatus(text) {
@@ -1350,7 +1332,7 @@ function setAIStatus(text) {
 
 async function refreshAIStatus() {
   if (!document.getElementById("ai-status")) return;
-  setAIStatus("Connecting...");
+  setAIStatus("AI Ready");
   const online = await pingAI();
   setAIStatus(online ? "AI Powered" : "AI Ready");
 }

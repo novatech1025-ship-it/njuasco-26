@@ -101,7 +101,7 @@ async function handleAI(req, res) {
   try {
     const body = JSON.parse(await readBody(req) || "{}");
     const message = String(body.message || "").trim();
-    const siteContext = String(body.siteContext || "").slice(0, 20000);
+    const siteContext = String(body.siteContext || "").slice(0, 8000);
 
     if (!message) {
       send(res, 400, JSON.stringify({ error: "Message is required" }));
@@ -117,7 +117,7 @@ async function handleAI(req, res) {
       body: JSON.stringify({
         model: GROQ_MODEL,
         temperature: 0.4,
-        max_tokens: 450,
+        max_tokens: 300,
         messages: [
           {
             role: "system",

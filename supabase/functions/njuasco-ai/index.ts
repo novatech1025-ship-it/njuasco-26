@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const message = String(body.message || "").trim();
-    const siteContext = String(body.siteContext || "").slice(0, 20000);
+    const siteContext = String(body.siteContext || "").slice(0, 8000);
 
     if (!message) {
       return json({ error: "Message is required" }, 400);
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: Deno.env.get("GROQ_MODEL") || "openai/gpt-oss-20b",
         temperature: 0.4,
-        max_tokens: 450,
+        max_tokens: 300,
         messages: [
           {
             role: "system",
