@@ -1085,7 +1085,9 @@ function sendmsg() {
 // AI CHAT - Groq-powered via local API proxy or Supabase Edge Function
 let AI_TYPING = false;
 let AI_CHAT_HISTORY = [];
-const AI_CHAT_HISTORY_LIMIT = 4;
+const AI_CHAT_HISTORY_LIMIT = 10;
+const AI_CHAT_MEMORY_KEY = "nj_ai_chat_memory_v1";
+const AI_REFERENCE_LIMIT = 4;
 
 function getNovaTechContext() {
   return window.NOVA_TECH_AI_KNOWLEDGE || "";
@@ -1323,6 +1325,39 @@ Phone: ${info.phone || ""}`.trim(),
   return LIVE_SITE_CONTEXT;
 }
 
+function loadAIChatMemory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AI_CHAT_MEMORY_KEY) || "[]");
+    AI_CHAT_HISTORY = Array.isArray(saved)
+      ? saved
+          .filter((turn) => ["user", "assistant"].includes(turn?.role) && String(turn?.content || "").trim())
+          .slice(-AI_CHAT_HISTORY_LIMIT)
+          .map((turn) => ({ role: turn.role, content: String(turn.content).slice(0, 600) }))
+      : [];
+  } catch {
+    AI_CHAT_HISTORY = [];
+  }
+}
+
+function persistAIChatMemory() {
+  try {
+    localStorage.setItem(AI_CHAT_MEMORY_KEY, JSON.stringify(AI_CHAT_HISTORY));
+  } catch {}
+}
+
+function clearAIChatMemory() {
+  AI_CHAT_HISTORY = [];
+  try {
+    localStorage.removeItem(AI_CHAT_MEMORY_KEY);
+  } catch {}
+  const body = document.getElementById("cbody");
+  if (body) {
+    body.innerHTML = `<div class="cmsg bot"><div class="cbb">${ico("wave")} Hi! I can help with official NJUASCO information, admissions, programmes, news, and more.</div></div>`;
+    hydrateIcons(body);
+  }
+  toast("AI conversation memory cleared");
+}
+
 function rememberAIChat(role, content) {
   const clean = String(content || "").trim();
   if (!clean) return;
@@ -1330,6 +1365,57 @@ function rememberAIChat(role, content) {
   if (AI_CHAT_HISTORY.length > AI_CHAT_HISTORY_LIMIT) {
     AI_CHAT_HISTORY = AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT);
   }
+  persistAIChatMemory();
+}
+
+function referenceSearchText(reference) {
+  return `${reference.label} ${reference.detail}`.toLowerCase();
+}
+
+function getAIReferences(userMsg = "") {
+  const info = DB.getInfo();
+  const references = [
+    {
+      label: "School profile",
+      detail: `${info.name || "New Juaben Senior High School"}. Motto: ${info.motto || "HARDWORK"}. War cry: ${info.warCry || "DAASEBRE MMA"}. ${info.address || "New Juaben, Koforidua, Eastern Region, Ghana"}.`,
+    },
+    ...((Array.isArray(info.aiKnowledgePoints) ? info.aiKnowledgePoints : []).map((point) => ({
+      label: `Official knowledge${point.category ? `: ${point.category}` : ""}${point.source ? ` (${point.source})` : ""}`,
+      detail: String(point.text || ""),
+    }))),
+    ...((Array.isArray(info.aiFaqs) ? info.aiFaqs : []).map((faq) => ({
+      label: `Official Q&A: ${faq.q || faq.question || "School information"}`,
+      detail: String(faq.a || faq.answer || ""),
+    }))),
+    ...DB.getAll("news")
+      .filter((item) => item.status === "published")
+      .map((item) => ({ label: `News: ${item.title}`, detail: `${fmtDate(item.date)}. ${item.excerpt || item.content || ""}` })),
+    ...DB.getAll("documents")
+      .filter((item) => (item.status || "published") === "published")
+      .map((item) => ({ label: `Document: ${item.title}`, detail: `${item.category || ""}. ${item.description || ""}` })),
+    ...DB.getAll("facilities").map((item) => ({ label: `Facility: ${item.name}`, detail: String(item.description || "") })),
+    ...DB.getAll("departments").map((item) => ({ label: `Department: ${item.name}`, detail: `${item.description || ""} ${Array.isArray(item.subjects) ? item.subjects.join(" ") : String(item.subjects || "")}` })),
+    ...DB.getAll("team").map((item) => ({ label: `Staff: ${item.name}`, detail: `${item.position || ""}. ${item.department || ""}` })),
+  ].filter((reference) => reference.detail.trim());
+
+  const terms = String(userMsg || "").toLowerCase().match(/[a-z0-9]{3,}/g) || [];
+  return references
+    .map((reference, index) => ({
+      ...reference,
+      score: terms.reduce((score, term) => score + (referenceSearchText(reference).includes(term) ? 1 : 0), 0),
+      index,
+    }))
+    .filter((reference) => reference.score > 0 || reference.label === "School profile")
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, AI_REFERENCE_LIMIT)
+    .map(({ label, detail }) => ({ label, detail: detail.slice(0, 700) }));
+}
+
+function renderAIReferences(references = []) {
+  if (!references.length) return "";
+  return `<div class="ai-references" aria-label="Official references">${references
+    .map((reference) => `<span class="ai-reference">${esc(reference.label)}</span>`)
+    .join("")}</div>`;
 }
 
 function getAIChatHistoryText() {
@@ -1358,7 +1444,7 @@ function fetchWithTimeout(url, options = {}, ms = 20000) {
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
-async function callAIEndpoint(apiUrl, userMsg, siteContext) {
+async function callAIEndpoint(apiUrl, userMsg, siteContext, references) {
   const config = window.NJUASCO_SUPABASE || {};
   const headers = { "Content-Type": "application/json" };
   if (config.anonKey && /supabase\.co\/functions\//.test(apiUrl)) {
@@ -1375,13 +1461,17 @@ async function callAIEndpoint(apiUrl, userMsg, siteContext) {
         currentMessage: userMsg,
         history: AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT),
         siteContext: String(siteContext || "").slice(0, 8000),
+        references,
       }),
     },
     20000,
   );
-  if (!res.ok) return "";
+  if (!res.ok) return { reply: "", references };
   const data = await res.json();
-  return String(data.reply || data?.choices?.[0]?.message?.content || "").trim();
+  return {
+    reply: String(data.reply || data?.choices?.[0]?.message?.content || "").trim(),
+    references: Array.isArray(data.references) ? data.references : references,
+  };
 }
 
 async function pingAI() {
@@ -1403,14 +1493,15 @@ async function refreshAIStatus() {
 async function getAIResponse(userMsg) {
   setAIStatus("Thinking...");
   const siteContext = getLiveSiteContext(true, userMsg);
+  const references = getAIReferences(userMsg);
   const apiUrls = getAIEndpointCandidates();
   for (const apiUrl of apiUrls) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const reply = await callAIEndpoint(apiUrl, userMsg, siteContext);
-        if (reply) {
+        const result = await callAIEndpoint(apiUrl, userMsg, siteContext, references);
+        if (result.reply) {
           setAIStatus("AI Powered");
-          return reply;
+          return result;
         }
       } catch {
         if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
@@ -1418,7 +1509,7 @@ async function getAIResponse(userMsg) {
     }
   }
   setAIStatus("AI Ready");
-  return getFallbackResponse(userMsg);
+  return { reply: getFallbackResponse(userMsg), references };
 }
 
 function getAIEndpointCandidates() {
@@ -1539,6 +1630,29 @@ function tchat() {
   if (open) refreshAIStatus();
 }
 
+function initAIChatMemoryUI() {
+  loadAIChatMemory();
+  const header = document.querySelector("#cwin .chdr");
+  if (header && !header.querySelector(".ai-memory-clear")) {
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "ai-memory-clear";
+    clear.title = "Clear conversation memory";
+    clear.setAttribute("aria-label", "Clear conversation memory");
+    clear.innerHTML = "Clear";
+    clear.addEventListener("click", clearAIChatMemory);
+    header.insertBefore(clear, header.querySelector(".cx"));
+  }
+  if (!AI_CHAT_HISTORY.length) return;
+  const body = document.getElementById("cbody");
+  if (!body) return;
+  body.innerHTML = `<div class="cmsg bot"><div class="cbb">${ico("wave")} Welcome back. I remember our recent conversation on this device.</div></div>${AI_CHAT_HISTORY
+    .map((turn) => `<div class="cmsg ${turn.role === "assistant" ? "bot" : "user"}"><div class="cbb">${esc(turn.content).replace(/\n/g, "<br>")}</div></div>`)
+    .join("")}`;
+  hydrateIcons(body);
+  body.scrollTop = body.scrollHeight;
+}
+
 function schat() {
   const i = document.getElementById("cinput");
   const msg = i?.value.trim();
@@ -1577,12 +1691,12 @@ async function scmsg(msg) {
 
   const response = await getAIResponse(msg);
   AI_TYPING = false;
-  rememberAIChat("assistant", response);
+  rememberAIChat("assistant", response.reply);
 
   // Replace typing indicator with response
   const typingEl = document.getElementById(typingId);
   if (typingEl)
-    typingEl.innerHTML = `<div class="cbb">${esc(response).replace(/\n/g, "<br>")}</div>`;
+    typingEl.innerHTML = `<div class="cbb">${esc(response.reply).replace(/\n/g, "<br>")}</div>${renderAIReferences(response.references)}`;
   b.scrollTop = b.scrollHeight;
 }
 
@@ -2570,6 +2684,7 @@ subapp = async function () {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initAIChatMemoryUI();
   if (document.getElementById("ai-status")) refreshAIStatus();
   hydrateIcons();
   const adminEmailInput = document.getElementById("auser");

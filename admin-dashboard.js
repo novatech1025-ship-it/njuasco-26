@@ -1570,12 +1570,13 @@
           wrap.innerHTML = '<p style="padding:12px 0;color:var(--g400);font-size:13px">No knowledge points yet. Add your first official fact above.</p>';
           return;
         }
-        // Filter by query across text and category
+        // Filter by query across text, category, and official source.
         let filtered = items.filter((it) => {
           if (!query) return true;
           const text = (it.text || '').toLowerCase();
           const cat = (it.category || '').toLowerCase();
-          return text.includes(query) || cat.includes(query);
+          const source = (it.source || '').toLowerCase();
+          return text.includes(query) || cat.includes(query) || source.includes(query);
         });
         // Sort by newest first using createdAt/updatedAt fallback
         filtered.sort((a, b) => {
@@ -1593,7 +1594,7 @@
             return `<div class="ai-knowledge-card repeater-row" data-point-id="${item.id}" style="display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:10px;background:var(--g50);margin-bottom:8px">
                       <div style="flex:1">
                         <div style="font-size:13px;color:var(--g800);line-height:1.4;white-space:pre-wrap">${esc(short)}${needsEllipsis? '...':''}</div>
-                        <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.category?esc(item.category)+' · ':''}${item.createdAt?fmtDate(item.createdAt):''}</div>
+                        <div style="font-size:11px;color:var(--g400);margin-top:6px">${item.category ? esc(item.category) + ' | ' : ''}${item.source ? esc(item.source) + ' | ' : ''}${item.createdAt ? fmtDate(item.createdAt) : ''}</div>
                         <div class="ai-knowledge-full" style="display:none;margin-top:8px;font-size:14px;color:var(--g800);white-space:pre-wrap">${esc(item.text||"")}</div>
                       </div>
                       <div style="display:flex;flex-direction:column;gap:8px">
@@ -1636,12 +1637,13 @@
       async function addAIKnowledgePoint() {
         const text = document.getElementById("ai-knowledge-input")?.value.trim() || "";
         const category = document.getElementById('ai-knowledge-category')?.value || 'General';
+        const source = document.getElementById('ai-knowledge-source')?.value.trim() || '';
         if (!text) {
           toast("Enter a knowledge point before saving");
           return;
         }
         const points = getAIKnowledgePoints();
-        points.push({ id: DB._id(), text, category, createdAt: new Date().toISOString() });
+        points.push({ id: DB._id(), text, category, source, createdAt: new Date().toISOString() });
         const info = {
           ...DB.getInfo(),
           aiKnowledgePoints: points,
@@ -1650,6 +1652,7 @@
         await persistSiteInfo(info, "Knowledge point saved!", "ai-sync-note");
         document.getElementById("ai-knowledge-input").value = "";
         document.getElementById('ai-knowledge-category').value = 'General';
+        document.getElementById('ai-knowledge-source').value = '';
         renderAIKnowledgePoints(points);
       }
 
@@ -1665,12 +1668,14 @@
           return;
         }
         const newCategory = prompt('Category for this point (leave blank to keep current):', current.category || 'General');
+        const newSource = prompt('Official source/reference (leave blank to keep current):', current.source || '');
         const updatedPoints = points.map((point) =>
           point.id === id
             ? {
                 ...point,
                 text: trimmed,
                 category: newCategory && String(newCategory).trim() ? String(newCategory).trim() : point.category || 'General',
+                source: newSource === null ? point.source || '' : String(newSource).trim() || point.source || '',
                 updatedAt: new Date().toISOString(),
               }
             : point,

@@ -2113,6 +2113,24 @@
                 <label class="flbl">New Point</label>
                 <textarea class="finp fta" id="ai-knowledge-input" style="min-height:110px" placeholder="Example: School fees for 2025/2026 are handled through the admissions office."></textarea>
               </div>
+              <div class="form-grid" style="margin-top:14px">
+                <div class="fg">
+                  <label class="flbl">Category</label>
+                  <select class="finp" id="ai-knowledge-category">
+                    <option>General</option>
+                    <option>Admissions</option>
+                    <option>Academics</option>
+                    <option>School Policy</option>
+                    <option>Facilities</option>
+                    <option>Contact</option>
+                    <option>History</option>
+                  </select>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Official Source / Reference</label>
+                  <input class="finp" id="ai-knowledge-source" placeholder="e.g. Admissions Office, 2026 prospectus" />
+                </div>
+              </div>
               <button class="btn btn-p" type="button" onclick="addAIKnowledgePoint()">Save Point</button>
             </div>
             <div class="card" style="margin-bottom:20px">
