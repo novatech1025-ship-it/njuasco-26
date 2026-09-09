@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="icon" type="image/x-icon" href="njuasco-logo.ico" />
+    <link rel="apple-touch-icon" href="njuasco-logo.png" />
+    <title>NJOSA Gallery | NJUASCO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <script src="shared.js"></script>
+    <div id="ldr"></div>
+    <div id="toast" role="alert" aria-live="polite"></div>
+    <div id="atrig" onclick="atclick()"></div>
+    <div id="festive">
+      <span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>
+      Welcome to New Juaben Senior High School &nbsp;|&nbsp; Academic Excellence Since 1953
+      <span class="ico ico-trophy" data-ico="trophy" aria-hidden="true"></span>
+    </div>
+    <header id="hdr">
+      <div class="hi">
+        <div class="brand" onclick="go('njosa')">
+          <div class="logo"><img src="njuasco-logo.png" alt="NJUASCO logo" /></div>
+          <div><div class="sn">New Juaben Senior High</div><div class="sc">NJOSA Alumni Community</div></div>
+        </div>
+        <nav class="hnav">
+          <div class="ni"><button class="nl" onclick="go('njosa')">NJOSA Home</button></div>
+          <div class="ni"><button class="nl active" onclick="go('njosa-gallery')">Gallery</button></div>
+          <div class="ni"><button class="nl" onclick="go('news')">News & Events</button></div>
+        </nav>
+        <button class="hmob" onclick="tmob()" aria-label="Open menu"><span class="ico ico-menu" data-ico="menu" aria-hidden="true"></span></button>
+      </div>
+    </header>
+    <main>
+      <section class="njosa-gallery-page-hero">
+        <div class="container">
+          <div class="eyebrow">New Juaben Old Students Association</div>
+          <h1>Memories with a <span>shared heartbeat.</span></h1>
+          <p>Browse the NJOSA archive: the people, places, and reunions that keep our school community connected.</p>
+        </div>
+      </section>
+      <section class="njosa-gallery-section">
+        <div class="container">
+          <div class="njosa-gallery-heading rv">
+            <div>
+              <div class="eyebrow">The NJOSA Archive</div>
+              <h2 class="sectitle">Moments that keep us <span class="gt">connected</span></h2>
+              <p class="sdesc">Shared by alumni, preserved for the generations still to come.</p>
+            </div>
+            <a class="njosa-gallery-back" href="njosa.html">← Back to NJOSA</a>
+          </div>
+          <div class="njosa-gallery-grid" id="njosa-gallery-grid"></div>
+        </div>
+      </section>
+    </main>
+    <footer id="footer">
+      <div class="container">
+        <div class="fbot">
+          <span>© 2025 New Juaben Senior High School. All rights reserved.</span>
+          <span style="color: rgba(255, 255, 255, 0.25)">NJOSA Alumni Community</span>
+        </div>
+      </div>
+    </footer>
+    <script src="page-common.js"></script>
+  </body>
+</html>

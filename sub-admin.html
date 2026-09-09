@@ -1112,8 +1112,12 @@
                 </h2>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                   <input id="sa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadGallery(this)" />
+                  <input id="sa-njosa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadNjosaGallery(this)" />
                   <button class="btn btn-g" onclick="document.getElementById('sa-gallery-bulk-files').click()">
                     Bulk Upload
+                  </button>
+                  <button class="btn btn-g" onclick="document.getElementById('sa-njosa-gallery-bulk-files').click()">
+                    Bulk NJOSA Upload
                   </button>
                   <button class="btn btn-g" onclick="saSelectAll('sa-gallery-select', true)">
                     Select All
@@ -2130,10 +2134,13 @@
       async function saBulkUploadGallery(input) {
         await saBulkUploadMedia(input, "gallery", "gallery");
       }
+      async function saBulkUploadNjosaGallery(input) {
+        await saBulkUploadMedia(input, "gallery", "gallery", { category: "njosa" });
+      }
       function saFileTitle(file) {
         return file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
       }
-      async function saBulkUploadMedia(input, key, page) {
+      async function saBulkUploadMedia(input, key, page, extra = {}) {
         if (!requireSaPerm(permForSaType(key))) return;
         const files = Array.from(input?.files || []);
         if (!files.length) return;
@@ -2153,7 +2160,7 @@
           } else if (key === "houses") {
             saAdd(key, { name: title, gender: "Mixed", color: "#2563eb", master: "", motto: "", achievements: "", story: "", image: src, gallery: [src], order });
           } else {
-            saAdd(key, { title, category: "campus", image: src, description: "", color: "linear-gradient(135deg,#1e40af,#4f46e5)", order });
+            saAdd(key, { title, category: extra.category || "campus", image: src, description: "", color: "linear-gradient(135deg,#1e40af,#4f46e5)", order, ...extra });
           }
         }
         if (input) input.value = "";
@@ -3304,7 +3311,7 @@
         else if (type === "gallery")
           body = `<div style="display:flex;flex-direction:column;gap:14px">
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Photo title"></div>
-    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="events" ${item?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${item?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${item?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${item?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${item?.category === "campus" ? "selected" : ""}>Campus</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="events" ${item?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${item?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${item?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${item?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${item?.category === "campus" ? "selected" : ""}>Campus</option><option value="njosa" ${item?.category === "njosa" ? "selected" : ""}>NJOSA Alumni</option></select></div>
     ${saMediaField(item?.image, '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>')}
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><input class="finp" id="smf-desc" value="${v("description")}" placeholder="Brief description"></div>
     ${colorPickerField("smf-color", item?.color || "linear-gradient(135deg,#1e40af,#4f46e5)", { mode: "gradient", label: "Background Colour" })}

@@ -2204,8 +2204,12 @@
               <div class="sec-title">Gallery</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <input id="gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadGallery(this)" />
+                <input id="njosa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
                 <button class="btn btn-g" onclick="document.getElementById('gallery-bulk-files').click()">
                   Bulk Upload
+                </button>
+                <button class="btn btn-g" onclick="document.getElementById('njosa-gallery-bulk-files').click()">
+                  Bulk NJOSA Upload
                 </button>
                 <button class="btn btn-g" onclick="selectAll('admin-gallery-select', true)">
                   Select All

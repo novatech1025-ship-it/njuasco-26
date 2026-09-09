@@ -39,7 +39,8 @@ async function waitForPublicPageHydration() {
   await DB.syncRemotePublic();
 }
 
-setPublicPageHydrationState(true);
+// Render the cached/local page immediately; remote content refreshes afterward.
+setPublicPageHydrationState(false);
 
 const ICON_PATHS = {
   lock: '<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -1769,10 +1770,37 @@ async function scmsg(msg) {
 }
 
 // ── NEWS RENDER (for news.html) ────────────────────────────────
+const UPCOMING_EVENT_POSTS = [
+  {
+    id: "njuasco-73rd-anniversary",
+    title: "NJUASCO 73rd Anniversary Celebration",
+    category: "event",
+    date: "2026-12-31",
+    dateLabel: "Date to be announced",
+    excerpt: "Join the NJUASCO community as we celebrate 73 years of hard work, excellence, and legacy.",
+    content: "NJUASCO's 73rd Anniversary Celebration is coming soon. Programme details and the official date will be shared here.",
+    image: '<span class="ico ico-calendar" data-ico="calendar" aria-hidden="true"></span>',
+    status: "published",
+    color: "linear-gradient(135deg,#0f766e,#2563eb)",
+  },
+];
+
+function getPublishedNewsPosts() {
+  const published = DB.getAll("news").filter((n) => n.status === "published");
+  const staticPosts = UPCOMING_EVENT_POSTS.filter(
+    (post) => !published.some((item) => item.id === post.id || item.title === post.title),
+  );
+  return [...staticPosts, ...published].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function newsDateLabel(post) {
+  return post.dateLabel || fmtDate(post.date);
+}
+
 function renderNews(filter = "all") {
   const grid = document.getElementById("news-grid");
   if (!grid) return;
-  const all = DB.getAll("news").filter((n) => n.status === "published");
+  const all = getPublishedNewsPosts();
   const items =
     filter === "all" ? all : all.filter((n) => n.category === filter);
   grid.innerHTML =
@@ -1782,7 +1810,7 @@ function renderNews(filter = "all") {
     <article class="nc">
       <div class="nci" style="background:${n.color}">${mediaMarkup(n.image)}</div>
       <div class="ncb">
-        <div class="ncm"><span class="bdg ${catClass(n.category)}">${n.category}</span><span class="nd">${fmtDate(n.date)}</span></div>
+        <div class="ncm"><span class="bdg ${catClass(n.category)}">${n.category}</span><span class="nd">${newsDateLabel(n)}</span></div>
         <h3 class="nt">${esc(n.title)}</h3>
         <p class="ne">${esc(n.excerpt)}</p>
       </div>
@@ -1824,6 +1852,23 @@ function filterGallery(cat, btn) {
     .forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
   renderGallery(cat);
+}
+
+function renderNjosaGallery() {
+  const grid = document.getElementById("njosa-gallery-grid");
+  if (!grid) return;
+  const items = DB.getAll("gallery")
+    .filter((item) => item.category === "njosa")
+    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+  grid.innerHTML = items.length
+    ? items.map((item, index) => `
+      <article class="njosa-gallery-card rv rv${index % 3}" onclick="olb('${esc(item.image)}','${esc(item.title)}','${esc(item.description)}')">
+        <div class="njosa-gallery-image" style="background:${item.color || "linear-gradient(135deg,#0f766e,#2563eb)"}">${mediaMarkup(item.image)}<span class="njosa-gallery-open">${ico("search")}</span></div>
+        <div class="njosa-gallery-caption"><span>${esc(item.title || "NJOSA moment")}</span><small>${esc(item.description || "NJUASCO alumni community")}</small></div>
+      </article>`).join("")
+    : '<div class="njosa-gallery-empty"><span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span><strong>The album is ready for its first memory.</strong><span>NJOSA photos uploaded by an administrator will appear here.</span></div>';
+  hydrateIcons(grid);
+  setTimeout(initRv, 50);
 }
 
 // ── FACILITIES RENDER ──────────────────────────────────────────
@@ -2798,6 +2843,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     else if (path === "about.html") loadAboutFromDB();
     else if (path === "news.html") renderNews();
     else if (path === "gallery.html") renderGallery();
+    else if (path === "njosa-gallery.html") renderNjosaGallery();
     else if (path === "facilities.html") renderFacilities();
     else if (path === "academics.html") renderAcademicDepartments();
     else if (path === "clubs.html") renderClubs();
@@ -2810,19 +2856,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     hydrateIcons();
     showFirstVisitWelcome();
   };
-  try {
-    await waitForPublicPageHydration();
-  } catch {
-    // Keep the page visible even if the remote sync fails or times out.
-  } finally {
-    setPublicPageHydrationState(false);
-  }
+  renderCurrentPage();
+  setPublicPageHydrationState(false);
   if (DB?.syncRemoteAll) {
-    DB.syncRemoteAll().then(() => {
-      renderCurrentPage();
+    DB.syncRemoteAll().then(renderCurrentPage).catch(() => {
+      // Keep the locally rendered page available when the network is offline.
     });
-  } else {
-    renderCurrentPage();
   }
   if (DB?.subscribeRemoteInfo) {
     DB.subscribeRemoteInfo(() => {

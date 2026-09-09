@@ -87,6 +87,7 @@ function go(pg) {
     "admission-status": "admission-status.html",
     news: "news.html",
     gallery: "gallery.html",
+    "njosa-gallery": "njosa-gallery.html",
     documents: "documents.html",
     facilities: "facilities.html",
     clubs: "clubs.html",
