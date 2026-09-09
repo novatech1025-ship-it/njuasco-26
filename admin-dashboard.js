@@ -754,6 +754,7 @@
           const perms = allPermKeys.filter(
             (k) => document.getElementById("perm-" + k)?.checked,
           );
+          if (!perms.includes("njosaGallery")) perms.push("njosaGallery");
           data = {
             name: gv("mf-name"),
             email: gv("mf-email").toLowerCase(),
@@ -2639,7 +2640,16 @@
         this._set("subadmins", d);
       };
       function renderSubAdmins() {
-        const admins = DB._getSaAdmins().map((a) => ({
+        const storedAdmins = DB._getSaAdmins();
+        const migratedAdmins = storedAdmins.map((a) => ({
+          ...a,
+          permissions: Array.from(new Set([...(Array.isArray(a.permissions) ? a.permissions : []), "njosaGallery"])),
+        }));
+        if (JSON.stringify(storedAdmins) !== JSON.stringify(migratedAdmins)) {
+          DB._saveSaAdmins(migratedAdmins);
+          flushRemoteSync().catch(() => {});
+        }
+        const admins = migratedAdmins.map((a) => ({
           ...a,
           permissions: Array.isArray(a.permissions) ? a.permissions : [],
           active: a.active !== false,
