@@ -2046,6 +2046,9 @@ const DB = {
       linkedin: "#",
       motto: "HARDWORK",
       warCry: "DAASEBRE MMA",
+      topBannerMessage: "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}",
+      admissionsYearAuto: true,
+      admissionsAcademicYear: "",
       founded: "1953",
       code: "0020103",
       category: "B",
@@ -2280,6 +2283,18 @@ DB.migrateAboutContent = function () {
   }
   if (typeof info.adminVerifyPhone !== "string") {
     info.adminVerifyPhone = "";
+    changed = true;
+  }
+  if (typeof info.topBannerMessage !== "string" || !info.topBannerMessage.trim()) {
+    info.topBannerMessage = "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}";
+    changed = true;
+  }
+  if (info.admissionsYearAuto !== true && info.admissionsYearAuto !== false) {
+    info.admissionsYearAuto = true;
+    changed = true;
+  }
+  if (typeof info.admissionsAcademicYear !== "string") {
+    info.admissionsAcademicYear = "";
     changed = true;
   }
   const welcomeDefaults = {

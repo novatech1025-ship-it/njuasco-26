@@ -127,6 +127,16 @@ function isImageAsset(src) {
   );
 }
 
+function addLogoFallback(image) {
+  if (!image) return;
+
+  image.addEventListener("error", () => {
+    if (image.dataset.logoFallbackApplied === "true") return;
+    image.dataset.logoFallbackApplied = "true";
+    image.src = "njuasco-logo.png";
+  });
+}
+
 function mediaMarkup(src, cls = "") {
   if (isImageAsset(src)) {
     return `<img class="media-img ${cls}" src="${esc(src)}" alt="">`;
@@ -141,6 +151,30 @@ function safeHref(url) {
   return "#";
 }
 
+function getAdmissionAcademicYear(info) {
+  if (info.admissionsYearAuto === false && String(info.admissionsAcademicYear || "").trim()) {
+    return String(info.admissionsAcademicYear).trim();
+  }
+  const year = new Date().getFullYear();
+  return `${year}/${year + 1}`;
+}
+
+function applyTopBanner(info, schoolName) {
+  const banner = document.getElementById("festive");
+  if (!banner) return;
+
+  const template = info.topBannerMessage || "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}";
+  const values = {
+    schoolName,
+    founded: info.founded || "1953",
+    warCry: info.warCry || "DAASEBRE MMA",
+    admissionYear: getAdmissionAcademicYear(info),
+  };
+  const message = template.replace(/\{(schoolName|founded|warCry|admissionYear)\}/g, (_, key) => values[key]);
+  banner.innerHTML = `<span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span> ${esc(message)} <span class="ico ico-trophy" data-ico="trophy" aria-hidden="true"></span>`;
+  hydrateIcons?.(banner);
+}
+
 function applyFooterContent() {
   const info = DB.getInfo();
   if (info.maintenanceMode && !location.pathname.endsWith("admin.html") && !location.pathname.endsWith("sub-admin.html")) {
@@ -149,6 +183,7 @@ function applyFooterContent() {
   }
   const schoolName = info.name || "New Juaben Senior High School";
   const shortName = info.shortName || "NJUASCO";
+  applyTopBanner(info, schoolName);
   document.querySelectorAll(".sn").forEach((el) => (el.textContent = schoolName.replace(/\s+School$/i, "")));
   document.querySelectorAll(".msn").forEach((el) => (el.textContent = schoolName.replace(/\s+School$/i, "")));
   document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
@@ -179,6 +214,8 @@ function applyFooterContent() {
   });
   document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · NJB City · Est. ${info.founded || "1953"}`));
   document.querySelectorAll(".msc").forEach((el) => (el.textContent = `${shortName} · NJB City · Est. ${info.founded || "1953"}`));
+  document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
+  document.querySelectorAll(".msc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
   initFooterStaffPortalShortcut();
   initAIChrome();
 }
@@ -417,6 +454,31 @@ if (mob)
     if (e.target === mob) cmob();
   });
 
+function initMobileQuickActions() {
+  document.querySelectorAll("#nbtn").forEach((button) => {
+    button.setAttribute("data-notification-trigger", "");
+  });
+
+  document.querySelectorAll(".mnav").forEach((menu) => {
+    if (menu.querySelector(".mquick")) return;
+    menu.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="mquick" aria-label="Quick actions">
+        <button class="mquick-action" type="button" onclick="cmob(); osearch();">
+          <span class="mquick-icon mquick-search">${ico("search")}</span>
+          <span><strong>Search</strong><small>Find anything</small></span>
+        </button>
+        <button class="mquick-action" type="button" onclick="cmob(); tnotif();" data-notification-trigger>
+          <span class="mquick-icon mquick-notifications">${ico("bell")}<span class="mquick-badge" data-notification-count style="display: none"></span></span>
+          <span><strong>Notifications</strong><small>School updates</small></span>
+        </button>
+      </div>`,
+    );
+  });
+}
+
+initMobileQuickActions();
+
 // ── NOTIFICATIONS ──────────────────────────────────────────────
 function tnotif() {
   document.getElementById("npanel").classList.toggle("open");
@@ -432,18 +494,17 @@ function markAllRead() {
 }
 document.addEventListener("click", (e) => {
   const np = document.getElementById("npanel");
-  if (np && !e.target.closest("#npanel") && !e.target.closest("#nbtn"))
+  if (np && !e.target.closest("#npanel") && !e.target.closest("[data-notification-trigger]"))
     np.classList.remove("open");
 });
 function renderNotifPanel() {
   const notifs = DB.getAll("notifications")
     .filter((n) => n.status === "delivered")
     .slice(0, 4);
-  const nc = document.getElementById("notif-count");
-  if (nc) {
+  document.querySelectorAll("[data-notification-count], #notif-count").forEach((nc) => {
     nc.textContent = notifs.length ? notifs.length : "";
     nc.style.display = notifs.length ? "flex" : "none";
-  }
+  });
   const nl = document.getElementById("notif-list");
   if (!nl) return;
   if (!notifs.length) {
@@ -681,6 +742,7 @@ function showFirstVisitWelcome() {
   };
 
   document.body.appendChild(overlay);
+  addLogoFallback(overlay.querySelector(".njb-welcome-logo"));
   hydrateIcons?.(overlay);
   overlay.querySelector(".njb-welcome-close")?.addEventListener("click", close);
   overlay.querySelector(".njb-welcome-enter")?.addEventListener("click", close);

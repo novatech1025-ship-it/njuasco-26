@@ -213,16 +213,16 @@
           </div>
         </nav>
         <div class="ha">
-          <button class="hb" onclick="osearch()">
+          <button class="hb" onclick="osearch()" aria-label="Search the website">
             <span
               class="ico ico-search"
               data-ico="search"
               aria-hidden="true"
             ></span>
           </button>
-          <button class="hb" onclick="tnotif()" id="nbtn">
+          <button class="hb" onclick="tnotif()" id="nbtn" data-notification-trigger aria-label="View notifications">
             <span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span
-            ><span class="nbadge" id="notif-count" style="display: none"></span>
+            ><span class="nbadge" data-notification-count style="display: none"></span>
           </button>
           <div
             class="cart-badge-wrap"
@@ -278,6 +278,16 @@
           </button>
         </div>
         <div class="mnav">
+          <div class="mquick" aria-label="Quick actions">
+            <button class="mquick-action" type="button" onclick="cmob(); osearch();">
+              <span class="mquick-icon mquick-search"><span class="ico ico-search" data-ico="search" aria-hidden="true"></span></span>
+              <span><strong>Search</strong><small>Find anything</small></span>
+            </button>
+            <button class="mquick-action" type="button" onclick="cmob(); tnotif();" data-notification-trigger>
+              <span class="mquick-icon mquick-notifications"><span class="ico ico-bell" data-ico="bell" aria-hidden="true"></span><span class="mquick-badge" data-notification-count style="display: none"></span></span>
+              <span><strong>Notifications</strong><small>School updates</small></span>
+            </button>
+          </div>
           <div
             class="ml active"
             onclick="

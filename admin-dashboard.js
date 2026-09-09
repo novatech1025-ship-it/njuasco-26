@@ -1372,6 +1372,11 @@
         set("si-li", i.linkedin);
         set("si-motto", i.motto);
         set("si-warcry", i.warCry);
+        set("si-top-banner", i.topBannerMessage || "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}");
+        const admissionsYearAuto = document.getElementById("si-admissions-year-auto");
+        if (admissionsYearAuto) admissionsYearAuto.checked = i.admissionsYearAuto !== false;
+        set("si-admissions-year", i.admissionsAcademicYear || "");
+        updateAdmissionsYearField();
         set("si-founded", i.founded);
         set("si-hero", i.heroTitle);
         set("si-herosub", i.heroSubtitle);
@@ -1417,6 +1422,16 @@
         setNum("si-clubs-manual", i.heroClubsManual || "");
         updateHeroStatsPreview();
       }
+      function updateAdmissionsYearField() {
+        const automatic = document.getElementById("si-admissions-year-auto")?.checked !== false;
+        const field = document.getElementById("si-admissions-year");
+        if (!field) return;
+        field.disabled = automatic;
+        field.placeholder = automatic
+          ? `Automatic: ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`
+          : "2026/2027";
+      }
+
       function getHeroClubsCount(info) {
         const clubsLive = info?.heroClubsUseLive !== false;
         const clubsManual = Number(info?.heroClubsManual);
@@ -1462,6 +1477,9 @@
           linkedin: g("si-li"),
           motto: g("si-motto"),
           warCry: g("si-warcry"),
+          topBannerMessage: g("si-top-banner"),
+          admissionsYearAuto: document.getElementById("si-admissions-year-auto")?.checked !== false,
+          admissionsAcademicYear: g("si-admissions-year"),
           founded: g("si-founded"),
           heroTitle: g("si-hero"),
           heroSubtitle: g("si-herosub"),
@@ -2722,6 +2740,7 @@
       window.downloadOrderFulfillmentList = downloadOrderFulfillmentList;
       window.saveSchoolInfo = saveSchoolInfo;
       window.updateHeroStatsPreview = updateHeroStatsPreview;
+      window.updateAdmissionsYearField = updateAdmissionsYearField;
       window.saveAboutPage = saveAboutPage;
       window.saveAIKnowledge = saveAIKnowledge;
       window.clearNotifs = clearNotifs;

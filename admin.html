@@ -1818,6 +1818,26 @@
               </div>
             </div>
             <div class="card" style="margin-bottom: 20px">
+              <div class="card-title">Top Announcement Bar</div>
+              <div class="form-grid">
+                <div class="fg" style="grid-column: 1/-1">
+                  <label class="flbl">Announcement Message</label>
+                  <textarea class="finp fta" id="si-top-banner" style="min-height: 76px" placeholder="Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}"></textarea>
+                  <div class="hint-text">Use {schoolName}, {founded}, {warCry}, and {admissionYear} to keep those values current automatically.</div>
+                </div>
+                <div class="fg">
+                  <label class="settings-check">
+                    <input id="si-admissions-year-auto" type="checkbox" checked onchange="updateAdmissionsYearField()" />
+                    <span>Use the current BECE admissions academic year automatically</span>
+                  </label>
+                </div>
+                <div class="fg">
+                  <label class="flbl">Manual Admissions Academic Year</label>
+                  <input class="finp" id="si-admissions-year" placeholder="2026/2027" />
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom: 20px">
               <div class="card-title">
                 <span
                   class="ico ico-phone"
@@ -2730,4 +2750,3 @@
     <script src="admin-dashboard.js"></script>
   </body>
 </html>
-
