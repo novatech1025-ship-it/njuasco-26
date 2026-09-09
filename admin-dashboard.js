@@ -2662,6 +2662,8 @@
           news: '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span> News',
           gallery:
             '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span> Gallery',
+          njosaGallery:
+            '<span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span> NJOSA Gallery',
           documents:
             '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span> Documents',
           slides:
