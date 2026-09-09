@@ -91,6 +91,7 @@ const ICON_PATHS = {
   pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 15H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
   camera:
     '<path d="M14.5 4 16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.5-3h5z"/><circle cx="12" cy="13" r="3"/>',
   map: '<path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
@@ -1085,8 +1086,10 @@ function sendmsg() {
 // AI CHAT - Groq-powered via local API proxy or Supabase Edge Function
 let AI_TYPING = false;
 let AI_CHAT_HISTORY = [];
-const AI_CHAT_HISTORY_LIMIT = 10;
+const AI_CHAT_HISTORY_LIMIT = 50;
+const AI_CHAT_CONTEXT_LIMIT = 10;
 const AI_CHAT_MEMORY_KEY = "nj_ai_chat_memory_v1";
+const AI_CHAT_ARCHIVE_KEY = "nj_ai_chat_archive_v1";
 const AI_REFERENCE_LIMIT = 4;
 
 function getNovaTechContext() {
@@ -1345,17 +1348,58 @@ function persistAIChatMemory() {
   } catch {}
 }
 
+function loadAIChatArchive() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AI_CHAT_ARCHIVE_KEY) || "[]");
+    return Array.isArray(saved)
+      ? saved
+          .filter((chat) => Array.isArray(chat?.turns) && chat.turns.length)
+          .map((chat) => ({
+            id: String(chat.id || ""),
+            clearedAt: String(chat.clearedAt || ""),
+            turns: chat.turns
+              .filter((turn) => ["user", "assistant"].includes(turn?.role) && String(turn?.content || "").trim())
+              .map((turn) => ({ role: turn.role, content: String(turn.content).slice(0, 800) })),
+          }))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistAIChatArchive(chats) {
+  try {
+    localStorage.setItem(AI_CHAT_ARCHIVE_KEY, JSON.stringify(chats));
+  } catch {
+    toast("Your browser could not save this chat to history");
+  }
+}
+
+function resetAIChatView() {
+  const body = document.getElementById("cbody");
+  if (!body) return;
+  body.innerHTML = `<div class="cmsg bot"><div class="cbb">${ico("wave")} Hi! I can help with official NJUASCO information, admissions, programmes, news, and more.</div></div>`;
+  hydrateIcons(body);
+}
+
 function clearAIChatMemory() {
+  if (!AI_CHAT_HISTORY.length) {
+    resetAIChatView();
+    return;
+  }
+  const chats = loadAIChatArchive();
+  chats.unshift({
+    id: `chat-${Date.now()}`,
+    clearedAt: new Date().toISOString(),
+    turns: AI_CHAT_HISTORY.map((turn) => ({ ...turn })),
+  });
+  persistAIChatArchive(chats);
   AI_CHAT_HISTORY = [];
   try {
     localStorage.removeItem(AI_CHAT_MEMORY_KEY);
   } catch {}
-  const body = document.getElementById("cbody");
-  if (body) {
-    body.innerHTML = `<div class="cmsg bot"><div class="cbb">${ico("wave")} Hi! I can help with official NJUASCO information, admissions, programmes, news, and more.</div></div>`;
-    hydrateIcons(body);
-  }
-  toast("AI conversation memory cleared");
+  resetAIChatView();
+  toast("Conversation saved to history");
 }
 
 function rememberAIChat(role, content) {
@@ -1411,17 +1455,10 @@ function getAIReferences(userMsg = "") {
     .map(({ label, detail }) => ({ label, detail: detail.slice(0, 700) }));
 }
 
-function renderAIReferences(references = []) {
-  if (!references.length) return "";
-  return `<div class="ai-references" aria-label="Official references">${references
-    .map((reference) => `<span class="ai-reference">${esc(reference.label)}</span>`)
-    .join("")}</div>`;
-}
-
 function getAIChatHistoryText() {
   if (!AI_CHAT_HISTORY.length) return "";
   return AI_CHAT_HISTORY
-    .slice(-AI_CHAT_HISTORY_LIMIT)
+    .slice(-AI_CHAT_CONTEXT_LIMIT)
     .map((turn) => `${turn.role === "assistant" ? "Assistant" : "User"}: ${turn.content}`)
     .join("\n");
 }
@@ -1459,7 +1496,7 @@ async function callAIEndpoint(apiUrl, userMsg, siteContext, references) {
       body: JSON.stringify({
         message: buildAIMessageWithHistory(userMsg),
         currentMessage: userMsg,
-        history: AI_CHAT_HISTORY.slice(-AI_CHAT_HISTORY_LIMIT),
+        history: AI_CHAT_HISTORY.slice(-AI_CHAT_CONTEXT_LIMIT),
         siteContext: String(siteContext || "").slice(0, 8000),
         references,
       }),
@@ -1633,13 +1670,21 @@ function tchat() {
 function initAIChatMemoryUI() {
   loadAIChatMemory();
   const header = document.querySelector("#cwin .chdr");
-  if (header && !header.querySelector(".ai-memory-clear")) {
+  if (header && !header.querySelector(".ai-history-button")) {
+    const history = document.createElement("button");
+    history.type = "button";
+    history.className = "ai-history-button";
+    history.title = "View conversation history";
+    history.innerHTML = `${ico("clock")}<span>History</span>`;
+    history.addEventListener("click", showAIChatHistory);
+    header.insertBefore(history, header.querySelector(".cx"));
+
     const clear = document.createElement("button");
     clear.type = "button";
     clear.className = "ai-memory-clear";
-    clear.title = "Clear conversation memory";
-    clear.setAttribute("aria-label", "Clear conversation memory");
-    clear.innerHTML = "Clear";
+    clear.title = "Clear chat and save it to history";
+    clear.setAttribute("aria-label", "Clear chat and save it to history");
+    clear.innerHTML = ico("trash");
     clear.addEventListener("click", clearAIChatMemory);
     header.insertBefore(clear, header.querySelector(".cx"));
   }
@@ -1651,6 +1696,29 @@ function initAIChatMemoryUI() {
     .join("")}`;
   hydrateIcons(body);
   body.scrollTop = body.scrollHeight;
+}
+
+function showAIChatHistory() {
+  const cwin = document.getElementById("cwin");
+  if (!cwin) return;
+  cwin.querySelector(".ai-history-panel")?.remove();
+  const chats = loadAIChatArchive();
+  const panel = document.createElement("div");
+  panel.className = "ai-history-panel";
+  panel.innerHTML = `<div class="ai-history-header"><strong>Conversation history</strong><button type="button" class="ai-history-close" aria-label="Close history">${ico("x")}</button></div><div class="ai-history-list">${
+    chats.length
+      ? chats
+          .map(
+            (chat) => `<details class="ai-history-session"><summary><span>${esc(new Date(chat.clearedAt).toLocaleString())}</span><small>${chat.turns.length} messages</small></summary><div class="ai-history-turns">${chat.turns
+              .map((turn) => `<div class="ai-history-turn ${turn.role === "assistant" ? "bot" : "user"}"><strong>${turn.role === "assistant" ? "NJB City AI" : "You"}</strong><p>${esc(turn.content).replace(/\n/g, "<br>")}</p></div>`)
+              .join("")}</div></details>`,
+          )
+          .join("")
+      : '<p class="ai-history-empty">Cleared conversations will appear here.</p>'
+  }</div>`;
+  panel.querySelector(".ai-history-close")?.addEventListener("click", () => panel.remove());
+  cwin.appendChild(panel);
+  hydrateIcons(panel);
 }
 
 function schat() {
@@ -1696,7 +1764,7 @@ async function scmsg(msg) {
   // Replace typing indicator with response
   const typingEl = document.getElementById(typingId);
   if (typingEl)
-    typingEl.innerHTML = `<div class="cbb">${esc(response.reply).replace(/\n/g, "<br>")}</div>${renderAIReferences(response.references)}`;
+    typingEl.innerHTML = `<div class="cbb">${esc(response.reply).replace(/\n/g, "<br>")}</div>`;
   b.scrollTop = b.scrollHeight;
 }
 
