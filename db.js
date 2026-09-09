@@ -1292,7 +1292,7 @@ DB.getAIKnowledgeText = function () {
   return String(info.aiKnowledge || "").trim();
 };
 
-DB.findOrCreateShopCustomer = function ({ name, email, phone }) {
+DB.findOrCreateShopCustomer = function ({ name, email, phone, wardName, wardClass }) {
   const normalizedPhone = this._normalizeCheckoutPhone(phone);
   const customers = this._get("shopCustomers");
   let customer = customers.find((c) => c.phone === normalizedPhone);
@@ -1302,6 +1302,8 @@ DB.findOrCreateShopCustomer = function ({ name, email, phone }) {
       name: String(name || "").trim(),
       email: String(email || "").trim().toLowerCase(),
       phone: normalizedPhone,
+      wardName: String(wardName || "").trim(),
+      wardClass: String(wardClass || "").trim(),
       createdAt: new Date().toISOString(),
     };
     customers.push(customer);
@@ -1310,11 +1312,26 @@ DB.findOrCreateShopCustomer = function ({ name, email, phone }) {
   } else {
     customer.name = String(name || customer.name || "").trim();
     customer.email = String(email || customer.email || "").trim().toLowerCase();
+    customer.wardName = String(wardName || customer.wardName || "").trim();
+    customer.wardClass = String(wardClass || customer.wardClass || "").trim();
     customer.updatedAt = new Date().toISOString();
     this._set("shopCustomers", customers);
     this.saveRemoteContent?.("shopCustomers", customers);
   }
   return customer;
+};
+
+DB.saveCheckoutProfile = function (profile) {
+  localStorage.setItem("nj_checkout_profile", JSON.stringify({ ...profile, savedAt: Date.now() }));
+};
+
+DB.getCheckoutProfile = function () {
+  try {
+    const profile = JSON.parse(localStorage.getItem("nj_checkout_profile") || "null");
+    return profile && profile.customerId ? profile : null;
+  } catch {
+    return null;
+  }
 };
 
 DB.saveCheckoutSession = function (session) {

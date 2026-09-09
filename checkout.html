@@ -608,6 +608,16 @@
       <section class="sec">
         <div class="checkout-grid">
           <div>
+            <div class="checkout-tabs" role="tablist" aria-label="Checkout account">
+              <button class="checkout-tab active" type="button" onclick="switchCheckoutTab('checkout', this)">Checkout</button>
+              <button class="checkout-tab" type="button" onclick="switchCheckoutTab('profile', this)">Profile &amp; History</button>
+            </div>
+            <div id="co-profile-panel" class="checkout-profile-panel" style="display:none">
+              <div class="checkout-profile-head"><div><div class="eyebrow">Returning customer</div><h2>Your profile</h2></div><button class="btn btn-p" type="button" onclick="useSavedCheckoutProfile()">Use for checkout</button></div>
+              <div id="co-profile-summary"></div>
+              <div class="checkout-history-title">Checkout history</div>
+              <div id="co-order-history"></div>
+            </div>
             <div class="checkout-step rv" id="co-step-info">
               <div class="cs-header">
                 <div class="cs-num">1</div>
@@ -1121,6 +1131,44 @@
         };
       }
 
+      function switchCheckoutTab(tab, button){
+        document.querySelectorAll('.checkout-tab').forEach((item)=>item.classList.toggle('active', item===button));
+        const profile=document.getElementById('co-profile-panel');
+        const info=document.getElementById('co-step-info');
+        if(profile) profile.style.display=tab==='profile'?'block':'none';
+        if(info && tab==='profile') info.style.display='none';
+        if(info && tab==='checkout') info.style.display='block';
+        if(tab==='profile') renderCheckoutProfile();
+      }
+
+      function renderCheckoutProfile(){
+        const profile=DB.getCheckoutProfile();
+        const summary=document.getElementById('co-profile-summary');
+        const history=document.getElementById('co-order-history');
+        if(!summary||!history) return;
+        if(!profile){
+          summary.innerHTML='<div class="checkout-profile-empty">Your saved profile will appear here after your first verified checkout.</div>';
+          history.innerHTML='';
+          return;
+        }
+        summary.innerHTML=`<div class="checkout-profile-card"><strong>${esc(profile.name||'Customer')}</strong><span>${esc(profile.email||'')}</span><span>${esc(DB.formatCheckoutPhone(profile.phone)||profile.phone||'')}</span><span>Ward: ${esc(profile.wardName||'Not set')} · ${esc(profile.wardClass||'Not set')}</span></div>`;
+        const orders=DB.getAll('orders').filter((order)=>order.customerId===profile.customerId || DB._normalizeCheckoutPhone(order.phone)===DB._normalizeCheckoutPhone(profile.phone));
+        history.innerHTML=orders.length?orders.slice().reverse().map((order)=>`<div class="checkout-history-row"><div><strong>${esc(order.ref)}</strong><span>${esc(order.wardName||profile.wardName||'')} · ${esc(order.wardClass||profile.wardClass||'')}</span></div><div><strong>GHS ${Number(order.total||0).toFixed(2)}</strong><span class="checkout-status">${esc(order.status||'pending')}</span></div></div>`).join(''):'<div class="checkout-profile-empty">No checkout history yet.</div>';
+      }
+
+      function useSavedCheckoutProfile(){
+        const profile=DB.getCheckoutProfile();
+        if(!profile) return toast('Complete one verified checkout first.');
+        document.getElementById('co-fname').value=String(profile.name||'').split(' ')[0]||'';
+        document.getElementById('co-lname').value=String(profile.name||'').split(' ').slice(1).join(' ');
+        document.getElementById('co-email').value=profile.email||'';
+        document.getElementById('co-phone').value=profile.phone||'';
+        document.getElementById('co-ward-name').value=profile.wardName||'';
+        document.getElementById('co-ward-class').value=profile.wardClass||'';
+        switchCheckoutTab('checkout', document.querySelector('.checkout-tab'));
+        toast('Saved profile loaded. Review the ward details and continue.');
+      }
+
       function continueToVerification(){
         const {fname,phone,wardName,wardClass}=getCheckoutCustomerFields();
         if(!fname||!phone||!wardName||!wardClass){toast('Please fill in all required fields');return;}
@@ -1130,6 +1178,15 @@
           unlockCheckoutPayment();
           showCheckoutStep('payment');
           toast('Phone already verified on this device.');
+          return;
+        }
+        const profile=DB.getCheckoutProfile();
+        if(profile?.verificationToken&&DB._normalizeCheckoutPhone(profile.phone)===DB._normalizeCheckoutPhone(phone)){
+          checkoutVerification={verificationToken:profile.verificationToken,customerId:profile.customerId,phone:profile.phone,verifiedAt:profile.verifiedAt||new Date().toISOString()};
+          DB.saveCheckoutSession(checkoutVerification);
+          unlockCheckoutPayment();
+          showCheckoutStep('payment');
+          toast('Saved profile verified. Continue with payment.');
           return;
         }
         const verifyPhone=document.getElementById('co-verify-phone');
@@ -1219,6 +1276,8 @@
               name:[fields.fname,fields.lname].filter(Boolean).join(' '),
               email:fields.email,
               phone,
+              wardName:fields.wardName,
+              wardClass:fields.wardClass,
             });
             checkoutVerification={
               verificationToken:'local-'+crypto.randomUUID(),
@@ -1227,6 +1286,7 @@
               verifiedAt:new Date().toISOString(),
             };
             DB.saveCheckoutSession(checkoutVerification);
+            DB.saveCheckoutProfile({customerId:customer.id,name:[fields.fname,fields.lname].filter(Boolean).join(' '),email:fields.email,phone,wardName:fields.wardName,wardClass:fields.wardClass,verificationToken:checkoutVerification.verificationToken,verifiedAt:checkoutVerification.verifiedAt});
             unlockCheckoutPayment();
             toast('Phone verified successfully');
             return;
@@ -1240,6 +1300,8 @@
             name:[fields.fname,fields.lname].filter(Boolean).join(' '),
             email:fields.email,
             phone,
+            wardName:fields.wardName,
+            wardClass:fields.wardClass,
           });
           checkoutVerification={
             verificationToken:data.verificationToken,
@@ -1248,6 +1310,7 @@
             verifiedAt:new Date().toISOString(),
           };
           DB.saveCheckoutSession(checkoutVerification);
+          DB.saveCheckoutProfile({customerId:checkoutVerification.customerId,name:[fields.fname,fields.lname].filter(Boolean).join(' '),email:fields.email,phone,wardName:fields.wardName,wardClass:fields.wardClass,verificationToken:checkoutVerification.verificationToken,verifiedAt:checkoutVerification.verifiedAt});
           unlockCheckoutPayment();
           toast('Phone verified successfully');
         }catch(error){
@@ -1281,7 +1344,8 @@
         const ref='NJ-ORD-'+crypto.randomUUID().slice(0,8).toUpperCase();
         const cart=DB.getCart();
         const paymentMethod=document.querySelector('[name="pay"]:checked')?.value||'paystack';
-        const customer=DB.findOrCreateShopCustomer({name:fname,email,phone});
+        const customer=DB.findOrCreateShopCustomer({name:fname,email,phone,wardName,wardClass});
+        DB.saveCheckoutProfile({customerId:checkoutVerification.customerId||customer.id,name:fname,email,phone,wardName,wardClass});
         const localVerified=String(checkoutVerification.verificationToken||'').startsWith('local-');
         const order={id:DB._id(),ref,customerId:checkoutVerification.customerId||customer.id,customer:fname,email,phone,wardName,wardClass,pickupMethod:'school',items:cart,total:DB.cartTotal(),paymentMethod,status:paymentMethod==='paystack'&&!localVerified?'pending_payment':'pending',verified:true,date:new Date().toISOString().split("T")[0]};
         DB.add('orders',order);
@@ -1315,6 +1379,7 @@
       }
       document.addEventListener('DOMContentLoaded',()=>{
         checkoutVerification=DB.getCheckoutSession();
+        renderCheckoutProfile();
         const params=new URLSearchParams(window.location.search);
         if(params.get('payment')==='success'){
           const ref=params.get('ref')||'';
