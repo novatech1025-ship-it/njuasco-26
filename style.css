@@ -3721,7 +3721,7 @@ ul {
 .lbi .media-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
@@ -4600,6 +4600,7 @@ ul {
 }
 
 .shopimg {
+  position: relative;
   aspect-ratio: 1;
   background: var(--g100);
   display: flex;
@@ -4607,7 +4608,16 @@ ul {
   justify-content: center;
   font-size: clamp(36px, 10vw, 56px);
   overflow: hidden;
+  cursor: zoom-in;
 }
+
+.shopimg-view { position:absolute;right:12px;bottom:12px;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff;background:rgba(15,23,42,.72);opacity:0;transform:translateY(6px);transition:opacity 180ms ease,transform 180ms ease; }
+.shopimg:hover .shopimg-view, .shopimg:focus-visible .shopimg-view { opacity:1; transform:translateY(0); }
+
+.checkout-profile-login { display:grid; gap:8px; margin-bottom:16px; padding:14px; border:1px solid rgba(37,99,235,.14); border-radius:var(--r); background:#eff6ff; }
+.checkout-profile-login > div { display:flex; gap:8px; }
+.checkout-profile-login .finp { flex:1; background:#fff; }
+@media (max-width:600px) { .checkout-profile-login > div { align-items:stretch; flex-direction:column; } }
 
 .shopb {
   padding: 14px;

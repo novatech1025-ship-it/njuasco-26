@@ -614,6 +614,7 @@
             </div>
             <div id="co-profile-panel" class="checkout-profile-panel" style="display:none">
               <div class="checkout-profile-head"><div><div class="eyebrow">Returning customer</div><h2>Your profile</h2></div><button class="btn btn-p" type="button" onclick="useSavedCheckoutProfile()">Use for checkout</button></div>
+              <div class="checkout-profile-login"><label class="flbl" for="co-profile-email">Sign in with your saved email</label><div><input class="finp" id="co-profile-email" type="email" placeholder="you@example.com" autocomplete="email" /><button class="btn btn-g" type="button" onclick="signInCheckoutProfile()">Continue with email</button></div></div>
               <div id="co-profile-summary"></div>
               <div class="checkout-history-title">Checkout history</div>
               <div id="co-order-history"></div>
@@ -1167,6 +1168,15 @@
         document.getElementById('co-ward-class').value=profile.wardClass||'';
         switchCheckoutTab('checkout', document.querySelector('.checkout-tab'));
         toast('Saved profile loaded. Review the ward details and continue.');
+      }
+
+      function signInCheckoutProfile(){
+        const profile=DB.getCheckoutProfile();
+        const email=(document.getElementById('co-profile-email')?.value||'').trim().toLowerCase();
+        if(!profile) return toast('No saved profile found on this device.');
+        if(!email||email!==String(profile.email||'').toLowerCase()) return toast('That email does not match the saved profile.');
+        useSavedCheckoutProfile();
+        toast('Profile loaded. You can continue with payment.');
       }
 
       function continueToVerification(){

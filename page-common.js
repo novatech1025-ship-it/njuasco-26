@@ -622,6 +622,11 @@ function olb(emoji, title, desc) {
   document.getElementById("lb").classList.add("open");
   document.body.style.overflow = "hidden";
 }
+function openShopItem(id) {
+  const item = DB.getById("merchandise", id);
+  if (!item) return;
+  olb(item.image, item.name, `${item.currency || "GHS"} ${item.price} · ${item.description || "Official NJUASCO merchandise"}`);
+}
 function clb() {
   document.getElementById("lb").classList.remove("open");
   document.body.style.overflow = "";
@@ -2510,7 +2515,7 @@ function renderShopPage(cat = "all") {
       .map(
         (m) => `
     <div class="shopcard rv">
-      <div class="shopimg">${mediaMarkup(m.image)}</div>
+      <div class="shopimg" role="button" tabindex="0" aria-label="View ${esc(m.name)} image" onclick="openShopItem('${esc(m.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openShopItem('${esc(m.id)}')}">${mediaMarkup(m.image)}<span class="shopimg-view">${ico("search")}</span></div>
       <div class="shopb">
         <div class="shopn">${esc(m.name)}</div>
         <div class="shopp">${m.currency || "GHS"} ${m.price}</div>
