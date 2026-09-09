@@ -2127,7 +2127,8 @@ function renderHomePage() {
       </div>
     </article>`,
     )
-    .join("");
+    .join("") ||
+    '<div class="empty-news" style="grid-column:1/-1">No news or events have been published yet.</div>';
   // Marquee
   const mtrack = document.getElementById("mtrack");
   if (mtrack) {
