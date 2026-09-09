@@ -102,6 +102,7 @@
         "team-mgr": "Team Members",
         "departments-mgr": "Departments",
         "gallery-mgr": "Gallery",
+        "njosa-gallery-mgr": "NJOSA Gallery",
         "docs-mgr": "Documents",
         "slides-mgr": "Homepage Slides",
         "facilities-mgr": "Facilities",
@@ -162,6 +163,7 @@
         else if (id === "team-mgr") renderTeam();
         else if (id === "departments-mgr") renderDepartments();
         else if (id === "gallery-mgr") renderGallery();
+        else if (id === "njosa-gallery-mgr") renderNjosaGalleryManager();
         else if (id === "docs-mgr") renderDocs();
         else if (id === "slides-mgr") renderSlides();
         else if (id === "facilities-mgr") renderFacilities();
@@ -434,6 +436,8 @@
             news: '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span> News & Events',
             gallery:
               '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span> Gallery',
+            njosaGallery:
+              '<span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span> NJOSA Gallery',
             documents:
               '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span> Documents',
             slides:
@@ -738,6 +742,7 @@
             "teachers",
             "news",
             "gallery",
+            "njosaGallery",
             "documents",
             "slides",
             "notifications",
@@ -1871,6 +1876,25 @@
             )
             .join("") ||
           '<div style="padding:24px;text-align:center;color:var(--g400);grid-column:1/-1">No gallery photos yet.</div>';
+      }
+
+      function renderNjosaGalleryManager() {
+        const items = DB.getAll("gallery").filter((item) => item.category === "njosa");
+        const list = document.getElementById("njosa-gallery-list");
+        if (!list) return;
+        list.innerHTML = items.map((g) => `
+          <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
+            <div style="aspect-ratio:1;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;position:relative"><input class="admin-njosa-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image)}</div>
+            <div style="padding:12px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">${esc(g.title)}</div><div style="font-size:11px;color:var(--g500);margin-bottom:10px">${esc(g.description || "NJOSA Alumni")}</div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-g" onclick="openModal('gallery','${g.id}')">Edit</button><button class="btn btn-sm btn-r" onclick="delItem('gallery','${g.id}','njosa-gallery-mgr')">Delete</button></div></div>
+          </div>`).join("") || '<div style="padding:24px;text-align:center;color:var(--g400);grid-column:1/-1">No NJOSA photos yet.</div>';
+      }
+
+      function openNjosaGalleryModal(id) {
+        openModal("gallery", id);
+        setTimeout(() => {
+          const select = document.getElementById("mf-cat");
+          if (select) select.value = "njosa";
+        }, 0);
       }
 
       // ── FACILITIES ─────────────────────────────────────────────

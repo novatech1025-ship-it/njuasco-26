@@ -1143,6 +1143,23 @@
               ></div>
             </div>
 
+            <!-- NJOSA GALLERY MANAGEMENT -->
+            <div class="sa-page" id="sap-njosa-gallery">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <h2 class="stitle" style="margin:0">NJOSA <span class="gt">Gallery</span></h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="sa-njosa-only-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadNjosaOnly(this)" />
+                  <button class="btn btn-g" onclick="document.getElementById('sa-njosa-only-files').click()">Bulk Upload Images</button>
+                  <button class="btn btn-g" onclick="saSelectAll('sa-njosa-gallery-select', true)">Select All</button>
+                  <button class="btn btn-g" onclick="saBulkArrange('gallery','njosa-gallery','sa-njosa-gallery-select')">Arrange Selected</button>
+                  <button class="btn btn-r" onclick="saBulkDelete('gallery','njosa-gallery','sa-njosa-gallery-select')">Delete Selected</button>
+                  <button class="btn btn-p" onclick="saOpenNjosaGalleryModal()">+ Add NJOSA Photo</button>
+                </div>
+              </div>
+              <p style="margin:-8px 0 18px;color:var(--g500);font-size:13px">Manage photos shown on the separate NJOSA Gallery page.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px" id="sa-njosa-gallery-list"></div>
+            </div>
+
             <!-- DOCUMENTS MANAGEMENT -->
             <div class="sa-page" id="sap-documents">
               <div
@@ -1743,6 +1760,11 @@
           icon: '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
           page: "sap-gallery",
         },
+        njosaGallery: {
+          label: "NJOSA Gallery",
+          icon: '<span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span>',
+          page: "sap-njosa-gallery",
+        },
         documents: {
           label: "Documents",
           icon: '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>',
@@ -2056,6 +2078,7 @@
           teachers: "teachers",
           student: "students",
           gallery: "gallery",
+          njosaGallery: "njosaGallery",
           doc: "documents",
           documents: "documents",
           slide: "slides",
@@ -2120,8 +2143,8 @@
       }
       window.saQuickUpdate = saQuickUpdate;
 
-      function saAdd(dbKey, data) {
-        if (!requireSaPerm(permForSaType(dbKey))) return null;
+      function saAdd(dbKey, data, permission = permForSaType(dbKey)) {
+        if (!requireSaPerm(permission)) return null;
         const list = DB._get(dbKey);
         const item = { ...data, id: data.id || DB._id() };
         list.push(item);
@@ -2137,11 +2160,20 @@
       async function saBulkUploadNjosaGallery(input) {
         await saBulkUploadMedia(input, "gallery", "gallery", { category: "njosa" });
       }
+      async function saBulkUploadNjosaOnly(input) {
+        if (!requireSaPerm("njosaGallery")) return;
+        await saBulkUploadMedia(input, "gallery", "njosa-gallery", { category: "njosa", permission: "njosaGallery" });
+      }
+
+      function saOpenNjosaGalleryModal(id = null) {
+        if (!requireSaPerm("njosaGallery")) return;
+        saOpenModal("njosaGallery", id);
+      }
       function saFileTitle(file) {
         return file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
       }
       async function saBulkUploadMedia(input, key, page, extra = {}) {
-        if (!requireSaPerm(permForSaType(key))) return;
+        if (!requireSaPerm(extra.permission || permForSaType(key))) return;
         const files = Array.from(input?.files || []);
         if (!files.length) return;
         for (const [index, file] of files.entries()) {
@@ -2160,7 +2192,7 @@
           } else if (key === "houses") {
             saAdd(key, { name: title, gender: "Mixed", color: "#2563eb", master: "", motto: "", achievements: "", story: "", image: src, gallery: [src], order });
           } else {
-            saAdd(key, { title, category: extra.category || "campus", image: src, description: "", color: "linear-gradient(135deg,#1e40af,#4f46e5)", order, ...extra });
+            saAdd(key, { title, category: extra.category || "campus", image: src, description: "", color: "linear-gradient(135deg,#1e40af,#4f46e5)", order, ...extra }, extra.permission || permForSaType(key));
           }
         }
         if (input) input.value = "";
@@ -2192,8 +2224,8 @@
         });
       }
 
-      function saUpdate(dbKey, id, data) {
-        if (!requireSaPerm(permForSaType(dbKey))) return null;
+      function saUpdate(dbKey, id, data, permission = permForSaType(dbKey)) {
+        if (!requireSaPerm(permission)) return null;
         const list = DB._get(dbKey);
         const index = list.findIndex((x) => x.id === id);
         if (index === -1) return null;
@@ -2686,6 +2718,7 @@
         else if (key === "teachers") loadSaTeachers();
         else if (key === "news") loadSaNews();
         else if (key === "gallery") loadSaGallery();
+        else if (key === "njosaGallery") loadSaNjosaGallery();
         else if (key === "documents") loadSaDocs();
         else if (key === "slides") loadSaSlides();
         else if (key === "notifications") loadSaNotifs();
@@ -3033,6 +3066,17 @@
           '<div style="padding:30px;text-align:center;color:var(--g400);grid-column:1/-1">No photos yet.</div>';
       }
 
+      function loadSaNjosaGallery() {
+        const list = document.getElementById("sa-njosa-gallery-list");
+        if (!list) return;
+        const items = DB.getAll("gallery").filter((item) => item.category === "njosa");
+        list.innerHTML = items.map((g) => `
+          <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
+            <div style="aspect-ratio:1;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative"><input class="sa-njosa-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image)}</div>
+            <div style="padding:10px"><div style="font-size:13px;font-weight:600;margin-bottom:3px">${esc(g.title)}</div><div style="font-size:11px;color:var(--g500);margin-bottom:8px">${esc(g.description || "NJOSA Alumni")}</div><button style="width:100%;padding:6px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete?'))saDelete('gallery','${g.id}','njosaGallery')">Delete</button></div>
+          </div>`).join("") || '<div style="padding:30px;text-align:center;color:var(--g400);grid-column:1/-1">No NJOSA photos yet.</div>';
+      }
+
       function loadSaDocs() {
         const items = DB.getAll("documents").sort(
           (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0),
@@ -3204,6 +3248,8 @@
           student: "students",
           teacher: "teachers",
           gallery: "gallery",
+          njosaGallery: "gallery",
+          njosaGallery: "gallery",
           doc: "documents",
           slide: "homepageSlides",
           notif: "notifications",
@@ -3308,10 +3354,10 @@
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Phone</label><input class="finp" id="smf-phone" value="${v("phone")}" placeholder="+233 XX XXX XXXX"></div>
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="active" ${item?.status === "active" ? "selected" : ""}>Active</option><option value="inactive" ${item?.status === "inactive" ? "selected" : ""}>Inactive</option></select></div>
   </div>`;
-        else if (type === "gallery")
+        else if (type === "gallery" || type === "njosaGallery")
           body = `<div style="display:flex;flex-direction:column;gap:14px">
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Photo title"></div>
-    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="events" ${item?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${item?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${item?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${item?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${item?.category === "campus" ? "selected" : ""}>Campus</option><option value="njosa" ${item?.category === "njosa" ? "selected" : ""}>NJOSA Alumni</option></select></div>
+    <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Category</label><select class="finp" id="smf-cat"><option value="njosa" selected>NJOSA Alumni</option><option value="events" ${item?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${item?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${item?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${item?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${item?.category === "campus" ? "selected" : ""}>Campus</option></select></div>
     ${saMediaField(item?.image, '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>')}
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Description</label><input class="finp" id="smf-desc" value="${v("description")}" placeholder="Brief description"></div>
     ${colorPickerField("smf-color", item?.color || "linear-gradient(135deg,#1e40af,#4f46e5)", { mode: "gradient", label: "Background Colour" })}
@@ -3523,10 +3569,10 @@
             saToast("Teacher name required");
             return;
           }
-        } else if (type === "gallery") {
+        } else if (type === "gallery" || type === "njosaGallery") {
           data = {
             title: gsmv("smf-title"),
-            category: gsmv("smf-cat"),
+            category: type === "njosaGallery" ? "njosa" : gsmv("smf-cat"),
             image:
               (await saMediaValue()) ||
               '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
@@ -3607,11 +3653,12 @@
           notif: "notifications",
           merch: "merchandise",
         }[type];
-        if (!requireSaPerm(permForSaType(type))) return;
+        const permission = type === "njosaGallery" ? "njosaGallery" : permForSaType(type);
+        if (!requireSaPerm(permission)) return;
         if (id) {
-          saUpdate(dbKey, id, data);
+          saUpdate(dbKey, id, data, permission);
         } else {
-          saAdd(dbKey, data);
+          saAdd(dbKey, data, permission);
         }
         saToast("Saved!");
         closeSaModal();
@@ -3636,7 +3683,11 @@
                       ? "students"
                       : type === "teacher"
                         ? "teachers"
-                        : type,
+                        : type === "njosaGallery"
+                          ? "gallery"
+                          : type === "njosaGallery"
+                            ? "njosaGallery"
+                            : type,
         );
         saSyncAfterChange("Saved!").then(() => loadSaPage(CURRENT_SA_PAGE));
       }
