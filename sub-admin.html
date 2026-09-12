@@ -1730,16 +1730,6 @@
             active: true,
             color: "linear-gradient(135deg,#f59e0b,#d97706)",
           },
-          {
-            id: "sa5",
-            username: "njosaadmin",
-            email: "njosa@njuasco.edu.gh",
-            name: "NJOSA Administrator",
-            role: "NJOSA Administrator",
-            permissions: ["njosa"],
-            active: true,
-            color: "linear-gradient(135deg,#0f766e,#2563eb)",
-          },
         ];
         const existing = DB._getSaAdmins() || [];
         const existingEmails = new Set(
@@ -1804,16 +1794,6 @@
           label: "Photo Gallery",
           icon: '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
           page: "sap-gallery",
-        },
-        njosaGallery: {
-          label: "NJOSA Gallery",
-          icon: '<span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span>',
-          page: "sap-njosa-gallery",
-        },
-        njosa: {
-          label: "NJOSA Workspace",
-          icon: '<span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>',
-          page: "sap-njosa",
         },
         documents: {
           label: "Documents",

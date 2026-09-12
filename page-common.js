@@ -1777,10 +1777,7 @@ async function scmsg(msg) {
 // ── NJOSA PAGE ────────────────────────────────────────────────
 function renderNjosaPage() {
   const settings = DB.getAll("njosaSettings")[0] || {};
-  const events = DB.getAll("njosaEvents").filter((item) => item.status !== "draft");
-  const careers = DB.getAll("njosaCareers").filter((item) => item.status !== "draft");
-  const leaders = DB.getAll("njosaLeaders").filter((item) => item.status !== "hidden");
-  const news = DB.getAll("news").filter((item) => item.status === "published").slice(0, 4);
+  const leaders = DB.getAll("njosaLeaders").filter((item) => item.status === "published");
   const setText = (id, value) => {
     const el = document.getElementById(id);
     if (el && value) el.textContent = value;
@@ -1789,13 +1786,6 @@ function renderNjosaPage() {
   setText("njosa-network-copy", settings.networkCopy);
   setText("njosa-career-copy", settings.careerCopy);
   setText("njosa-homecoming-copy", settings.homecomingCopy);
-  const eventMarkup = events
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.dateLabel || fmtDate(item.date))}</div><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p>${item.location ? `<p class="njosa-feed-meta">${esc(item.location)}</p>` : ""}</article>`)
-    .join("");
-  const careerMarkup = careers
-    .map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.type || "Opportunity")}${item.deadline ? ` · ${esc(item.deadline)}` : ""}</div><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p>${item.contact ? `<p class="njosa-feed-meta">${esc(item.contact)}</p>` : ""}</article>`)
-    .join("");
   const leaderMarkup = leaders
     .map((item) => {
       const initials = esc(String(item.name || "NJ").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase());
@@ -1803,17 +1793,31 @@ function renderNjosaPage() {
       return `<article class="njosa-leader-card">${portrait}<h3>${esc(item.name)}</h3><p>${esc(item.position)}</p><small>${esc(item.bio || "")}</small></article>`;
     })
     .join("");
-  const newsMarkup = news.map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.category || "News")} · ${esc(item.dateLabel || fmtDate(item.date))}</div><h3>${esc(item.title)}</h3><p>${esc(item.excerpt || "")}</p></article>`).join("");
-  const empty = '<div class="njosa-feed-card"><p>Updates will appear here soon.</p></div>';
-  document.getElementById("njosa-events")?.replaceChildren();
-  const eventsEl = document.getElementById("njosa-events");
-  const careersEl = document.getElementById("njosa-careers");
   const leadersEl = document.getElementById("njosa-leaders");
-  const newsEl = document.getElementById("njosa-news");
-  if (eventsEl) eventsEl.innerHTML = eventMarkup || empty;
-  if (careersEl) careersEl.innerHTML = careerMarkup || empty;
-  if (leadersEl) leadersEl.innerHTML = leaderMarkup || empty;
-  if (newsEl) newsEl.innerHTML = newsMarkup || empty;
+  if (leadersEl) leadersEl.innerHTML = leaderMarkup || '<div class="njosa-feed-card"><p>Leadership profiles will appear here soon.</p></div>';
+}
+
+function renderNjosaCollectionPage(kind) {
+  const config = {
+    events: { key: "njosaEvents", title: "NJOSA Events", eyebrow: "Homecoming, reunions, and connection", description: "Only events approved by NJOSA or the main administrator appear here.", date: true },
+    careers: { key: "njosaCareers", title: "Career Opportunities", eyebrow: "Network with purpose", description: "Opportunities, mentorship, and professional connections shared with NJOSA members." },
+  }[kind];
+  const list = document.getElementById("njosa-collection-list");
+  if (!list || !config) return;
+  const items = DB.getAll(config.key).filter((item) => item.status === "published");
+  list.innerHTML = items.map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(config.date ? item.dateLabel || "Date to be announced" : item.type || "Opportunity")}${item.deadline ? ` · ${esc(item.deadline)}` : ""}</div><h2>${esc(item.title)}</h2><p>${esc(item.description || "")}</p>${item.location ? `<p class="njosa-feed-meta">${esc(item.location)}</p>` : ""}${item.contact ? `<p class="njosa-feed-meta">${esc(item.contact)}</p>` : ""}</article>`).join("") || '<div class="njosa-feed-card"><p>There are no published updates here yet.</p></div>';
+  document.getElementById("njosa-page-description").textContent = config.description;
+  document.getElementById("njosa-page-eyebrow").textContent = config.eyebrow;
+  document.getElementById("njosa-page-title").textContent = config.title;
+}
+
+function renderNjosaNetworkingPage() {
+  const settings = DB.getAll("njosaSettings")[0] || {};
+  const members = DB.getAll("njosaMembers").filter((item) => item.status === "approved");
+  const leaders = DB.getAll("njosaLeaders").filter((item) => item.status === "published");
+  document.getElementById("njosa-networking-copy").textContent = settings.networkCopy || "10,000+ alumni across Ghana and the world, connected through NJUASCO heritage and pride.";
+  document.getElementById("njosa-networking-count").textContent = members.length ? `${members.length}+ approved members are already connected.` : "The NJOSA network is growing across Ghana and the world.";
+  document.getElementById("njosa-networking-leaders").innerHTML = leaders.map((item) => `<article class="njosa-leader-card"><h3>${esc(item.name)}</h3><p>${esc(item.position)}</p></article>`).join("") || '<div class="njosa-feed-card"><p>Leadership profiles will appear here soon.</p></div>';
 }
 
 // ── NEWS RENDER (for news.html) ────────────────────────────────
@@ -2873,6 +2877,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     else if (path === "about.html") loadAboutFromDB();
     else if (path === "news.html") renderNews();
     else if (path === "njosa.html") renderNjosaPage();
+    else if (path === "njosa-events.html") renderNjosaCollectionPage("events");
+    else if (path === "njosa-careers.html") renderNjosaCollectionPage("careers");
+    else if (path === "njosa-networking.html") renderNjosaNetworkingPage();
     else if (path === "gallery.html") renderGallery();
     else if (path === "njosa-gallery.html") renderNjosaGallery();
     else if (path === "facilities.html") renderFacilities();

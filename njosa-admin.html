@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NJOSA Administration | NJUASCO</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body { background:#f8fafc; }
+      .nja-shell { min-height:100vh; }
+      .nja-top { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px clamp(18px,4vw,52px); background:#0b1324; color:#fff; }
+      .nja-brand { display:flex; align-items:center; gap:12px; }
+      .nja-brand img { width:38px; height:38px; object-fit:contain; background:#fff; border-radius:8px; padding:3px; }
+      .nja-brand strong { display:block; font-family:"Playfair Display",serif; font-size:17px; }
+      .nja-brand span { display:block; color:rgba(255,255,255,.5); font-size:11px; margin-top:2px; }
+      .nja-top a { color:#c7d2fe; font-size:12px; text-decoration:none; }
+      .nja-main { width:min(1180px,100%); margin:0 auto; padding:34px clamp(18px,4vw,52px) 70px; }
+      .nja-login { width:min(460px,100%); margin:12vh auto 0; padding:30px; border:1px solid var(--g200); border-radius:var(--rl); background:#fff; box-shadow:var(--sh3); }
+      .nja-login h1 { color:var(--g900); font-family:"Playfair Display",serif; font-size:30px; }
+      .nja-login p { color:var(--g500); font-size:13px; line-height:1.6; margin:10px 0 22px; }
+      .nja-form { display:grid; gap:13px; }
+      .nja-form label { display:grid; gap:6px; color:var(--g700); font-size:12px; font-weight:700; }
+      .nja-form input, .nja-form textarea, .nja-form select { width:100%; padding:11px 12px; border:1px solid var(--g200); border-radius:var(--r); background:#fff; color:var(--g800); }
+      .nja-form textarea { min-height:88px; resize:vertical; }
+      .nja-msg { color:var(--r6); min-height:18px; font-size:12px; }
+      .nja-dashboard { display:none; }
+      .nja-head { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; flex-wrap:wrap; margin-bottom:22px; }
+      .nja-head h1 { color:var(--g900); font-family:"Playfair Display",serif; font-size:clamp(28px,5vw,46px); }
+      .nja-head p { color:var(--g500); font-size:13px; margin-top:6px; }
+      .nja-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+      .nja-tab { padding:9px 13px; border:1px solid var(--g200); border-radius:999px; background:#fff; color:var(--g600); font-weight:700; cursor:pointer; }
+      .nja-tab.active { border-color:#0f766e; background:#ecfdf5; color:#0f766e; }
+      .nja-panel { display:none; }
+      .nja-panel.active { display:block; }
+      .nja-card { padding:20px; margin-bottom:18px; border:1px solid var(--g200); border-radius:var(--r); background:#fff; box-shadow:var(--sh1); }
+      .nja-card h2 { color:var(--g900); font-size:17px; margin-bottom:14px; }
+      .nja-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:13px; }
+      .nja-list { display:grid; gap:10px; }
+      .nja-row { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding:13px; border:1px solid var(--g200); border-radius:var(--r); background:#fff; }
+      .nja-row strong { color:var(--g900); font-size:14px; }
+      .nja-row small { display:block; color:var(--g500); line-height:1.55; margin-top:4px; }
+      .nja-actions { display:flex; gap:7px; flex-wrap:wrap; flex-shrink:0; }
+      .nja-empty { color:var(--g400); font-size:13px; padding:10px 0; }
+      .nja-table-wrap { overflow-x:auto; }
+      .nja-table { width:100%; min-width:760px; border-collapse:collapse; font-size:12px; }
+      .nja-table th, .nja-table td { padding:10px 8px; border-bottom:1px solid var(--g100); text-align:left; vertical-align:top; }
+      .nja-table th { color:var(--g500); text-transform:uppercase; letter-spacing:.6px; font-size:10px; }
+      .nja-cover { width:70px; height:50px; object-fit:cover; border-radius:8px; background:var(--g100); }
+      @media (max-width:650px) { .nja-row { flex-direction:column; } .nja-actions { width:100%; } }
+    </style>
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script><script src="db.js"></script>
+    <div class="nja-shell">
+      <header class="nja-top"><div class="nja-brand"><img src="njuasco-logo.png" alt="NJUASCO" /><div><strong>NJOSA Administration</strong><span>Dedicated alumni workspace</span></div></div><a href="njosa.html">← Return to NJOSA</a></header>
+      <main class="nja-main">
+        <section class="nja-login" id="nja-login"><h1>Welcome back.</h1><p>Sign in with the approved NJOSA administrator or main administrator account.</p><form class="nja-form" id="nja-login-form"><label>Email<input id="nja-email" type="email" required autocomplete="username" /></label><label>Password<input id="nja-password" type="password" required autocomplete="current-password" /></label><button class="btn btn-p" type="submit">Sign in</button><div class="nja-msg" id="nja-login-msg"></div></form></section>
+        <section class="nja-dashboard" id="nja-dashboard">
+          <div class="nja-head"><div><div class="eyebrow">Dedicated control room</div><h1>NJOSA <span class="gt">workspace</span></h1><p id="nja-user-label"></p></div><button class="btn btn-g" id="nja-logout">Sign out</button></div>
+          <nav class="nja-tabs"><button class="nja-tab active" data-panel="overview">Overview</button><button class="nja-tab" data-panel="members">Members</button><button class="nja-tab" data-panel="events">Events</button><button class="nja-tab" data-panel="careers">Careers</button><button class="nja-tab" data-panel="leaders">Leaders</button><button class="nja-tab" data-panel="gallery">Gallery</button></nav>
+          <section class="nja-panel active" id="nja-panel-overview"><div class="nja-grid"><div class="nja-card"><h2>Members</h2><strong id="nja-count-members">0</strong><small>Registration records</small></div><div class="nja-card"><h2>Published events</h2><strong id="nja-count-events">0</strong><small>Visible on NJOSA Events</small></div><div class="nja-card"><h2>Career posts</h2><strong id="nja-count-careers">0</strong><small>Published opportunities</small></div></div><div class="nja-card"><h2>NJOSA page settings</h2><form class="nja-form" id="nja-settings-form"><label>Intro<input id="nja-setting-intro" /></label><label>Global network message<input id="nja-setting-network" /></label><label>Career message<input id="nja-setting-career" /></label><label>Homecoming message<input id="nja-setting-homecoming" /></label><button class="btn btn-p" type="submit">Save settings</button><div class="nja-msg" id="nja-settings-msg"></div></form></div></section>
+          <section class="nja-panel" id="nja-panel-members"><div class="nja-card"><h2>Registration list</h2><div class="nja-table-wrap"><table class="nja-table" id="nja-members-table"></table></div></div></section>
+          <section class="nja-panel" id="nja-panel-events"><div class="nja-card"><h2>Approved NJOSA events</h2><form class="nja-form" id="nja-event-form"><input type="hidden" id="nja-event-id" /><div class="nja-grid"><label>Title<input id="nja-event-title" required /></label><label>Date label<input id="nja-event-date" placeholder="12 December 2026" /></label><label>Location<input id="nja-event-location" /></label><label>Status<select id="nja-event-status"><option value="draft">Draft</option><option value="published">Published</option></select></label></div><label>Description<textarea id="nja-event-description"></textarea></label><div class="nja-actions"><button class="btn btn-p" type="submit">Save event</button><button class="btn btn-g" type="button" id="nja-event-cancel">Clear</button></div></form></div><div class="nja-list" id="nja-events-list"></div></section>
+          <section class="nja-panel" id="nja-panel-careers"><div class="nja-card"><h2>Career opportunity</h2><form class="nja-form" id="nja-career-form"><input type="hidden" id="nja-career-id" /><div class="nja-grid"><label>Title<input id="nja-career-title" required /></label><label>Type<input id="nja-career-type" placeholder="Job, mentorship, internship" /></label><label>Deadline<input id="nja-career-deadline" /></label><label>Contact or link<input id="nja-career-contact" /></label></div><label>Description<textarea id="nja-career-description"></textarea></label><label>Status<select id="nja-career-status"><option value="draft">Draft</option><option value="published">Published</option></select></label><div class="nja-actions"><button class="btn btn-p" type="submit">Save opportunity</button><button class="btn btn-g" type="button" id="nja-career-cancel">Clear</button></div></form></div><div class="nja-list" id="nja-careers-list"></div></section>
+          <section class="nja-panel" id="nja-panel-leaders"><div class="nja-card"><h2>Leadership profile</h2><form class="nja-form" id="nja-leader-form"><input type="hidden" id="nja-leader-id" /><div class="nja-grid"><label>Name<input id="nja-leader-name" required /></label><label>Position<input id="nja-leader-position" required /></label><label>Image URL<input id="nja-leader-image" placeholder="https://... or uploaded asset URL" /></label></div><label>Biography<textarea id="nja-leader-bio"></textarea></label><label>Status<select id="nja-leader-status"><option value="published">Published</option><option value="hidden">Hidden</option></select></label><div class="nja-actions"><button class="btn btn-p" type="submit">Save leader</button><button class="btn btn-g" type="button" id="nja-leader-cancel">Clear</button></div></form></div><div class="nja-list" id="nja-leaders-list"></div></section>
+          <section class="nja-panel" id="nja-panel-gallery"><div class="nja-card"><h2>NJOSA gallery</h2><form class="nja-form" id="nja-gallery-form"><div class="nja-grid"><label>Title<input id="nja-gallery-title" required /></label><label>Image URL<input id="nja-gallery-image" required placeholder="https://... or uploaded asset URL" /></label></div><label>Description<input id="nja-gallery-description" /></label><button class="btn btn-p" type="submit">Add gallery image</button></form></div><div class="nja-list" id="nja-gallery-list"></div></section>
+        </section>
+      </main>
+    </div>
+    <script>
+      const fullAdmins = (window.NJUASCO_SUPABASE?.adminEmails || []).map((email) => email.toLowerCase());
+      const njosaAdmins = ["njosa@njuasco.edu.gh"];
+      let currentEmail = "";
+      const $ = (id) => document.getElementById(id);
+      const value = (id) => $(id)?.value.trim() || "";
+      const escHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
+      const saveCollection = async (key, items) => { DB._set(key, items); await DB._flushPendingRemoteWrites?.(); };
+      const collection = (key) => DB.getAll(key);
+      function allowed(email) { return fullAdmins.includes(email) || njosaAdmins.includes(email); }
+      function resetForm(prefix) { $(`nja-${prefix}-form`).reset(); $(`nja-${prefix}-id`).value = ""; }
+      function fillForm(prefix, item) { Object.entries(item).forEach(([key, val]) => { const el = $(`nja-${prefix}-${key}`); if (el) el.value = val || ""; }); $(`nja-${prefix}-id`).value = item.id; }
+      function renderMembers() {
+        const members = collection("njosaMembers");
+        $("nja-count-members").textContent = members.length;
+        $("nja-members-table").innerHTML = `<thead><tr><th>Name</th><th>Contact</th><th>Class / work</th><th>Status</th><th></th></tr></thead><tbody>${members.map((item) => `<tr><td><strong>${escHtml(item.name)}</strong><br><small>${escHtml(item.location)}</small></td><td>${escHtml(item.email)}<br>${escHtml(item.phone)}</td><td>${escHtml(item.graduationYear)} · ${escHtml(item.profession || item.programme)}</td><td><select class="nja-member-status" data-id="${item.id}"><option ${item.status === "pending" ? "selected" : ""}>pending</option><option ${item.status === "approved" ? "selected" : ""}>approved</option><option ${item.status === "rejected" ? "selected" : ""}>rejected</option></select></td><td><button class="btn btn-r btn-sm nja-member-delete" data-id="${item.id}">Delete</button></td></tr>`).join("") || '<tr><td colspan="5">No registrations yet.</td></tr>'}</tbody>`;
+        document.querySelectorAll(".nja-member-status").forEach((el) => el.addEventListener("change", async () => { const item = members.find((entry) => entry.id === el.dataset.id); if (!item) return; item.status = el.value; DB.updateNjosaMember?.(item.id, { status: item.status }); await saveCollection("njosaMembers", members); }));
+        document.querySelectorAll(".nja-member-delete").forEach((el) => el.addEventListener("click", async () => { if (!confirm("Delete this registration?")) return; await DB.deleteNjosaMembers?.([el.dataset.id]); await saveCollection("njosaMembers", members.filter((item) => item.id !== el.dataset.id)); renderMembers(); }));
+      }
+      function renderList(key, elementId, prefix, label) {
+        const items = collection(key); $(`nja-count-${prefix === "event" ? "events" : "careers"}`).textContent = items.filter((item) => item.status === "published").length;
+        $(elementId).innerHTML = items.map((item) => `<div class="nja-row"><div><strong>${escHtml(item.title || item.name)}</strong><small>${escHtml(item.dateLabel || item.type || item.position || "")}</small><small>${escHtml(item.description || item.bio || "")}</small></div><div class="nja-actions"><button class="btn btn-g btn-sm nja-edit" data-key="${key}" data-prefix="${prefix}" data-id="${item.id}">Edit</button><button class="btn btn-r btn-sm nja-delete" data-key="${key}" data-id="${item.id}">Delete</button></div></div>`).join("") || `<div class="nja-empty">No ${label} yet.</div>`;
+        $(elementId).querySelectorAll(".nja-edit").forEach((el) => el.addEventListener("click", () => fillForm(el.dataset.prefix, collection(key).find((item) => item.id === el.dataset.id))));
+        $(elementId).querySelectorAll(".nja-delete").forEach((el) => el.addEventListener("click", async () => { if (!confirm("Delete this item?")) return; await saveCollection(key, collection(key).filter((item) => item.id !== el.dataset.id)); renderAll(); }));
+      }
+      function renderGallery() { const items = collection("gallery").filter((item) => item.category === "njosa"); $("nja-gallery-list").innerHTML = items.map((item) => `<div class="nja-row"><div style="display:flex;gap:10px"><img class="nja-cover" src="${escHtml(item.image)}" alt=""><div><strong>${escHtml(item.title)}</strong><small>${escHtml(item.description)}</small></div></div><button class="btn btn-r btn-sm nja-gallery-delete" data-id="${item.id}">Delete</button></div>`).join("") || '<div class="nja-empty">No gallery images yet.</div>'; $("nja-gallery-list").querySelectorAll(".nja-gallery-delete").forEach((el) => el.addEventListener("click", async () => { await saveCollection("gallery", collection("gallery").filter((item) => item.id !== el.dataset.id)); renderGallery(); })); }
+      function renderAll() { renderMembers(); renderList("njosaEvents", "nja-events-list", "event", "events"); renderList("njosaCareers", "nja-careers-list", "career", "career opportunities"); renderList("njosaLeaders", "nja-leaders-list", "leader", "leaders"); renderGallery(); $("nja-count-careers").textContent = collection("njosaCareers").filter((item) => item.status === "published").length; }
+      function bindCrud(formId, key, prefix) { $(formId).addEventListener("submit", async (event) => { event.preventDefault(); const id = value(`nja-${prefix}-id`); const existing = id ? DB.getById(key, id) : null; const data = prefix === "event" ? { title:value("nja-event-title"), dateLabel:value("nja-event-date"), location:value("nja-event-location"), description:value("nja-event-description"), status:value("nja-event-status") } : prefix === "career" ? { title:value("nja-career-title"), type:value("nja-career-type"), deadline:value("nja-career-deadline"), contact:value("nja-career-contact"), description:value("nja-career-description"), status:value("nja-career-status") } : { name:value("nja-leader-name"), position:value("nja-leader-position"), bio:value("nja-leader-bio"), image:value("nja-leader-image"), status:value("nja-leader-status") }; const items = collection(key); if (existing) Object.assign(existing, data); else items.push({ ...data, id: crypto.randomUUID() }); await saveCollection(key, items); resetForm(prefix); renderAll(); }); }
+      async function loadApp() { await DB.completeAuthRedirect?.(); await DB.syncRemoteAll?.(); await DB.syncRemoteNjosaMembers?.(); const user = await DB.getAuthUser?.(); if (!user || !allowed((user.email || "").toLowerCase())) { $("nja-login").style.display = "block"; return; } currentEmail = user.email.toLowerCase(); $("nja-user-label").textContent = currentEmail; $("nja-login").style.display = "none"; $("nja-dashboard").style.display = "block"; const settings = DB.getAll("njosaSettings")[0] || {}; $("nja-setting-intro").value = settings.intro || ""; $("nja-setting-network").value = settings.networkCopy || ""; $("nja-setting-career").value = settings.careerCopy || ""; $("nja-setting-homecoming").value = settings.homecomingCopy || ""; renderAll(); }
+      $("nja-login-form").addEventListener("submit", async (event) => { event.preventDefault(); $("nja-login-msg").textContent = "Signing in..."; try { await DB.signInWithEmail(value("nja-email"), value("nja-password")); await loadApp(); if ($("nja-login").style.display !== "none") $("nja-login-msg").textContent = "This account is not authorized for NJOSA administration."; } catch (error) { $("nja-login-msg").textContent = error.message || "Sign-in failed."; } });
+      $("nja-logout").addEventListener("click", async () => { await DB.signOut?.(); location.reload(); });
+      document.querySelectorAll(".nja-tab").forEach((tab) => tab.addEventListener("click", () => { document.querySelectorAll(".nja-tab").forEach((item) => item.classList.remove("active")); document.querySelectorAll(".nja-panel").forEach((item) => item.classList.remove("active")); tab.classList.add("active"); $(`nja-panel-${tab.dataset.panel}`).classList.add("active"); }));
+      $("nja-settings-form").addEventListener("submit", async (event) => { event.preventDefault(); const current = collection("njosaSettings")[0]; const data = { intro:value("nja-setting-intro"), networkCopy:value("nja-setting-network"), careerCopy:value("nja-setting-career"), homecomingCopy:value("nja-setting-homecoming") }; if (current) DB.update("njosaSettings", current.id, data); else DB.add("njosaSettings", data); await DB._flushPendingRemoteWrites?.(); $("nja-settings-msg").textContent = "Settings saved."; });
+      $("nja-gallery-form").addEventListener("submit", async (event) => { event.preventDefault(); const items = collection("gallery"); items.push({ id:crypto.randomUUID(), title:value("nja-gallery-title"), image:value("nja-gallery-image"), description:value("nja-gallery-description"), category:"njosa", color:"linear-gradient(135deg,#0f766e,#2563eb)", status:"published" }); await saveCollection("gallery", items); event.target.reset(); renderGallery(); });
+      $("nja-event-cancel").addEventListener("click", () => resetForm("event")); $("nja-career-cancel").addEventListener("click", () => resetForm("career")); $("nja-leader-cancel").addEventListener("click", () => resetForm("leader"));
+      bindCrud("nja-event-form", "njosaEvents", "event"); bindCrud("nja-career-form", "njosaCareers", "career"); bindCrud("nja-leader-form", "njosaLeaders", "leader"); loadApp();
+    </script>
+  </body>
+</html>
