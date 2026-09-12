@@ -289,6 +289,7 @@
     <div class="fg"><label class="flbl">Title</label><input class="finp" id="mf-title" value="${v("title")}" placeholder="Post title"></div>
     <div class="fg"><label class="flbl">Category</label><select class="finp" id="mf-cat"><option value="news" ${d?.category === "news" ? "selected" : ""}>News</option><option value="event" ${d?.category === "event" ? "selected" : ""}>Event</option><option value="achievement" ${d?.category === "achievement" ? "selected" : ""}>Achievement</option><option value="announcement" ${d?.category === "announcement" ? "selected" : ""}>Announcement</option></select></div>
     <div class="fg"><label class="flbl">Date</label><input class="finp" id="mf-date" type="date" value="${v("date", new Date().toISOString().split("T")[0])}"></div>
+    <div class="fg"><label class="flbl">Date Label</label><input class="finp" id="mf-date-label" value="${v("dateLabel")}" placeholder="Leave blank to show the date"></div>
     <div class="fg"><label class="flbl">Excerpt (short summary)</label><input class="finp" id="mf-excerpt" value="${v("excerpt")}" placeholder="Short description for cards"></div>
     <div class="fg"><label class="flbl">Full Content</label><textarea class="finp fta" id="mf-content" placeholder="Full article content…">${v("content")}</textarea></div>
     ${mediaField("Image Upload / Icon", '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>')}
@@ -489,6 +490,7 @@
             title: gv("mf-title"),
             category: gv("mf-cat"),
             date: gv("mf-date"),
+            dateLabel: gv("mf-date-label"),
             excerpt: gv("mf-excerpt"),
             content: gv("mf-content"),
             image:
@@ -1758,7 +1760,7 @@
       function renderNews() {
         const all = DB.getAll("news");
         const mkItem = (n) =>
-          `<div class="news-item"><div class="news-thumb" style="background:${n.color}">${mediaMarkup(n.image)}</div><div class="news-info"><div class="news-title">${esc(n.title)}</div><div class="news-meta"><span style="color:${n.status === "published" ? "var(--gn)" : "var(--go)"}">● ${n.status}</span><span>${fmtDate(n.date)}</span><span class="tag tag-b" style="font-size:10px">${n.category}</span></div></div><div class="news-acts"><button class="btn btn-sm btn-g" onclick="openModal('news','${n.id}')">Edit</button>${n.status === "draft" ? `<button class="btn btn-sm btn-p" onclick="adminQuickUpdate('news','${n.id}',{status:'published'},'news-mgr')">Publish</button>` : `<button class="btn btn-sm btn-g" onclick="adminQuickUpdate('news','${n.id}',{status:'draft'},'news-mgr')">Unpublish</button>`}<button class="btn btn-sm btn-r" onclick="delItem('news','${n.id}','news-mgr')">Delete</button></div></div>`;
+          `<div class="news-item"><div class="news-thumb" style="background:${n.color}">${mediaMarkup(n.image)}</div><div class="news-info"><div class="news-title">${esc(n.title)}</div><div class="news-meta"><span style="color:${n.status === "published" ? "var(--gn)" : "var(--go)"}">● ${n.status}</span><span>${esc(n.dateLabel || fmtDate(n.date))}</span><span class="tag tag-b" style="font-size:10px">${n.category}</span></div></div><div class="news-acts"><button class="btn btn-sm btn-g" onclick="openModal('news','${n.id}')">Edit</button>${n.status === "draft" ? `<button class="btn btn-sm btn-p" onclick="adminQuickUpdate('news','${n.id}',{status:'published'},'news-mgr')">Publish</button>` : `<button class="btn btn-sm btn-g" onclick="adminQuickUpdate('news','${n.id}',{status:'draft'},'news-mgr')">Unpublish</button>`}<button class="btn btn-sm btn-r" onclick="delItem('news','${n.id}','news-mgr')">Delete</button></div></div>`;
         document.getElementById("news-list-all").innerHTML =
           all.map(mkItem).join("") ||
           '<p style="padding:20px;color:var(--g400)">No posts yet. Add your first news post!</p>';

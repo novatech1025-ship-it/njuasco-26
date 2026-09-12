@@ -1775,27 +1775,10 @@ async function scmsg(msg) {
 }
 
 // ── NEWS RENDER (for news.html) ────────────────────────────────
-const UPCOMING_EVENT_POSTS = [
-  {
-    id: "njuasco-73rd-anniversary",
-    title: "NJUASCO 73rd Anniversary Celebration",
-    category: "event",
-    date: "2026-12-31",
-    dateLabel: "Date to be announced",
-    excerpt: "Join the NJUASCO community as we celebrate 73 years of hard work, excellence, and legacy.",
-    content: "NJUASCO's 73rd Anniversary Celebration is coming soon. Programme details and the official date will be shared here.",
-    image: '<span class="ico ico-calendar" data-ico="calendar" aria-hidden="true"></span>',
-    status: "published",
-    color: "linear-gradient(135deg,#0f766e,#2563eb)",
-  },
-];
-
 function getPublishedNewsPosts() {
-  const published = DB.getAll("news").filter((n) => n.status === "published");
-  const staticPosts = UPCOMING_EVENT_POSTS.filter(
-    (post) => !published.some((item) => item.id === post.id || item.title === post.title),
-  );
-  return [...staticPosts, ...published].sort((a, b) => new Date(b.date) - new Date(a.date));
+  return DB.getAll("news")
+    .filter((n) => n.status === "published")
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 function newsDateLabel(post) {

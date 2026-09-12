@@ -16,6 +16,18 @@ const DASHBOARD_PASSWORDS = {
   admin: "NJUASCO-Admin-2026!",
   subadmin: "NJUASCO-SubAdmin-2026!",
 };
+const DEFAULT_NEWS_POST = {
+  id: "njuasco-73rd-anniversary",
+  title: "NJUASCO 73rd Anniversary Celebration",
+  category: "event",
+  date: "2026-12-31",
+  dateLabel: "Date to be announced",
+  excerpt: "Join the NJUASCO community as we celebrate 73 years of hard work, excellence, and legacy.",
+  content: "NJUASCO's 73rd Anniversary Celebration is coming soon. Programme details and the official date will be shared here.",
+  image: '<span class="ico ico-calendar" data-ico="calendar" aria-hidden="true"></span>',
+  status: "published",
+  color: "linear-gradient(135deg,#0f766e,#2563eb)",
+};
 window.NJUASCO_SUPABASE = SUPABASE_CONFIG;
 
 (function preloadSupabaseSdk() {
@@ -881,7 +893,8 @@ const DB = {
       this._remoteSyncReady = true;
       return false;
     }
-    if (rows.length) {
+    const remoteKeys = new Set(rows.map((row) => row?.key));
+    if (remoteKeys.has("news")) {
       rows.forEach((row) => {
         if (!this._siteContentKeys.includes(row.key) || !Array.isArray(row.value)) return;
         if (this._pendingRemoteWrites.has(row.key)) return;
@@ -889,13 +902,20 @@ const DB = {
         localStorage.setItem("nj_" + row.key, JSON.stringify(deduped));
         this._notifyRemoteContentSubscribers(row.key, deduped);
       });
-    } else if (!options.preferRemote && await this.isSupabaseAuthenticated()) {
+      localStorage.setItem("nj_news_seed_initialized", "1");
+    } else if (!localStorage.getItem("nj_news_seed_initialized") && !this._get("news").length) {
+      localStorage.setItem("nj_news", JSON.stringify([DEFAULT_NEWS_POST]));
+      localStorage.setItem("nj_news_seed_initialized", "1");
+      this._notifyRemoteContentSubscribers("news", [DEFAULT_NEWS_POST]);
+    }
+    if (!options.preferRemote && await this.isSupabaseAuthenticated()) {
       await Promise.all(
         this._siteContentKeys.map((key) => this.saveRemoteContent(key, this._dedupeById(this._get(key)))),
       );
+    } else if (!remoteKeys.has("news") && !options.preferRemote && await this.isSupabaseAuthenticated()) {
+      await this.saveRemoteContent("news", this._dedupeById(this._get("news")));
     }
     if (options.preferRemote) {
-      const remoteKeys = new Set(rows.map((row) => row?.key));
       const publicKeys = [
         "news",
         "team",
