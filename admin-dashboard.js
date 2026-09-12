@@ -281,7 +281,7 @@
     <div class="fg media-field">
       <label class="flbl">${label}</label>
       <div class="media-preview" id="mf-preview"></div>
-      <input class="finp" id="mf-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*">
+      <input class="finp" id="mf-file" type="file" accept="image/*,video/*">
       <input class="finp" id="mf-image" value="${v("image", def)}" placeholder="Optional emoji or image URL">
     </div>`;
         if (type === "news")
@@ -2641,6 +2641,7 @@
         this._set("subadmins", d);
       };
       function renderSubAdmins() {
+        renderNjosaAdminApprovals();
         const admins = DB._getSaAdmins().map((a) => ({
           ...a,
           permissions: Array.isArray(a.permissions) ? a.permissions : [],
@@ -2714,6 +2715,40 @@
             )
             .join("") ||
           '<div style="text-align:center;padding:40px;color:var(--g400)"><div style="font-size:48px;margin-bottom:12px">🛡️</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">No sub-admins yet</div><div style="font-size:13px">Add sub-admins to delegate specific sections of the website to staff members.</div></div>';
+      }
+
+      function renderNjosaAdminApprovals() {
+        const list = DB.getAll("njosaAdmins");
+        const el = document.getElementById("njosa-admin-approval-list");
+        if (!el) return;
+        el.innerHTML = list.map((admin) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--g100)"><div><strong>${esc(admin.name || "NJOSA Administrator")}</strong><div style="font-size:12px;color:var(--g500)">${esc(admin.email)}</div></div><div style="display:flex;gap:8px;align-items:center"><span style="padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:${admin.approved ? "rgba(16,185,129,.1)" : "rgba(245,158,11,.12)"};color:${admin.approved ? "#047857" : "#b45309"}">${admin.approved ? "Approved" : "Pending approval"}</span><button class="btn btn-sm ${admin.approved ? "btn-g" : "btn-p"}" onclick="setNjosaAdminApproval('${esc(admin.id)}',${!admin.approved})">${admin.approved ? "Revoke" : "Approve"}</button><button class="btn btn-sm btn-r" onclick="removeNjosaAdmin('${esc(admin.id)}')">Remove</button></div></div>`).join("") || '<div style="color:var(--g400);font-size:13px">No NJOSA administrator has been added yet.</div>';
+      }
+
+      async function addNjosaAdminApproval() {
+        const email = document.getElementById("njosa-admin-email")?.value.trim().toLowerCase();
+        const name = document.getElementById("njosa-admin-name")?.value.trim() || "NJOSA Administrator";
+        if (!email || !email.includes("@")) return toast("Enter a valid NJOSA administrator email");
+        if (DB.getAll("njosaAdmins").some((admin) => admin.email === email)) return toast("That NJOSA email is already listed");
+        DB.add("njosaAdmins", { name, email, approved: false, addedAt: new Date().toISOString() });
+        document.getElementById("njosa-admin-name").value = "";
+        document.getElementById("njosa-admin-email").value = "";
+        renderNjosaAdminApprovals();
+        await flushRemoteSync();
+        toast("NJOSA administrator added for approval.");
+      }
+
+      async function setNjosaAdminApproval(id, approved) {
+        DB.update("njosaAdmins", id, { approved });
+        renderNjosaAdminApprovals();
+        await flushRemoteSync();
+        toast(approved ? "NJOSA administrator approved." : "NJOSA administrator access revoked.");
+      }
+
+      async function removeNjosaAdmin(id) {
+        DB.delete("njosaAdmins", id);
+        renderNjosaAdminApprovals();
+        await flushRemoteSync();
+        toast("NJOSA administrator removed.");
       }
 
       function toggleSubAdminPassword(id) {

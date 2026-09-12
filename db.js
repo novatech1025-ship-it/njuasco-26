@@ -74,6 +74,7 @@ const DB = {
     "njosaCareers",
     "njosaLeaders",
     "njosaSettings",
+    "njosaAdmins",
   ],
   _get(k) {
     try {

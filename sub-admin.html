@@ -1111,8 +1111,8 @@
                   Photo <span class="gt">Gallery</span>
                 </h2>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <input id="sa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadGallery(this)" />
-                  <input id="sa-njosa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadNjosaGallery(this)" />
+                  <input id="sa-gallery-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="saBulkUploadGallery(this)" />
+                  <input id="sa-njosa-gallery-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="saBulkUploadNjosaGallery(this)" />
                   <button class="btn btn-g" onclick="document.getElementById('sa-gallery-bulk-files').click()">
                     Bulk Upload
                   </button>
@@ -1148,7 +1148,7 @@
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
                 <h2 class="stitle" style="margin:0">NJOSA <span class="gt">Gallery</span></h2>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <input id="sa-njosa-only-files" type="file" accept="image/*" multiple style="display:none" onchange="saBulkUploadNjosaOnly(this)" />
+                  <input id="sa-njosa-only-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="saBulkUploadNjosaOnly(this)" />
                   <button class="btn btn-g" onclick="document.getElementById('sa-njosa-only-files').click()">Bulk Upload Images</button>
                   <button class="btn btn-g" onclick="saSelectAll('sa-njosa-gallery-select', true)">Select All</button>
                   <button class="btn btn-g" onclick="saBulkArrange('gallery','njosa-gallery','sa-njosa-gallery-select')">Arrange Selected</button>
@@ -1869,8 +1869,8 @@
 
       function saMediaField(current, fallback) {
         return `<div>
-    <label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Image Upload / Icon</label>
-    <input class="finp" id="smf-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" style="margin-bottom:8px">
+    <label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Image or Video Upload</label>
+    <input class="finp" id="smf-file" type="file" accept="image/*,video/*" style="margin-bottom:8px">
     <input class="finp" id="smf-image" value="${esc(current || fallback || "")}" placeholder="Paste an image URL, file path, or icon">
   </div>`;
       }

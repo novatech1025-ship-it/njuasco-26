@@ -55,9 +55,13 @@ function isImageAsset(src) {
     String(src || ""),
   );
 }
+function isVideoAsset(src) {
+  return /^(data:video\/|https?:\/\/|\.?\/|[\w .-]+\.(mp4|webm|ogg|mov)(\?.*)?$)/i.test(String(src || ""));
+}
 
 function mediaMarkup(src, cls = "") {
   if (isImageAsset(src)) return `<img class="media-img ${cls}" src="${adminEsc(src)}" alt="">`;
+  if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${adminEsc(src)}" controls playsinline preload="metadata"></video>`;
   return src || "";
 }
 

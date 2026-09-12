@@ -39,8 +39,12 @@ const ICON_PATHS = {
           String(src || ""),
         );
       }
+      function isVideoAsset(src) {
+        return /^(data:video\/|https?:\/\/|\.?\/|[\w .-]+\.(mp4|webm|ogg|mov)(\?.*)?$)/i.test(String(src || ""));
+      }
       function mediaMarkup(src, cls = "") {
         if (isImageAsset(src)) return `<img class="media-img ${cls}" src="${esc(src)}" alt="">`;
+        if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${esc(src)}" controls playsinline preload="metadata"></video>`;
         return src || "";
       }
       function fileToDataURL(file) {
@@ -80,6 +84,7 @@ const ICON_PATHS = {
             title: fileTitle(file),
             name: fileTitle(file),
             image: src,
+            mediaType: file.type.startsWith("video/") ? "video" : "image",
             file: src,
             description: "",
             category: extra.category || (key === "documents" ? "General" : "campus"),

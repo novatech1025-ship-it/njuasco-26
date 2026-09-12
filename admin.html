@@ -2211,8 +2211,8 @@
             <div class="sec-hdr">
               <div class="sec-title">Gallery</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input id="gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadGallery(this)" />
-                <input id="njosa-gallery-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
+                <input id="gallery-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadGallery(this)" />
+                <input id="njosa-gallery-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
                 <button class="btn btn-g" onclick="document.getElementById('gallery-bulk-files').click()">
                   Bulk Upload
                 </button>
@@ -2248,7 +2248,7 @@
             <div class="sec-hdr">
               <div class="sec-title">NJOSA Alumni Gallery</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input id="admin-njosa-gallery-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
+                <input id="admin-njosa-gallery-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
                 <button class="btn btn-g" onclick="document.getElementById('admin-njosa-gallery-files').click()">Bulk Upload Images</button>
                 <button class="btn btn-g" onclick="selectAll('admin-njosa-gallery-select', true)">Select All</button>
                 <button class="btn btn-g" onclick="bulkArrange('gallery','njosa-gallery-mgr','admin-njosa-gallery-select')">Arrange Selected</button>
@@ -2781,6 +2781,12 @@
                   >Google Sign-In Shortcut →</a
                 >
               </div>
+            </div>
+            <div style="background:#fff;border-radius:var(--rl);padding:22px;box-shadow:var(--sh1);margin-bottom:20px;border-left:4px solid #0f766e">
+              <div class="card-title">NJOSA Administrator Approval</div>
+              <p style="font-size:14px;color:var(--g500);line-height:1.7;margin-bottom:16px">NJOSA administrators cannot enter their dedicated workspace until a main administrator approves their email here.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><input class="finp" id="njosa-admin-name" placeholder="Administrator name" style="max-width:240px"><input class="finp" id="njosa-admin-email" type="email" placeholder="njosa@njuasco.edu.gh" style="max-width:280px"><button class="btn btn-p" onclick="addNjosaAdminApproval()">Add for approval</button></div>
+              <div id="njosa-admin-approval-list"></div>
             </div>
             <div
               id="sa-list"
