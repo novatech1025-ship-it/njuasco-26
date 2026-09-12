@@ -4696,6 +4696,127 @@ ul {
   );
 }
 
+.njosa-admin-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.njosa-live-section {
+  background: #f8fafc;
+}
+
+.njosa-content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.section-kicker {
+  margin-bottom: 12px;
+  color: var(--g700);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.njosa-feed {
+  display: grid;
+  gap: 10px;
+}
+
+.njosa-feed-card {
+  padding: 16px;
+  border: 1px solid var(--g200);
+  border-radius: var(--r);
+  background: #fff;
+  box-shadow: var(--sh1);
+}
+
+.njosa-feed-card h3 {
+  color: var(--g900);
+  font-size: 15px;
+}
+
+.njosa-feed-card p,
+.njosa-feed-meta {
+  margin-top: 6px;
+  color: var(--g500);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.njosa-feed-meta {
+  color: var(--b7);
+  font-weight: 700;
+}
+
+.njosa-leaders-section {
+  background: #fff;
+}
+
+.njosa-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.njosa-leader-card {
+  padding: 20px 16px;
+  border: 1px solid var(--g200);
+  border-radius: var(--r);
+  text-align: center;
+  background: #fff;
+}
+
+.njosa-leader-card img,
+.njosa-leader-avatar {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f766e, #2563eb);
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: 27px;
+}
+
+.njosa-leader-card h3 {
+  color: var(--g900);
+  font-size: 15px;
+}
+
+.njosa-leader-card p {
+  margin-top: 4px;
+  color: var(--b7);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.njosa-leader-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--g500);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .njosa-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .njosa-gallery-section {
   position: relative;
   overflow: hidden;

@@ -99,6 +99,7 @@ function go(pg) {
     "parent-portal": "parent-portal.html",
     "alumni-portal": "alumni-portal.html",
     njosa: "njosa.html",
+    "njosa-registration": "njosa-registration.html",
     shop: "shop.html",
     cart: "cart.html",
     checkout: "checkout.html",

@@ -1160,6 +1160,35 @@
               <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px" id="sa-njosa-gallery-list"></div>
             </div>
 
+            <!-- NJOSA WORKSPACE -->
+            <div class="sa-page" id="sap-njosa">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+                <div><h2 class="stitle" style="margin:0">NJOSA <span class="gt">Workspace</span></h2><p style="margin:6px 0 0;color:var(--g500);font-size:13px">Manage members, leadership, opportunities, reunions, and the public NJOSA page.</p></div>
+                <button class="btn btn-g" onclick="saSaveNjosaSettings()">Save page settings</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px">
+                <div class="card"><div class="card-title">Members</div><div id="sa-njosa-member-count" style="font-size:28px;font-weight:800;color:var(--g900)">0</div><div style="font-size:12px;color:var(--g500)">Registration records</div></div>
+                <div class="card"><div class="card-title">Events</div><div id="sa-njosa-event-count" style="font-size:28px;font-weight:800;color:var(--g900)">0</div><div style="font-size:12px;color:var(--g500)">Homecoming and reunions</div></div>
+                <div class="card"><div class="card-title">Opportunities</div><div id="sa-njosa-career-count" style="font-size:28px;font-weight:800;color:var(--g900)">0</div><div style="font-size:12px;color:var(--g500)">Career and mentorship posts</div></div>
+              </div>
+              <div class="card" style="margin-bottom:18px">
+                <div class="card-title">Public page message</div>
+                <div style="display:grid;gap:12px">
+                  <input class="finp" id="sa-njosa-intro" placeholder="Intro shown below the NJOSA heading" />
+                  <input class="finp" id="sa-njosa-network" placeholder="Global network description" />
+                  <input class="finp" id="sa-njosa-career-copy" placeholder="Career opportunities description" />
+                  <input class="finp" id="sa-njosa-homecoming" placeholder="Homecoming description" />
+                </div>
+              </div>
+              <div class="card" style="margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px"><div class="card-title" style="margin:0">Registered members</div><button class="btn btn-r btn-sm" onclick="saDeleteNjosaMembers()">Delete selected</button></div>
+                <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:760px" id="sa-njosa-members-table"></table></div>
+              </div>
+              <div class="card" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-title" style="margin:0">Homecoming & reunions</div><button class="btn btn-p btn-sm" onclick="saOpenModal('njosaEvent')">+ Add event</button></div><div id="sa-njosa-events-list"></div></div>
+              <div class="card" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-title" style="margin:0">Career opportunities</div><button class="btn btn-p btn-sm" onclick="saOpenModal('njosaCareer')">+ Add opportunity</button></div><div id="sa-njosa-careers-list"></div></div>
+              <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-title" style="margin:0">NJOSA leadership</div><button class="btn btn-p btn-sm" onclick="saOpenModal('njosaLeader')">+ Add leader</button></div><div id="sa-njosa-leaders-list"></div></div>
+            </div>
+
             <!-- DOCUMENTS MANAGEMENT -->
             <div class="sa-page" id="sap-documents">
               <div
@@ -1644,6 +1673,12 @@
     <script>
       // ══ SUB-ADMIN SYSTEM ══════════════════════════════════════
 
+      function fmtDate(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+      }
+
       // Sub-admin profiles are synced as site content. Supabase Auth owns passwords.
       DB._getSaAdmins = function () {
         return this._get("subadmins");
@@ -1694,6 +1729,16 @@
             permissions: ["notifications", "news"],
             active: true,
             color: "linear-gradient(135deg,#f59e0b,#d97706)",
+          },
+          {
+            id: "sa5",
+            username: "njosaadmin",
+            email: "njosa@njuasco.edu.gh",
+            name: "NJOSA Administrator",
+            role: "NJOSA Administrator",
+            permissions: ["njosa"],
+            active: true,
+            color: "linear-gradient(135deg,#0f766e,#2563eb)",
           },
         ];
         const existing = DB._getSaAdmins() || [];
@@ -1764,6 +1809,11 @@
           label: "NJOSA Gallery",
           icon: '<span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span>',
           page: "sap-njosa-gallery",
+        },
+        njosa: {
+          label: "NJOSA Workspace",
+          icon: '<span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span>',
+          page: "sap-njosa",
         },
         documents: {
           label: "Documents",
@@ -2079,6 +2129,7 @@
           student: "students",
           gallery: "gallery",
           njosaGallery: "njosaGallery",
+          njosa: "njosa",
           doc: "documents",
           documents: "documents",
           slide: "slides",
@@ -2087,6 +2138,9 @@
           notif: "notifications",
           notifications: "notifications",
           merch: "merchandise",
+          njosaEvent: "njosa",
+          njosaCareer: "njosa",
+          njosaLeader: "njosa",
           merchandise: "merchandise",
           applications: "applications",
           students: "students",
@@ -2638,6 +2692,10 @@
           "'s <span class='gt'>Dashboard</span>";
         buildSaSidebar();
         loadSaPage("dashboard");
+        const requestedSection = new URLSearchParams(location.search).get("section");
+        if (requestedSection && getSaPerms().includes(requestedSection)) {
+          setTimeout(() => showSaPage(requestedSection), 0);
+        }
         hydrateIcons(document);
       }
 
@@ -2719,6 +2777,7 @@
         else if (key === "news") loadSaNews();
         else if (key === "gallery") loadSaGallery();
         else if (key === "njosaGallery") loadSaNjosaGallery();
+        else if (key === "njosa") loadSaNjosa();
         else if (key === "documents") loadSaDocs();
         else if (key === "slides") loadSaSlides();
         else if (key === "notifications") loadSaNotifs();
@@ -3230,6 +3289,56 @@
           `<tbody>${rows || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--g400)">No orders yet.</td></tr>'}</tbody>`;
       }
 
+      async function loadSaNjosa() {
+        await DB.syncRemoteNjosaMembers?.();
+        const settings = DB.getAll("njosaSettings")[0] || {};
+        const members = DB.getAll("njosaMembers");
+        const events = DB.getAll("njosaEvents");
+        const careers = DB.getAll("njosaCareers");
+        const leaders = DB.getAll("njosaLeaders");
+        document.getElementById("sa-njosa-intro").value = settings.intro || "A living alumni network for opportunity, mentorship, service, and the friendships that began at NJUASCO.";
+        document.getElementById("sa-njosa-network").value = settings.networkCopy || "10,000+ alumni across Ghana and the world, connected through NJUASCO heritage and pride.";
+        document.getElementById("sa-njosa-career-copy").value = settings.careerCopy || "Job postings, mentorship programs, and professional networking exclusive to NJOSA members.";
+        document.getElementById("sa-njosa-homecoming").value = settings.homecomingCopy || "Annual homecoming events, class reunions, and regular networking meetups for old students.";
+        document.getElementById("sa-njosa-member-count").textContent = members.length;
+        document.getElementById("sa-njosa-event-count").textContent = events.length;
+        document.getElementById("sa-njosa-career-count").textContent = careers.length;
+        document.getElementById("sa-njosa-members-table").innerHTML = `<thead><tr><th style="text-align:left;padding:8px"> </th><th style="text-align:left;padding:8px">Name</th><th style="text-align:left;padding:8px">Contact</th><th style="text-align:left;padding:8px">Class / work</th><th style="text-align:left;padding:8px">Status</th><th style="text-align:left;padding:8px">Registered</th></tr></thead><tbody>${members.map((item) => `<tr><td style="padding:8px;border-top:1px solid var(--g100)"><input class="sa-njosa-member-select" type="checkbox" value="${item.id}"></td><td style="padding:8px;border-top:1px solid var(--g100);font-weight:700">${esc(item.name)}</td><td style="padding:8px;border-top:1px solid var(--g100)">${esc(item.email)}<br><span style="color:var(--g500);font-size:12px">${esc(item.phone)}</span></td><td style="padding:8px;border-top:1px solid var(--g100);color:var(--g500)">${esc(item.graduationYear || "")} · ${esc(item.profession || item.programme || "")}</td><td style="padding:8px;border-top:1px solid var(--g100)"><select class="finp" style="padding:5px;font-size:12px" onchange="saSetNjosaMemberStatus('${item.id}',this.value)"><option ${item.status === "pending" ? "selected" : ""}>pending</option><option ${item.status === "approved" ? "selected" : ""}>approved</option><option ${item.status === "rejected" ? "selected" : ""}>rejected</option></select></td><td style="padding:8px;border-top:1px solid var(--g100);color:var(--g500);white-space:nowrap">${esc(new Date(item.registeredAt).toLocaleDateString())}</td></tr>`).join("") || '<tr><td colspan="6" style="padding:20px;color:var(--g400)">No registrations yet.</td></tr>'}</tbody>`;
+        const renderList = (id, items, type, empty) => {
+          document.getElementById(id).innerHTML = items.map((item) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--g100)"><div><strong>${esc(item.title || item.name)}</strong><div style="font-size:12px;color:var(--g500);margin-top:4px">${esc(item.dateLabel || item.type || item.position || "")}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc(item.description || item.bio || "")}</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-g btn-sm" onclick="saOpenModal('${type}','${item.id}')">Edit</button><button class="btn btn-r btn-sm" onclick="if(confirm('Delete this item?'))saDelete('${type === "njosaEvent" ? "njosaEvents" : type === "njosaCareer" ? "njosaCareers" : "njosaLeaders"}','${item.id}','njosa')">Delete</button></div></div>`).join("") || `<p style="color:var(--g400);font-size:13px">${empty}</p>`;
+        };
+        renderList("sa-njosa-events-list", events, "njosaEvent", "No events added yet.");
+        renderList("sa-njosa-careers-list", careers, "njosaCareer", "No opportunities added yet.");
+        renderList("sa-njosa-leaders-list", leaders, "njosaLeader", "No leaders added yet.");
+      }
+
+      async function saSaveNjosaSettings() {
+        if (!requireSaPerm("njosa")) return;
+        const data = { intro: gsmv("sa-njosa-intro"), networkCopy: gsmv("sa-njosa-network"), careerCopy: gsmv("sa-njosa-career-copy"), homecomingCopy: gsmv("sa-njosa-homecoming") };
+        const current = DB.getAll("njosaSettings");
+        if (current[0]) DB.update("njosaSettings", current[0].id, data);
+        else DB.add("njosaSettings", data);
+        await saSyncAfterChange("NJOSA settings saved.");
+      }
+
+      async function saSetNjosaMemberStatus(id, status) {
+        const item = saUpdate("njosaMembers", id, { status }, "njosa");
+        if (!item) return;
+        await DB.updateNjosaMember?.(id, { status });
+        await saSyncAfterChange("Member status updated.");
+      }
+
+      async function saDeleteNjosaMembers() {
+        if (!requireSaPerm("njosa")) return;
+        const ids = new Set(Array.from(document.querySelectorAll(".sa-njosa-member-select:checked")).map((el) => el.value));
+        if (!ids.size) return saToast("Select at least one member first");
+        if (!confirm(`Delete ${ids.size} selected member${ids.size === 1 ? "" : "s"}?`)) return;
+        DB._set("njosaMembers", DB.getAll("njosaMembers").filter((item) => !ids.has(item.id)));
+        await DB.deleteNjosaMembers?.([...ids]);
+        await saSyncAfterChange("Members deleted.");
+        loadSaNjosa();
+      }
+
       // SA MODAL
       let SA_MODAL_TYPE = "";
       let SA_MODAL_ID = null;
@@ -3254,6 +3363,9 @@
           slide: "homepageSlides",
           notif: "notifications",
           merch: "merchandise",
+          njosaEvent: "njosaEvents",
+          njosaCareer: "njosaCareers",
+          njosaLeader: "njosaLeaders",
         };
         const item = id ? DB.getById(modalDbKeys[type] || type, id) : null;
         const v = (f, def = "") =>
@@ -3272,6 +3384,9 @@
           slide: "Homepage Slide",
           notif: "Notification",
           merch: "Product",
+          njosaEvent: "NJOSA Event",
+          njosaCareer: "Career Opportunity",
+          njosaLeader: "NJOSA Leader",
         };
         document.getElementById("sa-modal-title").textContent =
           (id ? "Edit " : "Add ") + titles[type];
@@ -3284,6 +3399,31 @@
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Content</label><textarea class="finp fta" id="smf-content" placeholder="Full article…">${v("content")}</textarea></div>
     ${saMediaField(item?.image, '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>')}
     <div><label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status === "published" ? "selected" : ""}>Published</option><option value="draft" ${item?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
+  </div>`;
+        else if (type === "njosaEvent")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label class="flbl">Event title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Annual homecoming"></div>
+    <div><label class="flbl">Date label</label><input class="finp" id="smf-dateLabel" value="${v("dateLabel")}" placeholder="12 December 2026"></div>
+    <div><label class="flbl">Location</label><input class="finp" id="smf-location" value="${v("location")}" placeholder="NJUASCO campus"></div>
+    <div><label class="flbl">Description</label><textarea class="finp fta" id="smf-description" placeholder="Tell alumni what to expect">${v("description")}</textarea></div>
+    <div><label class="flbl">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status !== "draft" ? "selected" : ""}>Published</option><option value="draft" ${item?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
+  </div>`;
+        else if (type === "njosaCareer")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label class="flbl">Opportunity title</label><input class="finp" id="smf-title" value="${v("title")}" placeholder="Marketing Manager at ..."></div>
+    <div><label class="flbl">Type</label><input class="finp" id="smf-type" value="${v("type", "Job opportunity")}" placeholder="Job, mentorship, internship"></div>
+    <div><label class="flbl">Deadline</label><input class="finp" id="smf-deadline" value="${v("deadline")}" placeholder="31 January 2027"></div>
+    <div><label class="flbl">Description</label><textarea class="finp fta" id="smf-description" placeholder="Describe the opportunity">${v("description")}</textarea></div>
+    <div><label class="flbl">Contact or application link</label><input class="finp" id="smf-contact" value="${v("contact")}" placeholder="email@example.com or https://..."></div>
+    <div><label class="flbl">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status !== "draft" ? "selected" : ""}>Published</option><option value="draft" ${item?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
+  </div>`;
+        else if (type === "njosaLeader")
+          body = `<div style="display:flex;flex-direction:column;gap:14px">
+    <div><label class="flbl">Full name</label><input class="finp" id="smf-name" value="${v("name")}" placeholder="Dr. Name Surname"></div>
+    <div><label class="flbl">Position</label><input class="finp" id="smf-position" value="${v("position")}" placeholder="National President"></div>
+    <div><label class="flbl">Biography</label><textarea class="finp fta" id="smf-bio" placeholder="Short leadership profile">${v("bio")}</textarea></div>
+    ${saMediaField(item?.image, '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>')}
+    <div><label class="flbl">Status</label><select class="finp" id="smf-status"><option value="published" ${item?.status !== "hidden" ? "selected" : ""}>Published</option><option value="hidden" ${item?.status === "hidden" ? "selected" : ""}>Hidden</option></select></div>
   </div>`;
         else if (type === "team")
           body = `<div style="display:flex;flex-direction:column;gap:14px">
@@ -3430,6 +3570,15 @@
             saToast("Title required");
             return;
           }
+        } else if (type === "njosaEvent") {
+          data = { title: gsmv("smf-title"), dateLabel: gsmv("smf-dateLabel"), location: gsmv("smf-location"), description: gsmv("smf-description"), status: gsmv("smf-status") || "published" };
+          if (!data.title) return saToast("Event title required");
+        } else if (type === "njosaCareer") {
+          data = { title: gsmv("smf-title"), type: gsmv("smf-type"), deadline: gsmv("smf-deadline"), description: gsmv("smf-description"), contact: gsmv("smf-contact"), status: gsmv("smf-status") || "published" };
+          if (!data.title) return saToast("Opportunity title required");
+        } else if (type === "njosaLeader") {
+          data = { name: gsmv("smf-name"), position: gsmv("smf-position"), bio: gsmv("smf-bio"), image: (await saMediaValue()) || '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>', status: gsmv("smf-status") || "published" };
+          if (!data.name || !data.position) return saToast("Name and position required");
         } else if (type === "team") {
           data = {
             name: gsmv("smf-name"),
@@ -3683,6 +3832,8 @@
                       ? "students"
                       : type === "teacher"
                         ? "teachers"
+                                  : type === "njosaEvent" || type === "njosaCareer" || type === "njosaLeader"
+                                    ? "njosa"
                         : type === "njosaGallery"
                           ? "gallery"
                           : type === "njosaGallery"

@@ -69,6 +69,11 @@ const DB = {
     "logs",
     "subadmins",
     "shopCustomers",
+    "njosaMembers",
+    "njosaEvents",
+    "njosaCareers",
+    "njosaLeaders",
+    "njosaSettings",
   ],
   _get(k) {
     try {
@@ -870,6 +875,59 @@ const DB = {
         .in("key", this._siteContentKeys);
       if (error) throw error;
       return data || [];
+    } catch {
+      return null;
+    }
+  },
+  async submitNjosaMember(member) {
+    try {
+      const client = await this._ensureSupabase();
+      const { error } = await client.from("njosa_members").insert({
+        id: member.id || this._id(),
+        value: member,
+      });
+      if (error) throw error;
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  async updateNjosaMember(id, changes) {
+    try {
+      const client = await this._ensureSupabase();
+      const current = this._get("njosaMembers").find((item) => item.id === id) || { id };
+      const { error } = await client
+        .from("njosa_members")
+        .update({ value: { ...current, ...changes, id } })
+        .eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  async deleteNjosaMembers(ids) {
+    try {
+      const client = await this._ensureSupabase();
+      const { error } = await client.from("njosa_members").delete().in("id", ids);
+      if (error) throw error;
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  async syncRemoteNjosaMembers() {
+    try {
+      const client = await this._ensureSupabase();
+      const { data, error } = await client
+        .from("njosa_members")
+        .select("id,value")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const members = (data || []).map((row) => ({ ...(row.value || {}), id: row.id }));
+      localStorage.setItem("nj_njosaMembers", JSON.stringify(this._dedupeById(members)));
+      this._notifyRemoteContentSubscribers("njosaMembers", members);
+      return members;
     } catch {
       return null;
     }

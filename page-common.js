@@ -1774,6 +1774,48 @@ async function scmsg(msg) {
   b.scrollTop = b.scrollHeight;
 }
 
+// ── NJOSA PAGE ────────────────────────────────────────────────
+function renderNjosaPage() {
+  const settings = DB.getAll("njosaSettings")[0] || {};
+  const events = DB.getAll("njosaEvents").filter((item) => item.status !== "draft");
+  const careers = DB.getAll("njosaCareers").filter((item) => item.status !== "draft");
+  const leaders = DB.getAll("njosaLeaders").filter((item) => item.status !== "hidden");
+  const news = DB.getAll("news").filter((item) => item.status === "published").slice(0, 4);
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value) el.textContent = value;
+  };
+  setText("njosa-intro-copy", settings.intro);
+  setText("njosa-network-copy", settings.networkCopy);
+  setText("njosa-career-copy", settings.careerCopy);
+  setText("njosa-homecoming-copy", settings.homecomingCopy);
+  const eventMarkup = events
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.dateLabel || fmtDate(item.date))}</div><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p>${item.location ? `<p class="njosa-feed-meta">${esc(item.location)}</p>` : ""}</article>`)
+    .join("");
+  const careerMarkup = careers
+    .map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.type || "Opportunity")}${item.deadline ? ` · ${esc(item.deadline)}` : ""}</div><h3>${esc(item.title)}</h3><p>${esc(item.description)}</p>${item.contact ? `<p class="njosa-feed-meta">${esc(item.contact)}</p>` : ""}</article>`)
+    .join("");
+  const leaderMarkup = leaders
+    .map((item) => {
+      const initials = esc(String(item.name || "NJ").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase());
+      const portrait = isImageAsset(item.image) ? `<img src="${esc(item.image)}" alt="${esc(item.name)}">` : `<div class="njosa-leader-avatar">${initials}</div>`;
+      return `<article class="njosa-leader-card">${portrait}<h3>${esc(item.name)}</h3><p>${esc(item.position)}</p><small>${esc(item.bio || "")}</small></article>`;
+    })
+    .join("");
+  const newsMarkup = news.map((item) => `<article class="njosa-feed-card"><div class="njosa-feed-meta">${esc(item.category || "News")} · ${esc(item.dateLabel || fmtDate(item.date))}</div><h3>${esc(item.title)}</h3><p>${esc(item.excerpt || "")}</p></article>`).join("");
+  const empty = '<div class="njosa-feed-card"><p>Updates will appear here soon.</p></div>';
+  document.getElementById("njosa-events")?.replaceChildren();
+  const eventsEl = document.getElementById("njosa-events");
+  const careersEl = document.getElementById("njosa-careers");
+  const leadersEl = document.getElementById("njosa-leaders");
+  const newsEl = document.getElementById("njosa-news");
+  if (eventsEl) eventsEl.innerHTML = eventMarkup || empty;
+  if (careersEl) careersEl.innerHTML = careerMarkup || empty;
+  if (leadersEl) leadersEl.innerHTML = leaderMarkup || empty;
+  if (newsEl) newsEl.innerHTML = newsMarkup || empty;
+}
+
 // ── NEWS RENDER (for news.html) ────────────────────────────────
 function getPublishedNewsPosts() {
   return DB.getAll("news")
@@ -2830,6 +2872,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (path === "index.html" || path === "") renderHomePage();
     else if (path === "about.html") loadAboutFromDB();
     else if (path === "news.html") renderNews();
+    else if (path === "njosa.html") renderNjosaPage();
     else if (path === "gallery.html") renderGallery();
     else if (path === "njosa-gallery.html") renderNjosaGallery();
     else if (path === "facilities.html") renderFacilities();

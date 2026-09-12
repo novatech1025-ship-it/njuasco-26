@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Join NJOSA | NJUASCO</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body { background: #f8fafc; }
+      .njreg-shell { min-height: 100vh; display: grid; place-items: center; padding: 34px 18px; }
+      .njreg-card { width: min(720px, 100%); padding: clamp(24px, 5vw, 48px); background: #fff; border: 1px solid var(--g200); border-radius: var(--rl); box-shadow: var(--sh3); }
+      .njreg-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+      .njreg-brand img { width: 42px; height: 42px; object-fit: contain; }
+      .njreg-brand strong { color: var(--g900); font-family: "Playfair Display", serif; font-size: 18px; }
+      .njreg-brand span { display: block; color: var(--g500); font-size: 11px; margin-top: 2px; }
+      .njreg-card h1 { color: var(--g900); font-family: "Playfair Display", serif; font-size: clamp(28px, 5vw, 42px); line-height: 1.05; }
+      .njreg-card > p { max-width: 560px; margin: 12px 0 28px; color: var(--g500); line-height: 1.7; }
+      .njreg-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .njreg-field { display: grid; gap: 6px; }
+      .njreg-field.full { grid-column: 1 / -1; }
+      .njreg-field label { color: var(--g700); font-size: 12px; font-weight: 700; }
+      .njreg-field input, .njreg-field select, .njreg-field textarea { width: 100%; padding: 12px 13px; border: 1px solid var(--g200); border-radius: var(--r); color: var(--g800); background: #fff; }
+      .njreg-field textarea { min-height: 100px; resize: vertical; }
+      .njreg-actions { display: flex; align-items: center; gap: 14px; margin-top: 24px; flex-wrap: wrap; }
+      .njreg-message { color: var(--g500); font-size: 13px; }
+      @media (max-width: 560px) { .njreg-form { grid-template-columns: 1fr; } .njreg-field.full { grid-column: auto; } }
+    </style>
+  </head>
+  <body>
+    <script src="nova-tech-knowledge.js"></script>
+    <script src="db.js"></script>
+    <main class="njreg-shell">
+      <section class="njreg-card">
+        <div class="njreg-brand"><img src="njuasco-logo.png" alt="NJUASCO logo" /><div><strong>NJOSA</strong><span>New Juaben Old Students Association</span></div></div>
+        <h1>Join the network.</h1>
+        <p>Register your details so the NJOSA team can welcome you into the alumni community, share opportunities, and keep you connected to homecoming events.</p>
+        <form class="njreg-form" id="njosa-registration-form">
+          <div class="njreg-field"><label for="njreg-name">Full name</label><input id="njreg-name" required /></div>
+          <div class="njreg-field"><label for="njreg-year">Graduation year</label><input id="njreg-year" type="number" min="1953" max="2100" required /></div>
+          <div class="njreg-field"><label for="njreg-email">Email address</label><input id="njreg-email" type="email" required /></div>
+          <div class="njreg-field"><label for="njreg-phone">Phone number</label><input id="njreg-phone" type="tel" required /></div>
+          <div class="njreg-field"><label for="njreg-programme">Programme / course</label><input id="njreg-programme" placeholder="e.g. General Science" /></div>
+          <div class="njreg-field"><label for="njreg-location">Current city / country</label><input id="njreg-location" placeholder="e.g. Koforidua, Ghana" /></div>
+          <div class="njreg-field full"><label for="njreg-work">Profession or organisation</label><input id="njreg-work" placeholder="Useful for networking and career opportunities" /></div>
+          <div class="njreg-field full"><label for="njreg-interest">How would you like to connect?</label><textarea id="njreg-interest" placeholder="Mentorship, jobs, reunion planning, volunteering..."></textarea></div>
+          <div class="njreg-actions full"><button class="btn btn-p" type="submit">Submit registration</button><a class="btn btn-g" href="njosa.html">Back to NJOSA</a><span class="njreg-message" id="njreg-message" role="status"></span></div>
+        </form>
+      </section>
+    </main>
+    <script>
+      const form = document.getElementById("njosa-registration-form");
+      const message = document.getElementById("njreg-message");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const member = {
+          name: document.getElementById("njreg-name").value.trim(),
+          graduationYear: document.getElementById("njreg-year").value.trim(),
+          email: document.getElementById("njreg-email").value.trim(),
+          phone: document.getElementById("njreg-phone").value.trim(),
+          programme: document.getElementById("njreg-programme").value.trim(),
+          location: document.getElementById("njreg-location").value.trim(),
+          profession: document.getElementById("njreg-work").value.trim(),
+          interests: document.getElementById("njreg-interest").value.trim(),
+          status: "pending",
+          registeredAt: new Date().toISOString(),
+        };
+        const duplicate = DB.getAll("njosaMembers").some((item) => item.email.toLowerCase() === member.email.toLowerCase());
+        if (duplicate) {
+          message.textContent = "That email is already registered with NJOSA.";
+          return;
+        }
+        DB.add("njosaMembers", member);
+        const remoteSaved = await Promise.race([
+          DB.submitNjosaMember?.(member),
+          new Promise((resolve) => setTimeout(() => resolve(false), 5000)),
+        ]);
+        if (!remoteSaved) await DB.syncRemoteAll?.();
+        form.reset();
+        message.textContent = remoteSaved
+          ? "Registration received. The NJOSA team will review your details."
+          : "Registration saved on this device. Please try again when you are online.";
+      });
+    </script>
+  </body>
+</html>
