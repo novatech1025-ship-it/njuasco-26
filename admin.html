@@ -1438,6 +1438,10 @@
               ></span></span
             >Gallery
           </div>
+          <div class="sb-item" onclick="showPage('njosa-gallery-mgr', this)">
+            <span class="sb-ic"><span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span></span
+            >NJOSA Gallery
+          </div>
           <div class="sb-item" onclick="showPage('docs-mgr', this)">
             <span class="sb-ic"
               ><span
@@ -2233,6 +2237,23 @@
               "
               id="gallery-list"
             ></div>
+          </div>
+
+          <!-- NJOSA GALLERY MANAGER -->
+          <div class="apage" id="pg-njosa-gallery-mgr">
+            <div class="sec-hdr">
+              <div class="sec-title">NJOSA Alumni Gallery</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input id="admin-njosa-gallery-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
+                <button class="btn btn-g" onclick="document.getElementById('admin-njosa-gallery-files').click()">Bulk Upload Images</button>
+                <button class="btn btn-g" onclick="selectAll('admin-njosa-gallery-select', true)">Select All</button>
+                <button class="btn btn-g" onclick="bulkArrange('gallery','njosa-gallery-mgr','admin-njosa-gallery-select')">Arrange Selected</button>
+                <button class="btn btn-r" onclick="bulkDelete('gallery','njosa-gallery-mgr','admin-njosa-gallery-select')">Delete Selected</button>
+                <button class="btn btn-p" onclick="openNjosaGalleryModal()">+ Add NJOSA Photo</button>
+              </div>
+            </div>
+            <p style="margin:-8px 0 18px;color:var(--g500);font-size:13px">Manage the memories shown on the separate NJOSA Gallery page.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px" id="njosa-gallery-list"></div>
           </div>
 
           <!-- DOCUMENTS MANAGER -->

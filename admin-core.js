@@ -66,7 +66,7 @@ const ICON_PATHS = {
         await bulkUploadMedia(input, "gallery", "gallery-mgr");
       }
       async function bulkUploadNjosaGallery(input) {
-        await bulkUploadMedia(input, "gallery", "gallery-mgr", { category: "njosa" });
+        await bulkUploadMedia(input, "gallery", "njosa-gallery-mgr", { category: "njosa" });
       }
       function fileTitle(file) {
         return file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
