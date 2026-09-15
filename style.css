@@ -1774,18 +1774,18 @@ ul {
   }
 
   .wbadge {
-    width: min(158px, calc(100% - 24px));
-    padding: 12px 14px;
+    width: min(132px, calc(100% - 24px));
+    padding: 9px 10px;
     border-right-width: 3px;
     border-radius: 16px;
   }
 
   .wbn {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .wbt {
-    font-size: 11px;
+    font-size: 9px;
   }
 }
 @media (max-width: 640px) {
