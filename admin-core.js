@@ -496,16 +496,24 @@ const ICON_PATHS = {
         },
         async signInFullAdmin(email, password) {
           const normalized = this._email(email);
-          if (!this.isFullAdminEmail(normalized)) {
-            throw new Error("This email is not allowed to access the main admin dashboard.");
-          }
           try {
             const user = await this.signInWithEmail(normalized, password);
-            if (!this.isFullAdminEmail(user?.email)) {
+            await this.syncRemoteAll?.();
+            const signedInEmail = this._email(user?.email || normalized);
+            if (this.isActiveSubAdminEmail?.(signedInEmail) && !this.isFullAdminEmail(signedInEmail)) {
               await this.signOut();
-              throw new Error("This email is not allowed to access the main admin dashboard.");
+              throw new Error("This account is assigned to the sub-admin dashboard. Use the Sub-Admin Portal instead.");
             }
-            this._saveLocalFullAdminSession(normalized);
+            const info = this.getInfo?.() || {};
+            const emails = this.getAdminEmails();
+            if (!emails.includes(signedInEmail)) {
+              info.adminEmails = [...emails, signedInEmail];
+              info.primaryAdminEmail = info.primaryAdminEmail || signedInEmail;
+              localStorage.setItem("nj_info", JSON.stringify(info));
+              this._notifyRemoteInfoSubscribers?.(info);
+              this.saveRemoteInfo?.(info).catch?.(() => {});
+            }
+            this._saveLocalFullAdminSession(signedInEmail);
             return user;
           } catch (error) {
             const msg = String(error?.message || "");
