@@ -1324,6 +1324,91 @@
         outline: 2px solid var(--b6);
         outline-offset: 2px;
       }
+      /* Responsive hardening */
+      html,
+      body {
+        overflow-wrap: anywhere;
+      }
+      img,
+      video,
+      canvas,
+      svg {
+        max-width: 100%;
+      }
+      img,
+      video {
+        height: auto;
+      }
+      .card,
+      .stat-w,
+      .modal,
+      .topbar,
+      .sec-hdr,
+      .form-grid,
+      .stats-row,
+      .grid2,
+      .tbl-wrap {
+        min-width: 0;
+      }
+      .tbl-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      @media (max-width: 860px) {
+        .topbar {
+          height: auto;
+          min-height: 64px;
+          padding: 10px 14px;
+          flex-wrap: wrap;
+        }
+        .topbar-title {
+          min-width: 0;
+          font-size: 16px;
+        }
+        .topbar-actions {
+          width: 100%;
+          justify-content: flex-start;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+        .content {
+          padding: 16px;
+          padding-bottom: calc(28px + var(--sb));
+        }
+        .sec-hdr {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .sec-hdr > div,
+        .sec-hdr > button,
+        .sec-hdr .btn {
+          max-width: 100%;
+        }
+        .stats-row,
+        .grid2,
+        .form-grid {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+      }
+      @media (max-width: 520px) {
+        .btn {
+          width: 100%;
+          justify-content: center;
+          white-space: normal;
+          min-height: 44px;
+        }
+        .card {
+          padding: 16px;
+          border-radius: 14px;
+        }
+        table.tbl {
+          min-width: 560px;
+        }
+        .modal {
+          padding: 18px;
+        }
+      }
     </style>
   </head>
   <body>

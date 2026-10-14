@@ -2787,6 +2787,7 @@
           throw new Error("Incorrect admin password. Please try again.");
         }
         DB.saveDashboardPasswordTrust?.(role, email);
+        DB.refreshPortalSession?.(role, email);
         return true;
       }
 
@@ -2851,6 +2852,7 @@
           window.location.replace("index.html?admin=1");
           return;
         }
+        DB.refreshPortalSession?.("admin", user.email);
         DB.runLocalMigrations?.();
         refreshAdminPage();
         hydrateIcons(document);

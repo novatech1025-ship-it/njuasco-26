@@ -7023,6 +7023,105 @@ body.nj-hydrating #ldr {
   font-weight: 600;
 }
 
+/* Responsive hardening */
+html {
+  overflow-wrap: anywhere;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+img,
+video {
+  height: auto;
+}
+
+table {
+  max-width: 100%;
+}
+
+.tbl-wrap,
+.table-wrap,
+.cart-table-wrap,
+.admin-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.card,
+.stat-w,
+.news-card,
+.team-card,
+.dept-card,
+.facility-card,
+.club-card,
+.gallery-card,
+.merch-card,
+.sub-admin-card {
+  min-width: 0;
+}
+
+.hero,
+.sec,
+.container,
+.grid,
+.grid2,
+.stats-row,
+.form-grid {
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .sec {
+    padding: 44px 0;
+  }
+
+  .stitle {
+    font-size: clamp(24px, 9vw, 34px);
+  }
+
+  .sdesc {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .btn,
+  .asub,
+  .abk {
+    min-height: 44px;
+  }
+
+  .sub-admin-card {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .stats-row,
+  .grid2,
+  .form-grid,
+  .perm-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+  }
+}
+
 
 
 

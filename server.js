@@ -39,7 +39,41 @@ const TYPES = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".ico": "image/x-icon",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
 };
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self)",
+  "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+  "Content-Security-Policy":
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://gkzuzugokctccfadzqwf.supabase.co; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com data:; " +
+    "img-src 'self' data: blob: https:; " +
+    "media-src 'self' data: blob: https:; " +
+    "connect-src 'self' https://gkzuzugokctccfadzqwf.supabase.co https://api.groq.com https://api.paystack.co https://sms.arkesel.com; " +
+    "frame-src 'self' https://checkout.paystack.com https://*.paystack.com https://www.google.com https://maps.google.com; " +
+    "object-src 'none'; base-uri 'self'; form-action 'self'",
+};
+
+function securityHeaders(extra = {}) {
+  return { ...SECURITY_HEADERS, ...extra };
+}
+
+function allowedOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return "*";
+  try {
+    const parsed = new URL(origin);
+    const host = parsed.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".njuasco.edu.gh")) return origin;
+  } catch {}
+  return "null";
+}
 
 function loadEnvFile() {
   const envPath = path.join(ROOT, ".env");
@@ -58,12 +92,24 @@ function loadEnvFile() {
 }
 
 function send(res, status, body, type = "application/json; charset=utf-8") {
-  res.writeHead(status, {
+  res.writeHead(status, securityHeaders({
     "Content-Type": type,
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  });
+  }));
+  res.end(body);
+}
+
+function sendApi(req, res, status, body, type = "application/json; charset=utf-8") {
+  res.writeHead(status, securityHeaders({
+    "Content-Type": type,
+    "Access-Control-Allow-Origin": allowedOrigin(req),
+    "Access-Control-Allow-Methods": "POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    Vary: "Origin",
+    "Cache-Control": "no-store",
+  }));
   res.end(body);
 }
 
@@ -88,12 +134,12 @@ async function handleAI(req, res) {
       send(res, 204, "");
       return;
     }
-    send(res, 405, JSON.stringify({ error: "Method not allowed" }));
+    sendApi(req, res, 405, JSON.stringify({ error: "Method not allowed" }));
     return;
   }
 
   if (!GROQ_API_KEY) {
-    send(res, 500, JSON.stringify({ error: "GROQ_API_KEY is not set" }));
+      sendApi(req, res, 500, JSON.stringify({ error: "GROQ_API_KEY is not set" }));
     return;
   }
 
@@ -103,7 +149,7 @@ async function handleAI(req, res) {
     const siteContext = String(body.siteContext || "").slice(0, 8000);
 
     if (!message) {
-      send(res, 400, JSON.stringify({ error: "Message is required" }));
+      sendApi(req, res, 400, JSON.stringify({ error: "Message is required" }));
       return;
     }
 
@@ -132,13 +178,13 @@ async function handleAI(req, res) {
 
     const data = await groqRes.json();
     if (!groqRes.ok) {
-      send(res, groqRes.status, JSON.stringify({ error: data.error?.message || "Groq API error" }));
+      sendApi(req, res, groqRes.status, JSON.stringify({ error: data.error?.message || "Groq API error" }));
       return;
     }
 
-    send(res, 200, JSON.stringify({ reply: data.choices?.[0]?.message?.content || "" }));
+    sendApi(req, res, 200, JSON.stringify({ reply: data.choices?.[0]?.message?.content || "" }));
   } catch (error) {
-    send(res, 500, JSON.stringify({ error: error.message || "AI request failed" }));
+    sendApi(req, res, 500, JSON.stringify({ error: error.message || "AI request failed" }));
   }
 }
 
@@ -416,21 +462,52 @@ function serveStatic(req, res) {
     return;
   }
 
-  fs.readFile(filePath, (err, data) => {
+  fs.stat(filePath, (statErr, stat) => {
+    if (statErr || !stat.isFile()) {
+      send(res, 404, "Not found", "text/plain; charset=utf-8");
+      return;
+    }
+
+    const etag = `"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+    if (req.headers["if-none-match"] === etag) {
+      res.writeHead(304, securityHeaders({
+        ETag: etag,
+        "Cache-Control": cacheControlFor(filePath),
+      }));
+      res.end();
+      return;
+    }
+
+    fs.readFile(filePath, (err, data) => {
     if (err) {
       send(res, 404, "Not found", "text/plain; charset=utf-8");
       return;
     }
 
     const type = TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-    send(res, 200, data, type);
+      res.writeHead(200, securityHeaders({
+        "Content-Type": type,
+        "Cache-Control": cacheControlFor(filePath),
+        ETag: etag,
+      }));
+      res.end(data);
+    });
   });
+}
+
+function cacheControlFor(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if ([".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".svg", ".woff", ".woff2"].includes(ext)) {
+    return "public, max-age=2592000, immutable";
+  }
+  if ([".css", ".js"].includes(ext)) return "public, max-age=3600, must-revalidate";
+  return "no-cache";
 }
 
 http
   .createServer((req, res) => {
     if (req.method === "OPTIONS") {
-      send(res, 204, "");
+      sendApi(req, res, 204, "");
       return;
     }
     if (req.url.startsWith("/api/ai")) {

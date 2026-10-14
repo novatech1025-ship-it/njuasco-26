@@ -40,10 +40,10 @@ window.NJUASCO_SUPABASE = SUPABASE_CONFIG;
 })();
 
 const DB = {
-  ADMIN_SESSION_MS: 3 * 60 * 60 * 1000,
-  SUBADMIN_SESSION_MS: 2 * 60 * 60 * 1000,
-  PORTAL_SESSION_MS: 2 * 60 * 60 * 1000,
-  DASHBOARD_PASSWORD_MS: 3 * 60 * 60 * 1000,
+  ADMIN_SESSION_MS: 14 * 24 * 60 * 60 * 1000,
+  SUBADMIN_SESSION_MS: 7 * 24 * 60 * 60 * 1000,
+  PORTAL_SESSION_MS: 7 * 24 * 60 * 60 * 1000,
+  DASHBOARD_PASSWORD_MS: 14 * 24 * 60 * 60 * 1000,
   _remoteSyncReady: false,
   _pendingRemoteWrites: new Map(),
   _remoteContentSubscribers: [],
@@ -216,6 +216,11 @@ const DB = {
       }),
     );
   },
+  refreshPortalSession(role, email) {
+    if (!email || !this.isAuthorizedDashboardEmail(role, email)) return null;
+    this.savePortalSession(role, email);
+    return this.getPortalSession(role);
+  },
   getPortalSession(role) {
     try {
       const data = JSON.parse(localStorage.getItem(`nj_portal_${role}`) || "null");
@@ -237,7 +242,9 @@ const DB = {
   saveDashboardPasswordTrust(role, email) {
     const key = this._dashboardPasswordTrustKey(role, email);
     const now = Date.now();
-    const ttl = role === "admin" ? this.ADMIN_SESSION_MS : this.SUBADMIN_SESSION_MS;
+    const ttl =
+      Number(this.DASHBOARD_PASSWORD_MS) ||
+      (role === "admin" ? this.ADMIN_SESSION_MS : this.SUBADMIN_SESSION_MS);
     localStorage.setItem(
       key,
       JSON.stringify({
@@ -555,7 +562,10 @@ const DB = {
     const user = await this.getSupabaseAuthUser();
     if (user && this.isAuthorizedDashboardEmail("admin", user?.email)) {
       const portal = this.getPortalSession("admin");
-      if (portal && portal.email === this._email(user.email)) return user;
+      if (portal && portal.email === this._email(user.email)) {
+        this.refreshPortalSession("admin", user.email);
+        return user;
+      }
       await this.signOut();
       return null;
     }

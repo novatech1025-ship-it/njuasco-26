@@ -829,6 +829,14 @@ function tpw() {
   const i = document.getElementById("apass");
   if (i) i.type = i.type === "password" ? "text" : "password";
 }
+function optimizePageImages(root = document) {
+  root.querySelectorAll("img").forEach((img) => {
+    if (!img.hasAttribute("decoding")) img.decoding = "async";
+    if (!img.hasAttribute("loading") && !img.closest(".hero, .njb-welcome-modal, .welcome, header")) {
+      img.loading = "lazy";
+    }
+  });
+}
 async function alogin() {
   const emailInput = document.getElementById("auser");
   const email = (emailInput?.value || "").trim().toLowerCase();
@@ -2888,6 +2896,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAIChatMemoryUI();
   if (document.getElementById("ai-status")) refreshAIStatus();
   hydrateIcons();
+  optimizePageImages();
+  new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) optimizePageImages(node);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
   const adminEmailInput = document.getElementById("auser");
   const adminPasswordInput = document.getElementById("apass");
   const adminEmailWrap = adminEmailInput?.closest(".afw");
