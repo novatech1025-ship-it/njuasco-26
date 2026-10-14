@@ -168,11 +168,29 @@ function getAdmissionAcademicYear(info) {
   return `${year}/${year + 1}`;
 }
 
+function ensureTopBanner() {
+  let banner = document.getElementById("festive");
+  if (banner) return banner;
+  const header = document.getElementById("hdr");
+  if (!header) return null;
+  banner = document.createElement("div");
+  banner.id = "festive";
+  header.parentNode.insertBefore(banner, header);
+  return banner;
+}
+
 function applyTopBanner(info, schoolName) {
-  const banner = document.getElementById("festive");
+  const banner = ensureTopBanner();
   if (!banner) return;
 
-  const template = info.topBannerMessage || "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}";
+  const template = String(info.topBannerMessage || "").trim();
+  const enabled = info.topBannerEnabled === true && template;
+  if (!enabled) {
+    banner.hidden = true;
+    banner.innerHTML = "";
+    return;
+  }
+
   const values = {
     schoolName,
     founded: info.founded || "1953",
@@ -180,7 +198,20 @@ function applyTopBanner(info, schoolName) {
     admissionYear: getAdmissionAcademicYear(info),
   };
   const message = template.replace(/\{(schoolName|founded|warCry|admissionYear)\}/g, (_, key) => values[key]);
-  banner.innerHTML = `<span class="ico ico-cap" data-ico="cap" aria-hidden="true"></span> ${esc(message)} <span class="ico ico-trophy" data-ico="trophy" aria-hidden="true"></span>`;
+  const encoded = btoa(unescape(encodeURIComponent(message))).slice(0, 32);
+  const dismissKey = `nj_special_announcement_closed_${encoded}`;
+  if (localStorage.getItem(dismissKey) === "1") {
+    banner.hidden = true;
+    banner.innerHTML = "";
+    return;
+  }
+
+  banner.hidden = false;
+  banner.innerHTML = `<div class="festive-inner"><span class="ico ico-megaphone" data-ico="megaphone" aria-hidden="true"></span><span class="festive-text">${esc(message)}</span></div><button class="festive-close" type="button" aria-label="Close special announcement">${ico("x")}</button>`;
+  banner.querySelector(".festive-close")?.addEventListener("click", () => {
+    localStorage.setItem(dismissKey, "1");
+    banner.hidden = true;
+  });
   hydrateIcons?.(banner);
 }
 
@@ -2408,7 +2439,7 @@ function renderHomePage() {
           `<span class="mitem"><span class="mdot"></span>${esc(text)}</span>`,
       )
       .join("");
-    mtrack.innerHTML = items ? items + items : "";
+    mtrack.innerHTML = items ? `<div class="mgroup">${items}</div><div class="mgroup" aria-hidden="true">${items}</div>` : "";
   }
   setTimeout(initRv, 50);
 }
@@ -2926,4 +2957,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 30000);
   hydrateIcons();
 });
+
 

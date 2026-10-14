@@ -1826,12 +1826,16 @@
               </div>
             </div>
             <div class="card" style="margin-bottom: 20px">
-              <div class="card-title">Top Announcement Bar</div>
+              <div class="card-title">Special Announcement Bar</div>
               <div class="form-grid">
                 <div class="fg" style="grid-column: 1/-1">
-                  <label class="flbl">Announcement Message</label>
-                  <textarea class="finp fta" id="si-top-banner" style="min-height: 76px" placeholder="Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}"></textarea>
-                  <div class="hint-text">Use {schoolName}, {founded}, {warCry}, and {admissionYear} to keep those values current automatically.</div>
+                  <label class="settings-check" style="margin-bottom:12px">
+                    <input id="si-top-banner-enabled" type="checkbox" />
+                    <span>Show special announcement bar on the website</span>
+                  </label>
+                  <label class="flbl">Special Announcement Message</label>
+                  <textarea class="finp fta" id="si-top-banner" style="min-height: 76px" placeholder="Example: Admissions forms are available now. Deadline: Friday."></textarea>
+                  <div class="hint-text">This bar is only for special announcements. Visitors can close it after reading. You can still use {schoolName}, {founded}, {warCry}, and {admissionYear}.</div>
                 </div>
                 <div class="fg">
                   <label class="settings-check">

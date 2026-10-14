@@ -1379,7 +1379,9 @@
         set("si-li", i.linkedin);
         set("si-motto", i.motto);
         set("si-warcry", i.warCry);
-        set("si-top-banner", i.topBannerMessage || "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}");
+        set("si-top-banner", i.topBannerMessage || "");
+        const topBannerEnabled = document.getElementById("si-top-banner-enabled");
+        if (topBannerEnabled) topBannerEnabled.checked = i.topBannerEnabled === true;
         const admissionsYearAuto = document.getElementById("si-admissions-year-auto");
         if (admissionsYearAuto) admissionsYearAuto.checked = i.admissionsYearAuto !== false;
         set("si-admissions-year", i.admissionsAcademicYear || "");
@@ -1484,6 +1486,7 @@
           linkedin: g("si-li"),
           motto: g("si-motto"),
           warCry: g("si-warcry"),
+          topBannerEnabled: document.getElementById("si-top-banner-enabled")?.checked === true,
           topBannerMessage: g("si-top-banner"),
           admissionsYearAuto: document.getElementById("si-admissions-year-auto")?.checked !== false,
           admissionsAcademicYear: g("si-admissions-year"),
@@ -2895,6 +2898,7 @@
         const iconObserver = new MutationObserver(() => hydrateIcons(document));
         iconObserver.observe(document.body, { childList: true, subtree: true });
       });
+
 
 
 

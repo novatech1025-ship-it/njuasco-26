@@ -289,6 +289,7 @@ ul {
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 #festive {
+  position: relative;
   background: linear-gradient(
     90deg,
     #1e40af,
@@ -301,15 +302,55 @@ ul {
   background-size: 400% 100%;
   animation: fscroll 8s linear infinite;
   color: #fff;
-  text-align: center;
-  padding: 9px 16px;
+  padding: 9px 52px 9px 16px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+}
+
+#festive[hidden],
+#festive:empty {
+  display: none !important;
+}
+
+.festive-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+  line-height: 1.35;
+}
+
+.festive-text {
+  min-width: 0;
+}
+
+.festive-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.festive-close:hover {
+  background: rgba(255, 255, 255, 0.26);
 }
 
 @media (max-width: 767px) {
   #festive {
-    display: none;
+    padding: 9px 44px 9px 14px;
+    font-size: 12px;
   }
 }
 
@@ -1506,16 +1547,24 @@ ul {
   background: var(--gp);
   padding: 12px 0;
   overflow: hidden;
+  width: 100%;
 }
 
 .mtrack {
   display: flex;
-  gap: 40px;
-  animation: mq 30s linear infinite;
-  white-space: nowrap;
   width: max-content;
   max-width: none;
+  white-space: nowrap;
+  animation: mq 28s linear infinite;
   will-change: transform;
+}
+
+.mgroup {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding-right: 40px;
+  flex-shrink: 0;
 }
 
 .mitem {
@@ -1538,10 +1587,10 @@ ul {
 
 @keyframes mq {
   0% {
-    transform: translateX(100vw);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
@@ -6957,4 +7006,6 @@ body.nj-hydrating #ldr {
   font-size: 11px;
   font-weight: 600;
 }
+
+
 

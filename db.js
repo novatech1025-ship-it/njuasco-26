@@ -1310,8 +1310,12 @@ DB.migrateAboutContent = function () {
     info.adminVerifyPhone = "";
     changed = true;
   }
-  if (typeof info.topBannerMessage !== "string" || !info.topBannerMessage.trim()) {
-    info.topBannerMessage = "Welcome to {schoolName} | Academic Excellence Since {founded} | War Cry: {warCry}! | Admissions Open {admissionYear}";
+  if (info.topBannerEnabled !== true && info.topBannerEnabled !== false) {
+    info.topBannerEnabled = false;
+    changed = true;
+  }
+  if (typeof info.topBannerMessage !== "string") {
+    info.topBannerMessage = "";
     changed = true;
   }
   if (info.admissionsYearAuto !== true && info.admissionsYearAuto !== false) {
@@ -1575,6 +1579,7 @@ DB.cartTotal = function () {
 DB.clearCart = function () {
   localStorage.removeItem("nj_cart");
 };
+
 
 
 
