@@ -272,7 +272,7 @@ returns boolean
 language sql
 stable
 as $$
-  select public.njuasco_auth_email() in ('info@njuasco.edu.gh', 'novatech1025@gmail.com');
+  select public.njuasco_auth_email() in ('info@njuasco.edu.gh');
 $$;
 
 create or replace function public.is_njuasco_staff_admin()
@@ -397,3 +397,4 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+

@@ -11,7 +11,7 @@ returns boolean
 language sql
 stable
 as $$
-  select public.njuasco_auth_email() in ('info@njuasco.edu.gh', 'novatech1025@gmail.com');
+  select public.njuasco_auth_email() in ('info@njuasco.edu.gh');
 $$;
 
 create or replace function public.is_njuasco_staff_admin()
@@ -95,3 +95,4 @@ on storage.objects
 for insert
 to authenticated
 with check (bucket_id = 'site-assets' and public.is_njuasco_staff_admin());
+

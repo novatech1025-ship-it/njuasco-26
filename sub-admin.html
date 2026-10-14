@@ -1925,7 +1925,7 @@
           permissions: Array.isArray(a.permissions) ? a.permissions : [],
           active: a.active !== false,
           passwordSet: a.passwordSet === true,
-          staffPassword: a.staffPassword || "",
+          staffPassword: "",
         };
       }
 
@@ -2367,13 +2367,8 @@
           revealSubAdminPasswordStep(CURRENT_AUTH_EMAIL);
           return false;
         }
-        if (!nextProfile.passwordSet && !nextProfile.staffPassword) {
-          const passwordLabel =
-            password && !isGoogle ? password : isGoogle ? "— Google Sign-In —" : "Set";
-          nextProfile = await DB.markSubAdminPasswordReady?.(
-            nextProfile,
-            passwordLabel,
-          );
+        if (!nextProfile.passwordSet) {
+          nextProfile = await DB.markSubAdminPasswordReady?.(nextProfile);
         }
         CURRENT_SA = normalizeSaAdmin(nextProfile);
         DB.savePortalSession?.("subadmin", CURRENT_AUTH_EMAIL);
@@ -3910,4 +3905,5 @@
     </script>
   </body>
 </html>
+
 

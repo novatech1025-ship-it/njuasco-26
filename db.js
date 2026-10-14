@@ -10,11 +10,11 @@ const SUPABASE_CONFIG = {
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/checkout-otp",
   paystackCheckoutFunctionUrl:
     "https://gkzuzugokctccfadzqwf.supabase.co/functions/v1/paystack-checkout",
-  adminEmails: ["info@njuasco.edu.gh", "novatech1025@gmail.com"],
+  adminEmails: ["info@njuasco.edu.gh"],
 };
 const DASHBOARD_PASSWORDS = {
-  admin: "NJUASCO-Admin-2026!",
-  subadmin: "NJUASCO-SubAdmin-2026!",
+  admin: "",
+  subadmin: "",
 };
 const DEFAULT_NEWS_POST = {
   id: "njuasco-73rd-anniversary",
@@ -169,7 +169,7 @@ const DB = {
     return this._sha256(`njuasco-subadmin:v1:${this._email(email)}:${salt}:${password}`);
   },
   _isLocalFullAdminCredential(email, password) {
-    return this._email(email) === "novatech1025@gmail.com" && String(password || "") === "admin123";
+    return false;
   },
   _saveLocalFullAdminSession(email) {
     const now = Date.now();
@@ -251,6 +251,7 @@ const DB = {
     localStorage.removeItem(key);
   },
   needsDashboardPasswordChallenge(role, email) {
+    if (!DASHBOARD_PASSWORDS[role] && !DASHBOARD_PASSWORDS.admin) return false;
     const key = this._dashboardPasswordTrustKey(role, email);
     try {
       const data = JSON.parse(localStorage.getItem(key) || "null");
@@ -277,6 +278,7 @@ const DB = {
     const normalized = this._email(email);
     if (!normalized || !password) return false;
     const expected = DASHBOARD_PASSWORDS[role] || DASHBOARD_PASSWORDS.admin;
+    if (!expected) return false;
     return String(password) === expected;
   },
   getAdminEmails() {
@@ -562,7 +564,6 @@ const DB = {
   subAdminNeedsPasswordSetup(profile) {
     if (!profile) return true;
     if (profile.passwordSet === true) return false;
-    if (String(profile.staffPassword || "").trim()) return false;
     return true;
   },
   getSubAdminProfileByEmail(email) {
@@ -574,13 +575,9 @@ const DB = {
       ) || null
     );
   },
-  async markSubAdminPasswordReady(profile, passwordLabel = "Set") {
+  async markSubAdminPasswordReady(profile) {
     if (!profile?.id) return profile;
-    if (passwordLabel && !/^Set$|^—/.test(String(passwordLabel))) {
-      await this._saveSubAdminPasswordCredential(profile.id, profile.email || profile.username, passwordLabel);
-    } else {
-      this._saveSubAdminStaffPassword(profile.id, "Set", { syncRemote: true });
-    }
+    this._saveSubAdminStaffPassword(profile.id, { syncRemote: true });
     try {
       const client = await this._ensureSupabase();
       await client.auth.updateUser({
@@ -594,13 +591,13 @@ const DB = {
     }
     return this.findSubAdminByEmail(profile.email || profile.username);
   },
-  _saveSubAdminStaffPassword(profileId, password, options = {}) {
+  _saveSubAdminStaffPassword(profileId, options = {}) {
     const admins = this._get("subadmins");
     const index = admins.findIndex((a) => a.id === profileId);
     if (index === -1) return false;
     admins[index] = {
       ...admins[index],
-      staffPassword: password,
+      staffPassword: "",
       passwordSet: true,
       passwordSetAt: new Date().toISOString().split("T")[0],
     };
@@ -620,7 +617,7 @@ const DB = {
     admins[index] = {
       ...admins[index],
       email: normalized || admins[index].email,
-      staffPassword: "Set",
+      staffPassword: "",
       staffPasswordHash: hash,
       passwordHashVersion: 2,
       passwordSalt: salt,
@@ -648,11 +645,6 @@ const DB = {
         return true;
       }
       return false;
-    }
-    const legacyPassword = String(profile.staffPassword || "");
-    if (legacyPassword && legacyPassword !== "Set" && legacyPassword === String(password)) {
-      await this._saveSubAdminPasswordCredential(profile.id, email, password);
-      return true;
     }
     return false;
   },
@@ -1583,4 +1575,6 @@ DB.cartTotal = function () {
 DB.clearCart = function () {
   localStorage.removeItem("nj_cart");
 };
+
+
 

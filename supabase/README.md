@@ -39,9 +39,8 @@ Open Supabase SQL Editor and run `supabase/run-this-in-sql-editor.sql`.
 Create Supabase Auth email/password users for:
 
 - `info@njuasco.edu.gh`
-- `novatech1025@gmail.com`
 
-Those two emails are the only full admin accounts. Sub-admins must also be Supabase Auth users, but their access is controlled by the matching active email profile in the Admin Dashboard's Sub-Admin Management page.
+That email is the full admin account. Sub-admins must also be Supabase Auth users, but their access is controlled by the matching active email profile in the Admin Dashboard's Sub-Admin Management page.
 
 ## Google Auth
 
@@ -164,3 +163,4 @@ npm run start:3000
 ```
 
 Keep VS Code Live Server on `http://127.0.0.1:5500` if you like; the browser chat will fall through to the AI proxy at `http://127.0.0.1:3000/api/ai`. If you want Node to serve the whole site instead, stop Live Server and run `npm run start:5500`.
+

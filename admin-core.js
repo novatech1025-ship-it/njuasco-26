@@ -180,7 +180,7 @@ const ICON_PATHS = {
         url: "https://gkzuzugokctccfadzqwf.supabase.co",
         anonKey:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrenV6dWdva2N0Y2NmYWR6cXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NDE3NTIsImV4cCI6MjA5NTQxNzc1Mn0.NgWjWFNoHMu9NgcgCLXza6FnoaAr5foRAWC990DsLNU",
-        adminEmails: ["info@njuasco.edu.gh", "novatech1025@gmail.com"],
+        adminEmails: ["info@njuasco.edu.gh"],
       };
       const PORTAL_SESSION_MS = 5 * 60 * 60 * 1000;
       const DB = {
@@ -253,7 +253,7 @@ const ICON_PATHS = {
           this.clearPortalSession("admin");
         },
         _isLocalFullAdminCredential(email, password) {
-          return this._email(email) === "novatech1025@gmail.com" && String(password || "") === "admin123";
+          return false;
         },
         _saveLocalFullAdminSession(email) {
           const now = Date.now();
@@ -865,4 +865,6 @@ const ICON_PATHS = {
         });
       };
       DB.migrateEmojiIcons();
+
+
 

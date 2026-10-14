@@ -2613,7 +2613,7 @@
             password: nw,
           });
           const info = DB.getInfo();
-          const emails = DB.getAdminEmails ? DB.getAdminEmails() : ["info@njuasco.edu.gh", "novatech1025@gmail.com"];
+          const emails = DB.getAdminEmails ? DB.getAdminEmails() : ["info@njuasco.edu.gh"];
           if (!emails.includes(email)) emails.push(email);
           DB.saveInfo({
             ...info,
@@ -2697,9 +2697,8 @@
         <div style="font-size:12px;color:var(--b6);font-weight:600;margin-bottom:2px">${esc(a.role || "")}</div>
         <div style="font-size:12px;color:var(--g500);margin-bottom:6px;font-family:monospace">${esc(a.email || a.username)}</div>
         <div style="font-size:12px;margin-bottom:10px;padding:8px 10px;background:var(--g50);border-radius:8px;border:1px solid var(--g100);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="color:var(--g500);font-weight:600">Staff password:</span>
-          <span id="sa-pass-${esc(a.id)}" data-hidden="true" data-password="${esc(a.staffPassword || "Set")}" style="font-family:monospace;color:${a.passwordSet ? "var(--g800)" : "var(--go)"};font-weight:700">${a.passwordSet ? "••••••••" : "Waiting for first login"}</span>
-          ${a.passwordSet ? `<button class="btn btn-sm btn-g" type="button" onclick="toggleSubAdminPassword('${esc(a.id)}')" aria-label="Show or hide password"><span class="ico ico-eye" data-ico="eye" aria-hidden="true"></span></button>` : ""}
+          <span style="color:var(--g500);font-weight:600">Password status:</span>
+          <span style="color:${a.passwordSet ? "var(--gn)" : "var(--go)"};font-weight:700">${a.passwordSet ? "Set" : "Waiting for first login"}</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
           <span style="background:${a.active === false ? "rgba(220,38,38,.08)" : "rgba(16,185,129,.1)"};color:${a.active === false ? "var(--r6)" : "#059669"};padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700">${a.active === false ? "Disabled" : "Active"}</span>
@@ -2896,3 +2895,7 @@
         const iconObserver = new MutationObserver(() => hydrateIcons(document));
         iconObserver.observe(document.body, { childList: true, subtree: true });
       });
+
+
+
+
