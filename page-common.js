@@ -168,6 +168,17 @@ function getAdmissionAcademicYear(info) {
   return `${year}/${year + 1}`;
 }
 
+function updateFixedHeaderLayout() {
+  const header = document.getElementById("hdr");
+  if (!header) return;
+  document.body.classList.add("has-fixed-header");
+  const banner = document.getElementById("festive");
+  const bannerHeight = banner && !banner.hidden ? Math.ceil(banner.getBoundingClientRect().height) : 0;
+  const headerHeight = Math.ceil(header.getBoundingClientRect().height) || 64;
+  document.documentElement.style.setProperty("--top-banner-height", `${bannerHeight}px`);
+  document.documentElement.style.setProperty("--header-height", `${headerHeight}px`);
+}
+
 function ensureTopBanner() {
   let banner = document.getElementById("festive");
   if (banner) return banner;
@@ -188,6 +199,7 @@ function applyTopBanner(info, schoolName) {
   if (!enabled) {
     banner.hidden = true;
     banner.innerHTML = "";
+    updateFixedHeaderLayout();
     return;
   }
 
@@ -203,6 +215,7 @@ function applyTopBanner(info, schoolName) {
   if (localStorage.getItem(dismissKey) === "1") {
     banner.hidden = true;
     banner.innerHTML = "";
+    updateFixedHeaderLayout();
     return;
   }
 
@@ -211,8 +224,10 @@ function applyTopBanner(info, schoolName) {
   banner.querySelector(".festive-close")?.addEventListener("click", () => {
     localStorage.setItem(dismissKey, "1");
     banner.hidden = true;
+    updateFixedHeaderLayout();
   });
   hydrateIcons?.(banner);
+  updateFixedHeaderLayout();
 }
 
 function applyFooterContent() {
@@ -2868,6 +2883,7 @@ subapp = async function () {
   }, 1600);
 };
 
+window.addEventListener("resize", updateFixedHeaderLayout);
 document.addEventListener("DOMContentLoaded", async () => {
   initAIChatMemoryUI();
   if (document.getElementById("ai-status")) refreshAIStatus();
@@ -2957,5 +2973,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 30000);
   hydrateIcons();
 });
+
 
 
