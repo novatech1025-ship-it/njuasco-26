@@ -1267,9 +1267,9 @@
 
       async function flushRemoteSync() {
         if (!(await DB.isSupabaseAuthenticated?.())) return false;
-        await DB._flushPendingRemoteWrites?.();
+        const contentOk = await DB._flushPendingRemoteWrites?.();
         const infoOk = await DB.saveRemoteInfo?.(DB.getInfo());
-        return !!infoOk;
+        return contentOk !== false && !!infoOk;
       }
 
       async function connectCloudSync(email, password) {

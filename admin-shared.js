@@ -109,7 +109,9 @@ async function uploadImageAsset(file, folder = "media") {
     throw new Error("Videos must be 50 MB or smaller.");
   }
   const prepared = await prepareImageFile(file);
-  const uploaded = await DB.uploadSiteAsset?.(prepared, folder);
+  const uploaded = await DB.uploadSiteAsset?.(prepared, folder, {
+    throwOnError: isVideoFile(file),
+  });
   if (isVideoFile(file)) {
     if (!uploaded) {
       throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
@@ -149,9 +151,15 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
     } catch (error) {
       if (index) {
         input.value = "";
-        if (typeof flushRemoteSync === "function") await flushRemoteSync();
+        const contentSynced = await DB.forceSyncContentKey?.(key);
+        const synced =
+          contentSynced !== false &&
+          (typeof flushRemoteSync === "function" ? await flushRemoteSync() : false);
         loadPage(reload);
-        toast(`Uploaded ${index} of ${files.length} items before the next upload failed: ${error.message}`);
+        toast(
+          `Uploaded ${index} of ${files.length} items before the next upload failed: ${error.message}` +
+            (synced ? "" : " Earlier items may not have synced to the public site."),
+        );
       } else {
         toast(`Upload failed: ${error.message || "Unable to upload selected media."}`);
       }
@@ -209,9 +217,16 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
     }
   }
   if (input) input.value = "";
-  if (typeof flushRemoteSync === "function") await flushRemoteSync();
+  const contentSynced = await DB.forceSyncContentKey?.(key);
+  const synced =
+    contentSynced !== false &&
+    (typeof flushRemoteSync === "function" ? await flushRemoteSync() : false);
   loadPage(reload);
-  toast(`${files.length} item${files.length === 1 ? "" : "s"} uploaded`);
+  toast(
+    synced
+      ? `${files.length} item${files.length === 1 ? "" : "s"} uploaded and synced to the public site`
+      : `${files.length} item${files.length === 1 ? "" : "s"} saved on this device, but cloud sync failed`,
+  );
 }
 
 function selectAll(selectorClass, checked = true) {

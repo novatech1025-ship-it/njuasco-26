@@ -837,7 +837,7 @@ const DB = {
       return null;
     }
   },
-  async uploadSiteAsset(file, folder = "uploads") {
+  async uploadSiteAsset(file, folder = "uploads", options = {}) {
     if (!file) return "";
     try {
       const client = await this._ensureSupabase();
@@ -852,8 +852,10 @@ const DB = {
       });
       if (error) throw error;
       const { data } = client.storage.from("site-assets").getPublicUrl(path);
-      return data?.publicUrl || "";
-    } catch {
+      if (!data?.publicUrl) throw new Error("Storage did not return a public URL for the uploaded file.");
+      return data.publicUrl;
+    } catch (error) {
+      if (options.throwOnError) throw error;
       return "";
     }
   },
@@ -952,7 +954,8 @@ const DB = {
         .upsert({ key, value }, { onConflict: "key" });
       if (error) throw error;
       return true;
-    } catch {
+    } catch (error) {
+      console.error(`Unable to save remote site content for "${key}"`, error);
       return false;
     }
   },
@@ -1597,7 +1600,6 @@ DB.cartTotal = function () {
 DB.clearCart = function () {
   localStorage.removeItem("nj_cart");
 };
-
 
 
 

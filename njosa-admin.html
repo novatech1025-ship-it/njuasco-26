@@ -74,7 +74,7 @@
       const $ = (id) => document.getElementById(id);
       const value = (id) => $(id)?.value.trim() || "";
       const escHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
-      const saveCollection = async (key, items) => { DB._set(key, items); await DB._flushPendingRemoteWrites?.(); };
+      const saveCollection = async (key, items) => { DB._set(key, items); return await DB._flushPendingRemoteWrites?.(); };
       const collection = (key) => DB.getAll(key);
       function allowed(email) { return fullAdmins.includes(email) || DB.getAll("njosaAdmins").some((admin) => admin.email.toLowerCase() === email && admin.approved === true); }
       function resetForm(prefix) { $(`nja-${prefix}-form`).reset(); $(`nja-${prefix}-id`).value = ""; }
@@ -110,7 +110,7 @@
         if (file) {
           try {
             if (isVideo && file.size > 50 * 1024 * 1024) throw new Error("Videos must be 50 MB or smaller.");
-            const uploaded = await DB.uploadSiteAsset?.(file, "gallery");
+            const uploaded = await DB.uploadSiteAsset?.(file, "gallery", { throwOnError: isVideo });
             if (isVideo && !uploaded) throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
             fileUrl = uploaded || await new Promise((resolve, reject) => {
               const reader = new FileReader();
@@ -126,9 +126,9 @@
         if (!fileUrl) return;
         const items = collection("gallery");
         items.push({ id:crypto.randomUUID(), title:value("nja-gallery-title"), image:fileUrl, mediaType:isVideo ? "video" : "image", description:value("nja-gallery-description"), category:"njosa", color:"linear-gradient(135deg,#0f766e,#2563eb)", status:"published" });
-        await saveCollection("gallery", items);
+        const synced = await saveCollection("gallery", items);
         event.target.reset();
-        message.textContent = "";
+        message.textContent = synced === false ? "Added on this device, but cloud sync failed. Check the connection and try again." : "";
         renderGallery();
       });
       $("nja-event-cancel").addEventListener("click", () => resetForm("event")); $("nja-career-cancel").addEventListener("click", () => resetForm("career")); $("nja-leader-cancel").addEventListener("click", () => resetForm("leader"));

@@ -1908,7 +1908,7 @@
           throw new Error("Videos must be 50 MB or smaller.");
         }
         const prepared = await saPrepareImageFile(file);
-        const uploaded = await DB.uploadSiteAsset?.(prepared, folder);
+        const uploaded = await DB.uploadSiteAsset?.(prepared, folder, { throwOnError: isVideo });
         if (isVideo && !uploaded) {
           throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
         }
@@ -2166,8 +2166,8 @@
 
       async function saFlushRemoteSync() {
         if (!(await DB.isSupabaseAuthenticated?.())) return false;
-        await DB._flushPendingRemoteWrites?.();
-        return true;
+        const contentOk = await DB._flushPendingRemoteWrites?.();
+        return contentOk !== false;
       }
 
       async function saSyncAfterChange(message) {
