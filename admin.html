@@ -2318,7 +2318,7 @@
                   Delete Selected
                 </button>
                 <button class="btn btn-p" onclick="openModal('gallery')">
-                  + Add Photo
+                  + Add Media
                 </button>
               </div>
             </div>
@@ -2338,11 +2338,11 @@
               <div class="sec-title">NJOSA Alumni Gallery</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <input id="admin-njosa-gallery-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadNjosaGallery(this)" />
-                <button class="btn btn-g" onclick="document.getElementById('admin-njosa-gallery-files').click()">Bulk Upload Images</button>
+                <button class="btn btn-g" onclick="document.getElementById('admin-njosa-gallery-files').click()">Bulk Upload Images or Videos</button>
                 <button class="btn btn-g" onclick="selectAll('admin-njosa-gallery-select', true)">Select All</button>
                 <button class="btn btn-g" onclick="bulkArrange('gallery','njosa-gallery-mgr','admin-njosa-gallery-select')">Arrange Selected</button>
                 <button class="btn btn-r" onclick="bulkDelete('gallery','njosa-gallery-mgr','admin-njosa-gallery-select')">Delete Selected</button>
-                <button class="btn btn-p" onclick="openNjosaGalleryModal()">+ Add NJOSA Photo</button>
+                <button class="btn btn-p" onclick="openNjosaGalleryModal()">+ Add NJOSA Media</button>
               </div>
             </div>
             <p style="margin:-8px 0 18px;color:var(--g500);font-size:13px">Manage the memories shown on the separate NJOSA Gallery page.</p>
@@ -2384,8 +2384,8 @@
             <div class="sec-hdr">
               <div class="sec-title">Homepage Slides</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input id="slides-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'homepageSlides','slides-mgr')" />
-                <button class="btn btn-g" onclick="document.getElementById('slides-bulk-files').click()">Bulk Upload</button>
+                <input id="slides-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadMedia(this,'homepageSlides','slides-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('slides-bulk-files').click()">Bulk Upload Images or Videos</button>
                 <button class="btn btn-p" onclick="openModal('slide')">+ Add Slide</button>
               </div>
             </div>
@@ -2404,8 +2404,8 @@
             <div class="sec-hdr">
               <div class="sec-title">Facilities</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input id="fac-bulk-files" type="file" accept="image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'facilities','facilities-mgr')" />
-                <button class="btn btn-g" onclick="document.getElementById('fac-bulk-files').click()">Bulk Upload</button>
+                <input id="fac-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadMedia(this,'facilities','facilities-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('fac-bulk-files').click()">Bulk Upload Images or Videos</button>
                 <button class="btn btn-p" onclick="openModal('facility')">+ Add Facility</button>
               </div>
             </div>
@@ -2420,8 +2420,8 @@
             <div class="sec-hdr">
               <div class="sec-title">School Houses</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <input id="house-bulk-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" multiple style="display:none" onchange="bulkUploadMedia(this,'houses','houses-mgr')" />
-                <button class="btn btn-g" onclick="document.getElementById('house-bulk-files').click()">Bulk Upload</button>
+                <input id="house-bulk-files" type="file" accept="image/*,video/*" multiple style="display:none" onchange="bulkUploadMedia(this,'houses','houses-mgr')" />
+                <button class="btn btn-g" onclick="document.getElementById('house-bulk-files').click()">Bulk Upload Images or Videos</button>
                 <button class="btn btn-p" onclick="openModal('house')">+ Add House</button>
               </div>
             </div>
@@ -2892,4 +2892,3 @@
     <script src="admin-dashboard.js"></script>
   </body>
 </html>
-

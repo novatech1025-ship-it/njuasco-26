@@ -3,6 +3,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+const AI_REQUEST_LIMIT = 30;
+const AI_RATE_WINDOW_MS = 60_000;
+const aiRequestCounts = new Map<string, { count: number; resetAt: number }>();
 
 const AI_SYSTEM_PROMPT =
   "You are NJB City AI, the official assistant for New Juaben Senior High School (NJUASCO) in Koforidua, Ghana. " +
@@ -24,6 +27,10 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
   }
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(ip)) {
+    return json({ error: "Too many requests. Please try again shortly." }, 429);
+  }
 
   const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) {
@@ -31,8 +38,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const message = String(body.currentMessage || body.message || "").trim();
+    const rawBody = await req.text();
+    if (rawBody.length > 20_000) {
+      return json({ error: "Request body is too large" }, 413);
+    }
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody || "{}");
+    } catch {
+      return json({ error: "Invalid request body" }, 400);
+    }
+    const message = String(body.currentMessage || body.message || "").trim().slice(0, 2000);
     const siteContext = String(body.siteContext || "").slice(0, 8000);
     const history = Array.isArray(body.history)
       ? body.history
@@ -97,4 +113,21 @@ function json(body: unknown, status = 200) {
       "Content-Type": "application/json; charset=utf-8",
     },
   });
+}
+
+function isRateLimited(ip: string) {
+  const now = Date.now();
+  if (aiRequestCounts.size > 5000) {
+    for (const [key, entry] of aiRequestCounts) {
+      if (entry.resetAt <= now) aiRequestCounts.delete(key);
+    }
+  }
+  if (aiRequestCounts.size > 5000 && !aiRequestCounts.has(ip)) return true;
+  const entry = aiRequestCounts.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    aiRequestCounts.set(ip, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > AI_REQUEST_LIMIT;
 }

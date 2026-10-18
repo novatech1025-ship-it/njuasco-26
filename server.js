@@ -12,12 +12,15 @@ loadEnvFile();
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const CHECKOUT_VERIFY_SECRET = process.env.CHECKOUT_VERIFY_SECRET || process.env.GROQ_API_KEY || "njuasco-dev-checkout-secret";
+const SITE_URL = process.env.SITE_URL;
+const CHECKOUT_VERIFY_SECRET = process.env.CHECKOUT_VERIFY_SECRET;
 const ARKESEL_API_KEY = process.env.ARKESEL_API_KEY;
 const ARKESEL_SENDER_ID = process.env.ARKESEL_SENDER_ID || "NJUASCO";
-const CHECKOUT_OTP_DEV_MODE = process.env.CHECKOUT_OTP_DEV_MODE === "true";
+const CHECKOUT_OTP_DEV_MODE =
+  process.env.NODE_ENV !== "production" && process.env.CHECKOUT_OTP_DEV_MODE === "true";
 
 const OTP_STORE = new Map();
+const REQUEST_LIMITS = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
 const VERIFY_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -40,12 +43,18 @@ const TYPES = {
   ".jpeg": "image/jpeg",
   ".ico": "image/x-icon",
   ".webp": "image/webp",
+  ".avif": "image/avif",
   ".svg": "image/svg+xml",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
 };
 const SECURITY_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "SAMEORIGIN",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-Permitted-Cross-Domain-Policies": "none",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(self)",
   "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
   "Content-Security-Policy":
@@ -55,7 +64,7 @@ const SECURITY_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com data:; " +
     "img-src 'self' data: blob: https:; " +
     "media-src 'self' data: blob: https:; " +
-    "connect-src 'self' https://gkzuzugokctccfadzqwf.supabase.co https://api.groq.com https://api.paystack.co https://sms.arkesel.com; " +
+    "connect-src 'self' https://gkzuzugokctccfadzqwf.supabase.co wss://gkzuzugokctccfadzqwf.supabase.co https://api.groq.com https://api.paystack.co https://sms.arkesel.com; " +
     "frame-src 'self' https://checkout.paystack.com https://*.paystack.com https://www.google.com https://maps.google.com; " +
     "object-src 'none'; base-uri 'self'; form-action 'self'",
 };
@@ -113,6 +122,27 @@ function sendApi(req, res, status, body, type = "application/json; charset=utf-8
   res.end(body);
 }
 
+function isRateLimited(key, limit, windowMs) {
+  const now = Date.now();
+  if (REQUEST_LIMITS.size > 5000) {
+    for (const [entryKey, entry] of REQUEST_LIMITS) {
+      if (entry.resetAt <= now) REQUEST_LIMITS.delete(entryKey);
+    }
+  }
+  if (REQUEST_LIMITS.size > 5000 && !REQUEST_LIMITS.has(key)) return true;
+  const entry = REQUEST_LIMITS.get(key);
+  if (!entry || entry.resetAt <= now) {
+    REQUEST_LIMITS.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > limit;
+}
+
+function requestIp(req) {
+  return req.socket.remoteAddress || "unknown";
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -137,15 +167,19 @@ async function handleAI(req, res) {
     sendApi(req, res, 405, JSON.stringify({ error: "Method not allowed" }));
     return;
   }
+  if (isRateLimited(`ai:${requestIp(req)}`, 30, 60_000)) {
+    sendApi(req, res, 429, JSON.stringify({ error: "Too many requests. Please try again shortly." }));
+    return;
+  }
 
   if (!GROQ_API_KEY) {
-      sendApi(req, res, 500, JSON.stringify({ error: "GROQ_API_KEY is not set" }));
+    sendApi(req, res, 500, JSON.stringify({ error: "GROQ_API_KEY is not set" }));
     return;
   }
 
   try {
     const body = JSON.parse(await readBody(req) || "{}");
-    const message = String(body.message || "").trim();
+    const message = String(body.message || "").trim().slice(0, 2000);
     const siteContext = String(body.siteContext || "").slice(0, 8000);
 
     if (!message) {
@@ -194,6 +228,27 @@ function requestOrigin(req) {
   return `${proto}://${host}`;
 }
 
+function checkoutSiteOrigin(value) {
+  try {
+    const candidate = new URL(String(value || ""));
+    if (candidate.username || candidate.password) return "";
+    const configuredOrigin = SITE_URL ? new URL(SITE_URL).origin : "";
+    if (configuredOrigin && candidate.origin === configuredOrigin) return candidate.origin;
+    const host = candidate.hostname.toLowerCase();
+    if (["localhost", "127.0.0.1"].includes(host) && candidate.protocol === "http:") {
+      return candidate.origin;
+    }
+    if (
+      ["njuasco.edu.gh", "www.njuasco.edu.gh"].includes(host) &&
+      candidate.protocol === "https:" &&
+      (!candidate.port || candidate.port === "443")
+    ) {
+      return candidate.origin;
+    }
+  } catch {}
+  return "";
+}
+
 function moneyToMinorUnits(amount) {
   const value = Number(amount);
   if (!Number.isFinite(value) || value <= 0) return 0;
@@ -211,6 +266,16 @@ function normalizeCheckoutPhone(value) {
 
 function hashCheckoutValue(value) {
   return crypto.createHmac("sha256", CHECKOUT_VERIFY_SECRET).update(value).digest("hex");
+}
+
+function hasStrongCheckoutSecret() {
+  return typeof CHECKOUT_VERIFY_SECRET === "string" && Buffer.byteLength(CHECKOUT_VERIFY_SECRET) >= 32;
+}
+
+function safeEqualText(left, right) {
+  const leftBuffer = Buffer.from(String(left));
+  const rightBuffer = Buffer.from(String(right));
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function signVerificationToken(payload) {
@@ -233,9 +298,10 @@ function verifyVerificationToken(token) {
     }
   }
   if (!token.includes(".")) return null;
+  if (token.indexOf(".") !== token.lastIndexOf(".")) return null;
   const [data, sig] = token.split(".");
   const expected = crypto.createHmac("sha256", CHECKOUT_VERIFY_SECRET).update(data).digest("base64url");
-  if (sig !== expected) return null;
+  if (!safeEqualText(sig, expected)) return null;
   try {
     const payload = JSON.parse(Buffer.from(data, "base64url").toString("utf8"));
     if (!payload?.exp || payload.exp < Date.now()) return null;
@@ -257,7 +323,6 @@ async function sendCheckoutSms(phone, message) {
       message,
       recipients: [to],
     };
-    console.log(`SMS: Sending to ${to} via Arkesel...`);
     const res = await fetch("https://sms.arkesel.com/api/v2/sms/send", {
       method: "POST",
       headers: {
@@ -268,20 +333,28 @@ async function sendCheckoutSms(phone, message) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data?.status !== "success") {
-      console.log(`SMS: Arkesel error ${res.status}: ${JSON.stringify(data)}`);
+      console.error(`SMS: Arkesel request failed with status ${res.status}`);
       return false;
     }
-    console.log("SMS: Sent successfully");
     return true;
   } catch (err) {
-    console.error("SMS: Fetch error:", err.message || err);
+    console.error("SMS: Request failed:", err.message || err);
     return false;
   }
 }
 
 async function handleCheckoutOtp(req, res) {
+  const reply = (status, body) => sendApi(req, res, status, body);
   if (req.method !== "POST") {
-    send(res, 405, JSON.stringify({ error: "Method not allowed" }));
+    reply(405, JSON.stringify({ error: "Method not allowed" }));
+    return;
+  }
+  if (!hasStrongCheckoutSecret()) {
+    reply(503, JSON.stringify({ error: "Checkout verification is not configured" }));
+    return;
+  }
+  if (isRateLimited(`checkout-otp:${requestIp(req)}`, 20, 10 * 60_000)) {
+    reply(429, JSON.stringify({ error: "Too many verification requests. Please try again later." }));
     return;
   }
 
@@ -290,18 +363,18 @@ async function handleCheckoutOtp(req, res) {
     const action = String(body.action || "send");
     const phone = normalizeCheckoutPhone(body.phone);
     if (phone.length < 9) {
-      send(res, 400, JSON.stringify({ error: "A valid mobile number is required" }));
+      reply(400, JSON.stringify({ error: "A valid mobile number is required" }));
       return;
     }
 
     if (action === "send") {
       const existing = OTP_STORE.get(phone);
       if (existing?.lastSent && Date.now() - existing.lastSent < 30000) {
-        send(res, 429, JSON.stringify({ error: "Please wait before requesting another code" }));
+        reply(429, JSON.stringify({ error: "Please wait before requesting another code" }));
         return;
       }
 
-      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const code = String(crypto.randomInt(100000, 1000000));
       OTP_STORE.set(phone, {
         hash: hashCheckoutValue(`otp:${phone}:${code}`),
         expires: Date.now() + OTP_TTL_MS,
@@ -319,7 +392,7 @@ async function handleCheckoutOtp(req, res) {
           !ARKESEL_API_KEY
             ? "Arkesel API key is missing. Set ARKESEL_API_KEY."
             : "Could not send SMS. Check your number and try again.";
-        send(res, 503, JSON.stringify({ error: senderIssue }));
+        reply(503, JSON.stringify({ error: senderIssue }));
         return;
       }
       const response = {
@@ -328,31 +401,31 @@ async function handleCheckoutOtp(req, res) {
         expiresIn: OTP_TTL_MS / 1000,
       };
       if (!smsSent && CHECKOUT_OTP_DEV_MODE) response.devCode = code;
-      send(res, 200, JSON.stringify(response));
+      reply(200, JSON.stringify(response));
       return;
     }
 
     if (action === "verify") {
       const code = String(body.code || "").trim();
       if (!/^\d{6}$/.test(code)) {
-        send(res, 400, JSON.stringify({ error: "Enter the 6-digit verification code" }));
+        reply(400, JSON.stringify({ error: "Enter the 6-digit verification code" }));
         return;
       }
 
       const challenge = OTP_STORE.get(phone);
       if (!challenge || challenge.expires < Date.now()) {
-        send(res, 400, JSON.stringify({ error: "Code expired. Request a new one." }));
+        reply(400, JSON.stringify({ error: "Code expired. Request a new one." }));
         return;
       }
       if (challenge.attempts >= OTP_MAX_ATTEMPTS) {
-        send(res, 429, JSON.stringify({ error: "Too many attempts. Request a new code." }));
+        reply(429, JSON.stringify({ error: "Too many attempts. Request a new code." }));
         return;
       }
 
-      if (challenge.hash !== hashCheckoutValue(`otp:${phone}:${code}`)) {
+      if (!safeEqualText(challenge.hash, hashCheckoutValue(`otp:${phone}:${code}`))) {
         challenge.attempts += 1;
         OTP_STORE.set(phone, challenge);
-        send(res, 400, JSON.stringify({ error: "Incorrect verification code" }));
+        reply(400, JSON.stringify({ error: "Incorrect verification code" }));
         return;
       }
 
@@ -363,19 +436,24 @@ async function handleCheckoutOtp(req, res) {
         customerId,
         exp: Date.now() + VERIFY_TOKEN_TTL_MS,
       });
-      send(res, 200, JSON.stringify({ ok: true, verificationToken, customerId, expiresIn: VERIFY_TOKEN_TTL_MS / 1000 }));
+      reply(200, JSON.stringify({ ok: true, verificationToken, customerId, expiresIn: VERIFY_TOKEN_TTL_MS / 1000 }));
       return;
     }
 
-    send(res, 400, JSON.stringify({ error: "Unknown action" }));
+    reply(400, JSON.stringify({ error: "Unknown action" }));
   } catch (error) {
-    send(res, 500, JSON.stringify({ error: error.message || "Verification failed" }));
+    console.error("Checkout OTP request failed:", error.message || error);
+    reply(500, JSON.stringify({ error: "Verification failed. Please try again." }));
   }
 }
 
 async function handlePaystackCheckout(req, res) {
   if (req.method !== "POST") {
     send(res, 405, JSON.stringify({ error: "Method not allowed" }));
+    return;
+  }
+  if (isRateLimited(`paystack:${requestIp(req)}`, 30, 60_000)) {
+    sendApi(req, res, 429, JSON.stringify({ error: "Too many checkout requests. Please try again shortly." }));
     return;
   }
 
@@ -391,13 +469,21 @@ async function handlePaystackCheckout(req, res) {
     const customerEmail = String(body.customerEmail || body.email || "").trim();
     const verificationToken = String(body.verificationToken || "");
     if (type !== "donation") {
+      if (!hasStrongCheckoutSecret()) {
+        send(res, 503, JSON.stringify({ error: "Checkout verification is not configured" }));
+        return;
+      }
       const verified = verifyVerificationToken(verificationToken);
       if (!verified) {
         send(res, 403, JSON.stringify({ error: "Phone verification is required before checkout" }));
         return;
       }
     }
-    const origin = String(body.origin || requestOrigin(req)).replace(/\/+$/, "");
+    const origin = checkoutSiteOrigin(body.origin || SITE_URL || requestOrigin(req));
+    if (!origin) {
+      sendApi(req, res, 400, JSON.stringify({ error: "A trusted checkout origin is required." }));
+      return;
+    }
     const encodedRef = encodeURIComponent(reference);
     const callbackPath =
       type === "donation"
@@ -497,7 +583,7 @@ function serveStatic(req, res) {
 
 function cacheControlFor(filePath) {
   const ext = path.extname(filePath).toLowerCase();
-  if ([".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".svg", ".woff", ".woff2"].includes(ext)) {
+  if ([".png", ".jpg", ".jpeg", ".webp", ".avif", ".gif", ".ico", ".svg", ".woff", ".woff2"].includes(ext)) {
     return "public, max-age=2592000, immutable";
   }
   if ([".css", ".js"].includes(ext)) return "public, max-age=3600, must-revalidate";

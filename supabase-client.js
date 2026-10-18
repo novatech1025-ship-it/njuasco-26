@@ -47,52 +47,21 @@
     };
   }
 
-  function rowToApp(row, documents = []) {
-    return {
-      id: row.id,
-      ref: row.ref,
-      name: row.name,
-      firstName: row.first_name,
-      lastName: row.last_name,
-      dob: row.dob,
-      gender: row.gender,
-      address: row.address,
-      phone: row.phone,
-      programme: row.programme,
-      status: row.status,
-      stage: row.stage,
-      date: row.created_at || row.updated_at,
-      aggregate: row.aggregate,
-      beceIndex: row.bece_index,
-      beceYear: row.bece_year,
-      school: row.previous_school,
-      guardianName: row.guardian_name,
-      guardianPhone: row.guardian_phone,
-      guardianEmail: row.guardian_email,
-      guardianRelation: row.guardian_relation,
-      guardianOccupation: row.guardian_occupation,
-      decisionNote: row.decision_note,
-      decisionDate: row.decision_date,
-      timeline: row.timeline || [],
-      documents,
-    };
-  }
-
   async function submitApplication(app) {
     const client = sdk();
     if (!client) return null;
 
-    const { data: row, error } = await client
+    const applicationId = crypto.randomUUID();
+    const { error } = await client
       .from("admission_applications")
-      .insert(appToRow(app))
-      .select("*")
-      .single();
+      .insert({ id: applicationId, ...appToRow(app) });
     if (error) throw error;
 
     const rows = [];
     for (const doc of app.documents || []) {
       if (!doc.data?.startsWith("data:")) continue;
-      const path = `${row.id}/${doc.type}-${Date.now()}-${doc.name}`;
+      const fileName = String(doc.name || "upload").replace(/[^\w.-]/g, "_").slice(0, 120);
+      const path = `${applicationId}/${doc.type}-${Date.now()}-${fileName}`;
       const { error: uploadError } = await client.storage
         .from(bucket)
         .upload(path, dataUrlToBlob(doc.data), {
@@ -116,25 +85,24 @@
       if (docError) throw docError;
     }
 
-    return rowToApp(row, rows.map((doc) => ({ ...doc, name: doc.file_name })));
+    return { ...app, id: applicationId };
   }
 
-  async function findApplicationByRef(ref) {
+  async function findApplicationByRef(ref, dob = "") {
     const client = sdk();
     if (!client) return null;
-    const { data: row, error } = await client
-      .from("admission_applications")
-      .select("*")
-      .eq("ref", ref)
-      .maybeSingle();
+    const { data, error } = await client.functions.invoke("admission-status", {
+      body: { ref, dob },
+    });
     if (error) throw error;
-    if (!row) return null;
-
-    const { data: docs } = await client
-      .from("admission_documents")
-      .select("*")
-      .eq("application_id", row.id);
-    return rowToApp(row, docs || []);
+    if (!data?.application) return null;
+    return {
+      ref: data.application.ref,
+      programme: data.application.programme,
+      status: data.application.status,
+      date: data.application.date,
+      documentCount: data.application.documentCount,
+    };
   }
 
   window.NJUASCO_SUPABASE_CLIENT = {
@@ -143,4 +111,3 @@
     findApplicationByRef,
   };
 })();
-

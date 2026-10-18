@@ -243,7 +243,7 @@
             news: "News Post",
             team: "Team Member",
             department: "Department",
-            gallery: "Gallery Photo",
+            gallery: "Gallery Media",
             doc: "Document",
             slide: "Homepage Slide",
             facility: "Facility",
@@ -267,6 +267,7 @@
         bindColorPickers(body);
       }
       function cmodal() {
+        clearMediaPreview();
         document.getElementById("modal-ov").classList.remove("open");
         _editId = null;
         _editKey = null;
@@ -282,7 +283,8 @@
       <label class="flbl">${label}</label>
       <div class="media-preview" id="mf-preview"></div>
       <input class="finp" id="mf-file" type="file" accept="image/*,video/*">
-      <input class="finp" id="mf-image" value="${v("image", def)}" placeholder="Optional emoji or image URL">
+      <small style="color:var(--g500)">Upload MP4, WebM, or OGG video (50 MB max), or use an image.</small>
+      <input class="finp" id="mf-image" value="${v("image", def)}" placeholder="Optional emoji, image URL, or direct video URL">
     </div>`;
         if (type === "news")
           return `<div style="display:flex;flex-direction:column;gap:14px">
@@ -292,7 +294,7 @@
     <div class="fg"><label class="flbl">Date Label</label><input class="finp" id="mf-date-label" value="${v("dateLabel")}" placeholder="Leave blank to show the date"></div>
     <div class="fg"><label class="flbl">Excerpt (short summary)</label><input class="finp" id="mf-excerpt" value="${v("excerpt")}" placeholder="Short description for cards"></div>
     <div class="fg"><label class="flbl">Full Content</label><textarea class="finp fta" id="mf-content" placeholder="Full article content…">${v("content")}</textarea></div>
-    ${mediaField("Image Upload / Icon", '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>')}
+    ${mediaField("Image or Video Upload", '<span class="ico ico-news" data-ico="news" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">Status</label><select class="finp" id="mf-status"><option value="published" ${d?.status === "published" ? "selected" : ""}>Published</option><option value="draft" ${d?.status === "draft" ? "selected" : ""}>Draft</option></select></div>
   </div>`;
         if (type === "team")
@@ -303,7 +305,7 @@
     <div class="fg"><label class="flbl">Email</label><input class="finp" id="mf-email" type="email" value="${v("email")}" placeholder="staff@njuasco.edu.gh"></div>
     <div class="fg"><label class="flbl">Display Order</label><input class="finp" id="mf-order" type="number" min="1" value="${v("order", "1")}" placeholder="1 = first to display" title="Set 1 for Headmistress, 2 for Deputy, etc."></div>
     <div class="fg"><label class="flbl">Bio</label><textarea class="finp fta" id="mf-bio" placeholder="Brief biography…">${v("bio")}</textarea></div>
-    ${mediaField("Photo Upload / Icon", '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>')}
+    ${mediaField("Photo or Video Upload", '<span class="ico ico-user" data-ico="user" aria-hidden="true"></span>')}
   </div>`;
         if (type === "department")
           return `<div style="display:flex;flex-direction:column;gap:14px">
@@ -313,7 +315,7 @@
     <div class="fg"><label class="flbl">H.O.D</label><input class="finp" id="mf-hods" value="${esc((d?.hods || []).join(", "))}" placeholder="Mr. Kwame Boateng, Mrs. Adwoa Mensah"></div>
     <div class="fg"><label class="flbl">Assistant H.O.D</label><input class="finp" id="mf-assistant-hods" value="${esc((d?.assistantHods || []).join(", "))}" placeholder="Mr. Kofi Boateng, Miss. Amina Yeboah"></div>
     <div class="fg"><label class="flbl">Department Members</label><textarea class="finp fta" id="mf-members" placeholder="Add one member per line or comma separated">${esc((d?.members || []).join("\n"))}</textarea></div>
-    ${mediaField("Icon / Image", '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
+    ${mediaField("Icon, Image, or Video Upload", '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}
     ${colorPickerField("mf-color", d?.color || "linear-gradient(135deg,#2563eb,#4f46e5)", { mode: "gradient", label: "Department Colour" })}
     <div class="fg"><label class="flbl">Display Order</label><input class="finp" id="mf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
   </div>`;
@@ -321,7 +323,7 @@
           return `<div style="display:flex;flex-direction:column;gap:14px">
     <div class="fg"><label class="flbl">Title</label><input class="finp" id="mf-title" value="${v("title")}" placeholder="Photo title"></div>
     <div class="fg"><label class="flbl">Category</label><select class="finp" id="mf-cat"><option value="events" ${d?.category === "events" ? "selected" : ""}>Events</option><option value="facilities" ${d?.category === "facilities" ? "selected" : ""}>Facilities</option><option value="activities" ${d?.category === "activities" ? "selected" : ""}>Activities</option><option value="achievements" ${d?.category === "achievements" ? "selected" : ""}>Achievements</option><option value="campus" ${d?.category === "campus" ? "selected" : ""}>Campus</option><option value="njosa" ${d?.category === "njosa" ? "selected" : ""}>NJOSA Alumni</option></select></div>
-    ${mediaField("Image Upload / Icon", '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>')}
+    ${mediaField("Image or Video Upload", '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">Description</label><input class="finp" id="mf-desc" value="${v("description")}" placeholder="Brief description"></div>
     ${colorPickerField("mf-color", d?.color || "linear-gradient(135deg,#1e40af,#4f46e5)", { mode: "gradient", label: "Background Colour" })}
   </div>`;
@@ -338,7 +340,7 @@
         if (type === "slide")
           return `<div style="display:flex;flex-direction:column;gap:14px">
     <div class="fg"><label class="flbl">Slide Title</label><input class="finp" id="mf-title" value="${v("title")}" placeholder="e.g. Campus Front View"></div>
-    ${mediaField("Slide Image Upload", "njb.png")}
+    ${mediaField("Slide Image or Video Upload", "njb.png")}
     <div class="fg"><label class="flbl">Overlay Text (Optional)</label><input class="finp" id="mf-overlay-text" value="${v("overlayText", "")}" placeholder="Text to display over image"></div>
     <div class="fg" style="display:flex;gap:8px;align-items:center"><label class="flbl" style="margin:0;flex:1">Show Text Overlay</label><input type="checkbox" id="mf-show-text" ${v("showText") ? "checked" : ""} style="width:18px;height:18px;cursor:pointer"></div>
     <div class="fg"><label class="flbl">Order</label><input class="finp" id="mf-order" type="number" value="${v("order", "1")}" placeholder="1"></div>
@@ -349,7 +351,7 @@
     <div class="fg"><label class="flbl">Facility Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="e.g. Science Laboratory"></div>
     <div class="fg"><label class="flbl">Category</label><select class="finp" id="mf-cat"><option value="library">Library</option><option value="laboratory">Laboratory</option><option value="sports">Sports</option><option value="classroom">Classroom</option><option value="cafeteria">Cafeteria</option><option value="other">Other</option></select></div>
     <div class="fg"><label class="flbl">Description</label><textarea class="finp fta" id="mf-desc" placeholder="Full description…">${v("description")}</textarea></div>
-    ${mediaField("Image Upload / Icon", '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>')}
+    ${mediaField("Image or Video Upload", '<span class="ico ico-landmark" data-ico="landmark" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">Features (comma-separated)</label><input class="finp" id="mf-features" value="${esc((d?.features || []).join(", "))}" placeholder="Feature 1, Feature 2, Feature 3"></div>
   </div>`;
         if (type === "house")
@@ -357,12 +359,12 @@
     <div class="fg"><label class="flbl">House Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="e.g. Red House"></div>
     <div class="fg"><label class="flbl">Gender</label><select class="finp" id="mf-gender"><option ${d?.gender === "Boys" ? "selected" : ""}>Boys</option><option ${d?.gender === "Girls" ? "selected" : ""}>Girls</option><option ${d?.gender === "Mixed" ? "selected" : ""}>Mixed</option></select></div>
     ${colorPickerField("mf-color", d?.color || "#ef4444", { label: "House Colour" })}
-    ${mediaField("House Cover Image", '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>')}
+    ${mediaField("House Cover Image or Video", '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">House Master</label><input class="finp" id="mf-master" value="${v("master")}" placeholder="Mr./Mrs. Name"></div>
     <div class="fg"><label class="flbl">Assistant House Master</label><input class="finp" id="mf-assistantMaster" value="${v("assistantMaster")}" placeholder="Mr./Mrs. Name"></div>
     <div class="fg"><label class="flbl">Motto</label><input class="finp" id="mf-motto" value="${v("motto")}" placeholder="House motto"></div>
     <div class="fg"><label class="flbl">House Story</label><textarea class="finp fta" id="mf-story" placeholder="History, story, and important details">${v("story")}</textarea></div>
-    <div class="fg"><label class="flbl">Add House Gallery Images</label><input class="finp" id="mf-gallery-files" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/*" multiple></div>
+    <div class="fg"><label class="flbl">Add House Gallery Images or Videos</label><input class="finp" id="mf-gallery-files" type="file" accept="image/*,video/*" multiple></div>
     <div class="fg"><label class="flbl">Achievements</label><textarea class="finp fta" id="mf-achievements" placeholder="List achievements…">${v("achievements")}</textarea></div>
   </div>`;
         if (type === "club")
@@ -371,7 +373,7 @@
     <div class="fg"><label class="flbl">Category</label><select class="finp" id="mf-cat"><option value="STEM" ${d?.category === "STEM" ? "selected" : ""}>STEM</option><option value="Arts" ${d?.category === "Arts" ? "selected" : ""}>Arts</option><option value="Academic" ${d?.category === "Academic" ? "selected" : ""}>Academic</option><option value="Social" ${d?.category === "Social" ? "selected" : ""}>Social</option><option value="Sports" ${d?.category === "Sports" ? "selected" : ""}>Sports</option></select></div>
     <div class="fg"><label class="flbl">Coordinator</label><input class="finp" id="mf-coordinator" value="${v("coordinator")}" placeholder="Teacher name"></div>
     <div class="fg"><label class="flbl">Meeting Days</label><input class="finp" id="mf-meetingDays" value="${v("meetingDays")}" placeholder="e.g. Thursdays, 3:00 PM"></div>
-    ${mediaField("Image Upload / Icon", '<span class="ico ico-masks" data-ico="masks" aria-hidden="true"></span>')}
+    ${mediaField("Image or Video Upload", '<span class="ico ico-masks" data-ico="masks" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">Description</label><textarea class="finp fta" id="mf-description" placeholder="Club description…">${v("description")}</textarea></div>
     <div class="fg"><label class="flbl">Achievements</label><input class="finp" id="mf-achievements" value="${v("achievements")}" placeholder="e.g. National champions 2024"></div>
   </div>`;
@@ -407,7 +409,7 @@
     <div class="fg"><label class="flbl">Product Name</label><input class="finp" id="mf-name" value="${v("name")}" placeholder="e.g. NJUASCO Polo Shirt"></div>
     <div class="fg"><label class="flbl">Price (GHS)</label><input class="finp" id="mf-price" type="number" value="${v("price")}" placeholder="Price in GHS"></div>
     <div class="fg"><label class="flbl">Category</label><select class="finp" id="mf-cat"><option ${d?.category === "Clothing" ? "selected" : ""}>Clothing</option><option ${d?.category === "Accessories" ? "selected" : ""}>Accessories</option><option ${d?.category === "Stationery" ? "selected" : ""}>Stationery</option><option ${d?.category === "Other" ? "selected" : ""}>Other</option></select></div>
-    ${mediaField("Image Upload / Icon", '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span>')}
+    ${mediaField("Product Image or Video Upload", '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span>')}
     <div class="fg"><label class="flbl">Description</label><textarea class="finp fta" id="mf-description" placeholder="Product description…">${v("description")}</textarea></div>
     <div class="fg"><label class="flbl">Stock Status</label><select class="finp" id="mf-stock"><option value="true" ${d?.stock ? "selected" : ""}>In Stock</option><option value="false" ${!d || !d.stock ? "selected" : ""}>Out of Stock</option></select></div>
   </div>`;
@@ -483,6 +485,15 @@
       }
 
       async function saveModal(type) {
+        try {
+          await saveModalData(type);
+        } catch (error) {
+          console.error("Unable to save admin media/content", error);
+          toast(`Upload failed: ${error.message || "Unable to save this item."}`);
+        }
+      }
+
+      async function saveModalData(type) {
         const id = _editId;
         let data = {};
         if (type === "news") {
@@ -2900,8 +2911,3 @@
         const iconObserver = new MutationObserver(() => hydrateIcons(document));
         iconObserver.observe(document.body, { childList: true, subtree: true });
       });
-
-
-
-
-

@@ -627,16 +627,21 @@
               Track Your Application
             </h2>
             <p style="color: var(--g500); margin-bottom: 28px; font-size: 14px">
-              Enter your application reference number to view your current
-              status.
+              Enter your application reference number to view your current status.
+              Older references also need the applicant's date of birth.
             </p>
             <div class="fg" style="text-align: left">
               <label class="flbl">Reference Number</label
               ><input
                 class="finp"
                 id="stref"
-                placeholder="e.g. NJ-2025-001234"
+                placeholder="e.g. NJ-2026-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                oninput="updateLegacyAdmissionStatusFields(this.value)"
               />
+            </div>
+            <div class="fg" id="legacy-status-dob-wrap" style="display:none;text-align:left">
+              <label class="flbl" for="legacy-status-dob">Applicant date of birth (older references only)</label>
+              <input class="finp" id="legacy-status-dob" type="date" autocomplete="bday">
             </div>
             <button class="btn btn-p btn-full" onclick="chkstatus()">
               Check Status →
@@ -760,5 +765,3 @@
     <script src="page-common.js"></script>
   </body>
 </html>
-
-

@@ -51,17 +51,23 @@ function hydrateIcons(root = document) {
 }
 
 function isImageAsset(src) {
-  return /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|gif|svg)(\?.*)?$)/i.test(
+  if (isVideoAsset(src)) return false;
+  return /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|avif|gif|svg)(\?.*)?$)/i.test(
     String(src || ""),
   );
 }
 function isVideoAsset(src) {
-  return /^(data:video\/|https?:\/\/|\.?\/|[\w .-]+\.(mp4|webm|ogg|mov)(\?.*)?$)/i.test(String(src || ""));
+  const value = String(src || "").trim();
+  return /^data:video\//i.test(value) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(value);
+}
+
+function isVideoFile(file) {
+  return file?.type?.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file?.name || "");
 }
 
 function mediaMarkup(src, cls = "") {
-  if (isImageAsset(src)) return `<img class="media-img ${cls}" src="${adminEsc(src)}" alt="">`;
-  if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${adminEsc(src)}" controls playsinline preload="metadata"></video>`;
+  if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${adminEsc(src)}" controls playsinline preload="none"></video>`;
+  if (isImageAsset(src)) return `<img class="media-img ${cls}" src="${adminEsc(src)}" alt="" loading="lazy" decoding="async">`;
   return src || "";
 }
 
@@ -99,8 +105,18 @@ async function prepareImageFile(file, maxDim = 1920, quality = 0.85) {
 
 async function uploadImageAsset(file, folder = "media") {
   if (!file) return "";
+  if (isVideoFile(file) && file.size > 50 * 1024 * 1024) {
+    throw new Error("Videos must be 50 MB or smaller.");
+  }
   const prepared = await prepareImageFile(file);
-  return (await DB.uploadSiteAsset?.(prepared, folder)) || (await fileToDataURL(prepared));
+  const uploaded = await DB.uploadSiteAsset?.(prepared, folder);
+  if (isVideoFile(file)) {
+    if (!uploaded) {
+      throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
+    }
+    return uploaded;
+  }
+  return uploaded || (await fileToDataURL(prepared));
 }
 
 async function docFileValue() {
@@ -127,11 +143,25 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
   const files = Array.from(input?.files || []);
   if (!files.length) return;
   for (const [index, file] of files.entries()) {
-    const src = (await uploadImageAsset(file, key)) || (await fileToDataURL(file));
+    let src;
+    try {
+      src = await uploadImageAsset(file, key);
+    } catch (error) {
+      if (index) {
+        input.value = "";
+        if (typeof flushRemoteSync === "function") await flushRemoteSync();
+        loadPage(reload);
+        toast(`Uploaded ${index} of ${files.length} items before the next upload failed: ${error.message}`);
+      } else {
+        toast(`Upload failed: ${error.message || "Unable to upload selected media."}`);
+      }
+      return;
+    }
     const base = {
       title: fileTitle(file),
       name: fileTitle(file),
       image: src,
+      mediaType: isVideoFile(file) ? "video" : "image",
       file: src,
       description: "",
       category: extra.category || (key === "documents" ? "General" : "campus"),
@@ -211,18 +241,36 @@ function bindMediaPreview(value = "") {
   const preview = document.getElementById("mf-preview");
   const input = document.getElementById("mf-image");
   const file = document.getElementById("mf-file");
+  clearMediaPreview();
   const paint = (src) => {
     if (!preview) return;
     preview.innerHTML = src ? mediaMarkup(src) : "<span>No image selected</span>";
     hydrateIcons(preview);
   };
   paint(value);
-  input?.addEventListener("input", () => paint(input.value.trim()));
+  input?.addEventListener("input", () => {
+    clearMediaPreview();
+    paint(input.value.trim());
+  });
   file?.addEventListener("change", async () => {
     const f = file.files?.[0];
     if (!f) return;
+    if (isVideoFile(f)) {
+      clearMediaPreview();
+      const url = URL.createObjectURL(f);
+      window.__adminMediaPreviewUrl = url;
+      preview.innerHTML = `<video class="media-video" src="${adminEsc(url)}" controls playsinline preload="metadata"></video>`;
+      return;
+    }
     paint(await fileToDataURL(await prepareImageFile(f)));
   });
+}
+
+function clearMediaPreview() {
+  if (window.__adminMediaPreviewUrl) {
+    URL.revokeObjectURL(window.__adminMediaPreviewUrl);
+    delete window.__adminMediaPreviewUrl;
+  }
 }
 
 const SOLID_COLOR_PRESETS = [
@@ -328,4 +376,3 @@ window.selectAll = selectAll;
 window.bulkArrange = bulkArrange;
 window.colorPickerField = colorPickerField;
 window.bindColorPickers = bindColorPickers;
-

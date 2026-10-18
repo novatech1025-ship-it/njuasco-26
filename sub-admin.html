@@ -1852,8 +1852,11 @@
       function mediaMarkup(src) {
         const val = String(src || "").trim();
         if (!val) return "";
-        if (/^(data:image\/|https?:\/\/|\.?\/|[\w\s-]+\.(png|jpe?g|gif|webp|svg))/i.test(val)) {
-          return `<img src="${esc(val)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+        if (/^data:video\//i.test(val) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(val)) {
+          return `<video src="${esc(val)}" controls playsinline preload="none" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block"></video>`;
+        }
+        if (/^(data:image\/|https?:\/\/|\.?\/|[\w\s-]+\.(png|jpe?g|gif|webp|avif|svg))/i.test(val)) {
+          return `<img src="${esc(val)}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`;
         }
         return val;
       }
@@ -1871,7 +1874,7 @@
         return `<div>
     <label style="display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Image or Video Upload</label>
     <input class="finp" id="smf-file" type="file" accept="image/*,video/*" style="margin-bottom:8px">
-    <input class="finp" id="smf-image" value="${esc(current || fallback || "")}" placeholder="Paste an image URL, file path, or icon">
+    <input class="finp" id="smf-image" value="${esc(current || fallback || "")}" placeholder="Paste an image or direct video URL, file path, or icon">
   </div>`;
       }
 
@@ -1900,8 +1903,16 @@
 
       async function saUploadImageAsset(file, folder = "media") {
         if (!file) return "";
+        const isVideo = file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+        if (isVideo && file.size > 50 * 1024 * 1024) {
+          throw new Error("Videos must be 50 MB or smaller.");
+        }
         const prepared = await saPrepareImageFile(file);
-        return (await DB.uploadSiteAsset?.(prepared, folder)) || (await fileToDataURL(prepared));
+        const uploaded = await DB.uploadSiteAsset?.(prepared, folder);
+        if (isVideo && !uploaded) {
+          throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
+        }
+        return uploaded || (await fileToDataURL(prepared));
       }
 
       async function saMediaValue(fallback = "", folder = "media") {
@@ -2211,10 +2222,22 @@
         const files = Array.from(input?.files || []);
         if (!files.length) return;
         for (const [index, file] of files.entries()) {
-          const src =
-            key === "houses" || key === "gallery" || key === "facilities" || key === "homepageSlides"
-              ? await saUploadImageAsset(file, key === "homepageSlides" ? "homepageSlides" : key)
-              : await fileToDataURL(file);
+          let src;
+          try {
+            src =
+              key === "houses" || key === "gallery" || key === "facilities" || key === "homepageSlides"
+                ? await saUploadImageAsset(file, key === "homepageSlides" ? "homepageSlides" : key)
+                : await fileToDataURL(file);
+          } catch (error) {
+            if (index) {
+              input.value = "";
+              loadSaPage(page);
+              await saSyncAfterChange(`${index} item${index === 1 ? "" : "s"} uploaded; next upload failed: ${error.message || "Unable to upload selected media."}`);
+            } else {
+              saToast(`Upload failed: ${error.message || "Unable to upload selected media."}`);
+            }
+            return;
+          }
           const title = saFileTitle(file);
           const order = Date.now() + index;
           if (key === "documents") {
@@ -3525,6 +3548,15 @@
         return el ? el.value.trim() : "";
       }
       async function saveSaModal() {
+        try {
+          await saveSaModalData();
+        } catch (error) {
+          console.error("Unable to save sub-admin media/content", error);
+          saToast(`Upload failed: ${error.message || "Unable to save this item."}`);
+        }
+      }
+
+      async function saveSaModalData() {
         const type = SA_MODAL_TYPE;
         const id = SA_MODAL_ID;
         let data = {};
@@ -3905,5 +3937,3 @@
     </script>
   </body>
 </html>
-
-

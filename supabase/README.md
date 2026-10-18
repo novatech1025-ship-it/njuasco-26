@@ -18,6 +18,20 @@ The migration creates:
 - `admission_notifications`
 - private storage bucket `admission-documents`
 - RLS policies for public submission and authenticated admin management
+- public `site-assets` storage for photos and MP4, WebM, OGG, and QuickTime videos (50 MB max)
+- an allowlist for public `site_content` rows; student, application, order, message, and admin collections remain staff-only
+- removal of direct public reads for application and admission-document rows
+
+Video upload support is enabled by the `20261018120000_allow_site_asset_videos.sql` migration. Apply it with `supabase db push`, or run the updated `supabase/run-this-in-sql-editor.sql` in the SQL Editor.
+The `20261018133000_protect_public_user_data.sql` migration removes broad public reads of private content and admission data. The public status page now uses the `admission-status` Edge Function, which returns only the reference, programme, current status, submission date, and document count. New references use cryptographically random UUIDs; older six-digit references also require the applicant's date of birth. Deploy the function and apply this migration together so status lookup continues to work without exposing applicant details.
+
+Deploy the public status endpoint manually with:
+
+```bash
+supabase functions deploy admission-status --project-ref gkzuzugokctccfadzqwf
+```
+
+The GitHub Actions deployment workflow also deploys this function when its source or workflow changes. Database migrations still need to be applied separately with `supabase db push` or the SQL Editor script.
 
 ## Browser client
 
@@ -28,7 +42,7 @@ The static site now includes `supabase-client.js`. It uses the public config in 
 
 If the SDK is unavailable, the forms continue to work through the existing localStorage fallback.
 
-Copy `.env.example` to your Supabase secrets/local environment and replace the placeholder values before deploying functions.
+Copy `.env.example` to your Supabase secrets/local environment and replace the placeholder values before deploying functions. The local Node checkout OTP endpoint requires a unique `CHECKOUT_VERIFY_SECRET` of at least 32 bytes; it no longer falls back to a built-in or unrelated API secret. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 ## Run this SQL in Supabase
 
@@ -92,7 +106,7 @@ If you need a different sender ID, set `ARKESEL_SENDER_ID` to the approved value
 
 ## Deploy Paystack payments
 
-The donation page and shop checkout first try the local Node server endpoint, then fall back to the hosted `paystack-checkout` Supabase Edge Function. Set your Paystack secret key and live site URL, then deploy:
+The donation page and shop checkout first try the local Node server endpoint, then fall back to the hosted `paystack-checkout` Supabase Edge Function. Set your Paystack secret key and exact HTTPS live site URL; the hosted checkout rejects callback origins that do not match `SITE_URL`. Shop transactions must also pass the signed phone-verification token issued by `checkout-otp`. Then deploy:
 
 ```bash
 supabase secrets set PAYSTACK_SECRET_KEY=sk_test_or_live_... SITE_URL=https://your-live-njuasco-site.example
@@ -134,6 +148,8 @@ For Authentication > Providers > Phone, configure your provider as needed in Sup
 
 The website chat tries the local `/api/ai` proxy first, then the hosted Supabase Edge Function. GitHub Pages cannot run `server.js`, so deploy this function before publishing the site on GitHub.
 
+The Node server adds response security headers, WebSocket support for Supabase Realtime, and in-process API rate limits. GitHub Pages does not apply these Node response headers, so keep Supabase RLS and the admission-status function deployed for production privacy.
+
 ### Option A — GitHub Actions (recommended for live site)
 
 1. Create a Supabase access token: [Supabase Account → Access Tokens](https://supabase.com/dashboard/account/tokens)
@@ -163,4 +179,3 @@ npm run start:3000
 ```
 
 Keep VS Code Live Server on `http://127.0.0.1:5500` if you like; the browser chat will fall through to the AI proxy at `http://127.0.0.1:3000/api/ai`. If you want Node to serve the whole site instead, stop Live Server and run `npm run start:5500`.
-

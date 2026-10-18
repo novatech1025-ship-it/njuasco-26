@@ -17,6 +17,8 @@ const corsHeaders = {
 const OTP_TTL_MS = 5 * 60 * 1000;
 const VERIFY_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 export default {
   async fetch(req: Request) {
@@ -26,11 +28,17 @@ export default {
     if (req.method !== "POST") {
       return json({ error: "Method not allowed" }, 405);
     }
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(`ip:${ip}`, 20, RATE_LIMIT_WINDOW_MS)) {
+      return json({ error: "Too many verification requests. Please try again later." }, 429);
+    }
 
     const secret = Deno.env.get("CHECKOUT_VERIFY_SECRET");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    if (!secret || !serviceKey || !supabaseUrl) {
+    const devMode =
+      Deno.env.get("CHECKOUT_OTP_DEV_MODE") === "true" && isLocalSupabaseUrl(supabaseUrl || "");
+    if (!secret || new TextEncoder().encode(secret).length < 32 || !serviceKey || !supabaseUrl) {
       return json({ error: "Checkout verification is not configured" }, 500);
     }
 
@@ -46,7 +54,10 @@ export default {
       const phoneHash = await sha256(`${secret}:phone:${phone}`);
 
       if (action === "send") {
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        if (isRateLimited(`send:${phoneHash}`, 1, 30_000)) {
+          return json({ error: "Please wait before requesting another code." }, 429);
+        }
+        const code = randomOtp();
         const codeHash = await sha256(`${secret}:otp:${phone}:${code}`);
         const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
@@ -60,7 +71,7 @@ export default {
         if (error) throw new Error(error.message);
 
         const smsSent = await sendSms(phone, `Your NJUASCO shop verification code is ${code}. It expires in 5 minutes.`);
-        if (!smsSent && Deno.env.get("CHECKOUT_OTP_DEV_MODE") !== "true") {
+        if (!smsSent && !devMode) {
           await supabase.from("checkout_otp_challenges").delete().eq("phone_hash", phoneHash);
           const senderIssue =
             !Deno.env.get("ARKESEL_API_KEY")
@@ -74,7 +85,7 @@ export default {
           message: smsSent ? "Verification code sent." : "Verification code prepared.",
           expiresIn: OTP_TTL_MS / 1000,
         };
-        if (!smsSent && Deno.env.get("CHECKOUT_OTP_DEV_MODE") === "true") {
+        if (!smsSent && devMode) {
           response.devCode = code;
         }
         return json(response);
@@ -102,7 +113,7 @@ export default {
         }
 
         const codeHash = await sha256(`${secret}:otp:${phone}:${code}`);
-        if (codeHash !== row.code_hash) {
+        if (!constantTimeEqual(codeHash, row.code_hash)) {
           await supabase
             .from("checkout_otp_challenges")
             .update({ attempts: (row.attempts || 0) + 1 })
@@ -121,7 +132,8 @@ export default {
 
       return json({ error: "Unknown action" }, 400);
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : "Verification failed" }, 500);
+      console.error("Checkout OTP request failed:", error);
+      return json({ error: "Verification failed. Please try again." }, 500);
     }
   },
 };
@@ -152,7 +164,7 @@ async function sendSms(phone: string, body: string) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data?.status !== "success") {
-      console.error("Arkesel SMS failed:", res.status, JSON.stringify(data));
+      console.error("Arkesel SMS failed with status:", res.status);
       return false;
     }
 
@@ -179,10 +191,56 @@ function normalizePhone(value: string) {
   return digits;
 }
 
+function isLocalSupabaseUrl(value: string) {
+  try {
+    return ["localhost", "127.0.0.1", "kong"].includes(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function sha256(value: string) {
   const data = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function randomOtp() {
+  const range = 900_000;
+  const ceiling = 0x1_0000_0000 - (0x1_0000_0000 % range);
+  const buffer = new Uint32Array(1);
+  do {
+    crypto.getRandomValues(buffer);
+  } while (buffer[0] >= ceiling);
+  return String(100_000 + (buffer[0] % range));
+}
+
+function constantTimeEqual(left: string, right: string) {
+  const leftBytes = new TextEncoder().encode(left);
+  const rightBytes = new TextEncoder().encode(right);
+  let difference = leftBytes.length ^ rightBytes.length;
+  const length = Math.max(leftBytes.length, rightBytes.length);
+  for (let index = 0; index < length; index += 1) {
+    difference |= (leftBytes[index] || 0) ^ (rightBytes[index] || 0);
+  }
+  return difference === 0;
+}
+
+function isRateLimited(key: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  if (requestCounts.size > 5000) {
+    for (const [entryKey, entry] of requestCounts) {
+      if (entry.resetAt <= now) requestCounts.delete(entryKey);
+    }
+  }
+  if (requestCounts.size > 5000 && !requestCounts.has(key)) return true;
+  const entry = requestCounts.get(key);
+  if (!entry || entry.resetAt <= now) {
+    requestCounts.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > limit;
 }
 
 async function signToken(payload: Record<string, unknown>, secret: string) {

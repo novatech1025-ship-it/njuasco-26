@@ -124,13 +124,15 @@ function hydrateIcons(root = document) {
 }
 
 function isImageAsset(src) {
-  return /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|gif|svg)(\?.*)?$)/i.test(
+  if (isVideoAsset(src)) return false;
+  return /^(data:image\/|https?:\/\/|\.?\/|[\w .-]+\.(png|jpe?g|webp|avif|gif|svg)(\?.*)?$)/i.test(
     String(src || ""),
   );
 }
 
 function isVideoAsset(src) {
-  return /^(data:video\/|https?:\/\/|\.?\/|[\w .-]+\.(mp4|webm|ogg|mov)(\?.*)?$)/i.test(String(src || ""));
+  const value = String(src || "").trim();
+  return /^data:video\//i.test(value) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(value);
 }
 
 function addLogoFallback(image) {
@@ -144,11 +146,12 @@ function addLogoFallback(image) {
 }
 
 function mediaMarkup(src, cls = "") {
-  if (isImageAsset(src)) {
-    return `<img class="media-img ${cls}" src="${esc(src)}" alt="">`;
-  }
+  const priority = cls.split(/\s+/).includes("home-slide-priority");
   if (isVideoAsset(src)) {
-    return `<video class="media-video ${cls}" src="${esc(src)}" controls playsinline preload="metadata"></video>`;
+    return `<video class="media-video ${cls}" src="${esc(src)}" controls playsinline preload="${priority ? "metadata" : "none"}" onclick="event.stopPropagation()"></video>`;
+  }
+  if (isImageAsset(src)) {
+    return `<img class="media-img ${cls}" src="${esc(src)}" alt="" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
   }
   return src || "";
 }
@@ -669,7 +672,7 @@ dosearch("");
 function olb(emoji, title, desc) {
   const img = document.getElementById("lbimg");
   img.innerHTML = mediaMarkup(emoji);
-  if (!isImageAsset(emoji)) img.textContent = emoji;
+  if (!isImageAsset(emoji) && !isVideoAsset(emoji)) img.textContent = emoji;
   document.getElementById("lbtit").textContent = title;
   document.getElementById("lbdesc").textContent = desc || "";
   document.getElementById("lb").classList.add("open");
@@ -999,11 +1002,7 @@ async function subapp() {
     toast(err.message || "Please upload the required files");
     return;
   }
-  const ref =
-    "NJ-" +
-    new Date().getFullYear() +
-    "-" +
-    Math.floor(Math.random() * 900000 + 100000);
+  const ref = `NJ-${new Date().getFullYear()}-${crypto.randomUUID().toUpperCase()}`;
   const application = {
     ref,
     name: fname + " " + (document.getElementById("af-lname")?.value || ""),
@@ -1052,17 +1051,37 @@ async function subapp() {
 }
 
 // ── ADMISSION STATUS ───────────────────────────────────────────
+function isLegacyAdmissionRef(ref) {
+  return /^NJ-\d{4}-\d{6}$/i.test(String(ref || "").trim());
+}
+
+function updateLegacyAdmissionStatusFields(ref) {
+  const legacy = isLegacyAdmissionRef(ref);
+  const field = document.getElementById("legacy-status-dob-wrap");
+  if (field) field.style.display = legacy ? "block" : "none";
+  if (!legacy) {
+    const dob = document.getElementById("legacy-status-dob");
+    if (dob) dob.value = "";
+  }
+}
+
 async function chkstatus() {
   const refEl = document.getElementById("stref");
   const ref = refEl?.value.trim();
   const res = document.getElementById("stres");
+  updateLegacyAdmissionStatusFields(ref);
   if (!ref) {
     toast("Please enter your reference number");
     return;
   }
+  const dob = document.getElementById("legacy-status-dob")?.value || "";
+  if (isLegacyAdmissionRef(ref) && !dob) {
+    toast("For older reference numbers, enter the applicant's date of birth");
+    return;
+  }
   let app = DB.getAll("applications").find((a) => a.ref === ref);
   try {
-    const remoteApp = await window.NJUASCO_SUPABASE_CLIENT?.findApplicationByRef(ref);
+    const remoteApp = await window.NJUASCO_SUPABASE_CLIENT?.findApplicationByRef(ref, dob);
     if (remoteApp) app = remoteApp;
   } catch (err) {
     console.warn("Supabase status lookup failed; using local records.", err);
@@ -1104,15 +1123,18 @@ async function chkstatus() {
           `<div style="display:flex;gap:10px;margin-top:10px"><div style="width:10px;height:10px;border-radius:50%;background:${s.color};margin-top:5px;flex-shrink:0"></div><div><div style="font-size:12px;font-weight:700;color:var(--g800)">${esc(t.title || t.status || "")}</div><div style="font-size:11px;color:var(--g400)">${fmtDate(t.date || app.date)}</div><div style="font-size:12px;color:var(--g600);line-height:1.5">${esc(t.note || "")}</div></div></div>`,
       )
       .join("");
-    const docs = (app.documents || []).length
-      ? `${app.documents.length} uploaded file${app.documents.length === 1 ? "" : "s"} received`
+    const documentCount = Number.isInteger(app.documentCount)
+      ? app.documentCount
+      : (app.documents || []).length;
+    const docs = documentCount
+      ? `${documentCount} uploaded file${documentCount === 1 ? "" : "s"} received`
       : "Document upload details are not available for this application.";
     if (res)
       res.innerHTML = `<div style="background:${s.bg};border:1px solid ${s.color}33;border-radius:var(--r);padding:20px;text-align:left">
       <div style="font-size:12px;color:var(--g500);margin-bottom:8px">Application status for <strong>${esc(ref)}</strong></div>
       <div style="display:inline-flex;align-items:center;gap:8px;background:${s.bg};color:${s.color};padding:6px 14px;border-radius:100px;font-size:13px;font-weight:700;margin-bottom:10px;border:1px solid ${s.color}44">${s.text}</div>
       <div style="font-size:13px;color:var(--g600);line-height:1.6">${s.msg}</div>
-      <div style="font-size:12px;color:var(--g500);margin-top:10px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:10px;padding:10px">Applicant: ${esc(app.name || "-")}<br>Programme: ${esc(app.programme || "-")}<br>Documents: ${esc(docs)}</div>
+      <div style="font-size:12px;color:var(--g500);margin-top:10px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:10px;padding:10px">Programme: ${esc(app.programme || "-")}<br>Documents: ${esc(docs)}</div>
       <div style="margin-top:14px">${timeline}</div>
     </div>`;
   } else {
@@ -2121,7 +2143,7 @@ function ensureHouseGalleryOv() {
     <button class="house-gallery-nav house-gallery-prev" type="button" onclick="stepHouseGallery(-1)" aria-label="Previous photo">‹</button>
     <button class="house-gallery-nav house-gallery-next" type="button" onclick="stepHouseGallery(1)" aria-label="Next photo">›</button>
     <div class="house-gallery-stage">
-      <img id="house-gallery-img" class="house-gallery-img" alt="">
+      <div id="house-gallery-media"></div>
     </div>
     <div class="house-gallery-foot">
       <div class="house-gallery-count" id="house-gallery-count"></div>
@@ -2162,7 +2184,7 @@ function renderHouseGalleryThumbs() {
   wrap.innerHTML = _houseGallery.images
     .map(
       (src, i) =>
-        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View photo ${i + 1}">${isImageAsset(src) ? `<img src="${esc(src)}" alt="">` : mediaMarkup(src)}</button>`,
+        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View media ${i + 1}">${isVideoAsset(src) ? '<span aria-hidden="true">▶</span>' : isImageAsset(src) ? `<img src="${esc(src)}" alt="">` : mediaMarkup(src)}</button>`,
     )
     .join("");
 }
@@ -2170,12 +2192,14 @@ function renderHouseGalleryThumbs() {
 function setHouseGallerySlide(index, animate = true) {
   if (_houseGalleryBusy || !_houseGallery.images.length) return;
   const next = Math.max(0, Math.min(index, _houseGallery.images.length - 1));
-  const img = document.getElementById("house-gallery-img");
-  if (!img) return;
+  const media = document.getElementById("house-gallery-media");
+  if (!media) return;
   const apply = () => {
     _houseGallery.index = next;
-    img.src = _houseGallery.images[next];
-    img.alt = `${_houseGallery.title} photo ${next + 1}`;
+    media.innerHTML = mediaMarkup(_houseGallery.images[next], "house-gallery-img");
+    const player = media.querySelector("video");
+    const image = media.querySelector("img");
+    if (image) image.alt = `${_houseGallery.title} photo ${next + 1}`;
     const count = document.getElementById("house-gallery-count");
     const title = document.getElementById("house-gallery-title");
     const caption = document.getElementById("house-gallery-caption");
@@ -2188,7 +2212,7 @@ function setHouseGallerySlide(index, animate = true) {
     document.querySelectorAll(`[data-house-gallery][data-index]`).forEach((btn) => {
       btn.classList.toggle("active", Number(btn.dataset.index) === next);
     });
-    img.classList.remove("is-changing");
+    (player || image)?.classList.remove("is-changing");
     _houseGalleryBusy = false;
   };
   if (!animate) {
@@ -2196,7 +2220,7 @@ function setHouseGallerySlide(index, animate = true) {
     return;
   }
   _houseGalleryBusy = true;
-  img.classList.add("is-changing");
+  media.querySelector(".house-gallery-img")?.classList.add("is-changing");
   setTimeout(apply, 220);
 }
 
@@ -2503,13 +2527,7 @@ function renderHomeSlides() {
     .map(
       (s, i) =>
         `<div class="slide-container" data-slide-index="${i}">
-          <img 
-            class="wimg ${i === 0 ? "active" : ""}" 
-            src="${esc(s.image)}" 
-            alt="${esc(s.title || "New Juaben Senior High School")}" 
-            loading="${i === 0 ? "eager" : "lazy"}"
-            decoding="async"
-          />
+          ${mediaMarkup(s.image, `wimg ${i === 0 ? "active home-slide-priority" : ""}`)}
           ${s.showText && s.overlayText ? `<div class="slide-overlay"><div class="slide-text">${esc(s.overlayText)}</div></div>` : ""}
         </div>`,
     )
@@ -2518,14 +2536,19 @@ function renderHomeSlides() {
   if (usable.length < 2) return;
   let idx = 0;
   const containers = [...wrap.querySelectorAll(".slide-container")];
+  const activate = (next) => {
+    containers.forEach((container) => container.querySelector(".wimg")?.classList.remove("active"));
+    idx = next % containers.length;
+    const media = containers[idx]?.querySelector(".wimg");
+    media?.classList.add("active");
+    if (media instanceof HTMLVideoElement) {
+      media.addEventListener("ended", () => activate(idx + 1), { once: true });
+    }
+  };
+  activate(idx);
   homeSlideTimer = setInterval(() => {
-    containers.forEach((c) => {
-      const img = c.querySelector(".wimg");
-      if (img) img.classList.remove("active");
-    });
-    idx = (idx + 1) % containers.length;
-    const nextImg = containers[idx]?.querySelector(".wimg");
-    if (nextImg) nextImg.classList.add("active");
+    if (containers[idx]?.querySelector("video.wimg")) return;
+    activate(idx + 1);
   }, 4500);
 }
 
@@ -2644,6 +2667,7 @@ function checkStatusFromURL() {
   if (ref) {
     const el = document.getElementById("stref");
     if (el) el.value = ref;
+    updateLegacyAdmissionStatusFields(ref);
     setTimeout(chkstatus, 300);
   }
 }
@@ -2858,11 +2882,7 @@ subapp = async function () {
     setAppSubmitting(false);
     return;
   }
-  const ref =
-    "NJ-" +
-    new Date().getFullYear() +
-    "-" +
-    Math.floor(Math.random() * 900000 + 100000);
+  const ref = `NJ-${new Date().getFullYear()}-${crypto.randomUUID().toUpperCase()}`;
   const application = applicationFromForm(ref, documents);
   if (!window.NJUASCO_SUPABASE_CLIENT?.isReady()) {
     saveApplicationDraft();
@@ -2989,6 +3009,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 30000);
   hydrateIcons();
 });
-
-
-

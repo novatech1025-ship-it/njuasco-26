@@ -7,6 +7,7 @@ on:
     paths:
       - "supabase/functions/njuasco-ai/**"
       - "supabase/functions/checkout-otp/**"
+      - "supabase/functions/admission-status/**"
       - ".github/workflows/deploy-supabase-ai.yml"
 
 jobs:
@@ -44,3 +45,9 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase functions deploy checkout-otp --project-ref gkzuzugokctccfadzqwf
+
+      - name: Deploy admission-status function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy admission-status --project-ref gkzuzugokctccfadzqwf
