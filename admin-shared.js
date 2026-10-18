@@ -65,8 +65,8 @@ function isVideoFile(file) {
   return file?.type?.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file?.name || "");
 }
 
-function mediaMarkup(src, cls = "") {
-  if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${adminEsc(src)}" controls playsinline preload="none"></video>`;
+function mediaMarkup(src, cls = "", poster = "") {
+  if (isVideoAsset(src)) return `<video class="media-video ${cls}" src="${adminEsc(src)}"${poster ? ` poster="${adminEsc(poster)}"` : ""} controls playsinline preload="metadata"></video>`;
   if (isImageAsset(src)) return `<img class="media-img ${cls}" src="${adminEsc(src)}" alt="" loading="lazy" decoding="async">`;
   return src || "";
 }
@@ -146,7 +146,9 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
   if (!files.length) return;
   for (const [index, file] of files.entries()) {
     let src;
+    let thumbnail = "";
     try {
+      if (isVideoFile(file)) thumbnail = await DB.createVideoThumbnail(file);
       src = await uploadImageAsset(file, key);
     } catch (error) {
       if (index) {
@@ -170,6 +172,7 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
       name: fileTitle(file),
       image: src,
       mediaType: isVideoFile(file) ? "video" : "image",
+      thumbnail,
       file: src,
       description: "",
       category: extra.category || (key === "documents" ? "General" : "campus"),

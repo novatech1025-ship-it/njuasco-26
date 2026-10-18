@@ -859,6 +859,85 @@ const DB = {
       return "";
     }
   },
+  async createVideoThumbnail(file) {
+    if (!file) return "";
+    const isVideo =
+      String(file.type || "").startsWith("video/") ||
+      /\.(mp4|webm|ogg|mov)$/i.test(String(file.name || ""));
+    if (!isVideo) return "";
+    if (typeof document === "undefined" || typeof URL.createObjectURL !== "function") {
+      throw new Error("Video thumbnails are not supported in this browser.");
+    }
+    const objectUrl = URL.createObjectURL(file);
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      let settled = false;
+      let targetTime = 0;
+      const timeout = setTimeout(
+        () => finish(new Error("Could not create a video thumbnail. Try another video format.")),
+        15000,
+      );
+      const cleanup = () => {
+        clearTimeout(timeout);
+        video.removeEventListener("loadedmetadata", onMetadata);
+        video.removeEventListener("loadeddata", onLoadedData);
+        video.removeEventListener("seeked", capture);
+        video.removeEventListener("error", onError);
+        video.removeAttribute("src");
+        video.load();
+        URL.revokeObjectURL(objectUrl);
+      };
+      const finish = (error, thumbnail) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (error) reject(error);
+        else resolve(thumbnail);
+      };
+      const capture = () => {
+        if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+        const scale = Math.min(1, 640 / video.videoWidth);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        const context = canvas.getContext("2d");
+        if (!context) {
+          finish(new Error("Could not create a video thumbnail."));
+          return;
+        }
+        try {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          finish(null, canvas.toDataURL("image/jpeg", 0.75));
+        } catch (error) {
+          finish(error);
+        }
+      };
+      const onMetadata = () => {
+        if (Number.isFinite(video.duration) && video.duration > 0.2) {
+          targetTime = Math.min(1, video.duration / 4);
+          try {
+            video.currentTime = targetTime;
+          } catch (error) {
+            finish(error);
+          }
+        }
+      };
+      const onLoadedData = () => {
+        if (video.currentTime >= targetTime) capture();
+      };
+      const onError = () =>
+        finish(new Error("Could not read this video to create its thumbnail."));
+      video.addEventListener("loadedmetadata", onMetadata);
+      video.addEventListener("loadeddata", onLoadedData);
+      video.addEventListener("seeked", capture);
+      video.addEventListener("error", onError);
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      video.src = objectUrl;
+      video.load();
+    });
+  },
   _remoteInfoSubscribers: [],
   _remoteInfoSubscription: null,
   _notifyRemoteInfoSubscribers(info) {
@@ -1600,7 +1679,5 @@ DB.cartTotal = function () {
 DB.clearCart = function () {
   localStorage.removeItem("nj_cart");
 };
-
-
 
 

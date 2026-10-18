@@ -46,7 +46,7 @@
       .nja-table th, .nja-table td { padding:10px 8px; border-bottom:1px solid var(--g100); text-align:left; vertical-align:top; }
       .nja-table th { color:var(--g500); text-transform:uppercase; letter-spacing:.6px; font-size:10px; }
       .nja-cover { width:70px; height:50px; object-fit:cover; border-radius:8px; background:var(--g100); }
-      .nja-cover-video { width:120px; height:70px; object-fit:cover; border-radius:8px; background:#0b1324; }
+      .nja-cover-video { width:clamp(140px,35vw,240px); max-width:100%; aspect-ratio:16/9; height:auto; object-fit:contain; border-radius:8px; background:#0b1324; }
       @media (max-width:650px) { .nja-row { flex-direction:column; } .nja-actions { width:100%; } }
     </style>
   </head>
@@ -92,7 +92,7 @@
         $(elementId).querySelectorAll(".nja-edit").forEach((el) => el.addEventListener("click", () => fillForm(el.dataset.prefix, collection(key).find((item) => item.id === el.dataset.id))));
         $(elementId).querySelectorAll(".nja-delete").forEach((el) => el.addEventListener("click", async () => { if (!confirm("Delete this item?")) return; await saveCollection(key, collection(key).filter((item) => item.id !== el.dataset.id)); renderAll(); }));
       }
-      function galleryMedia(item) { const src = String(item.image || "").trim(); const isVideo = /^data:video\//i.test(src) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(src); return isVideo ? `<video class="nja-cover-video" src="${escHtml(src)}" controls playsinline preload="none"></video>` : `<img class="nja-cover" src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`; }
+      function galleryMedia(item) { const src = String(item.image || "").trim(); const isVideo = /^data:video\//i.test(src) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(src); return isVideo ? `<video class="nja-cover-video" src="${escHtml(src)}"${item.thumbnail ? ` poster="${escHtml(item.thumbnail)}"` : ""} controls playsinline preload="metadata"></video>` : `<img class="nja-cover" src="${escHtml(src)}" alt="" loading="lazy" decoding="async">`; }
       function renderGallery() { const items = collection("gallery").filter((item) => item.category === "njosa"); $("nja-gallery-list").innerHTML = items.map((item) => `<div class="nja-row"><div style="display:flex;gap:10px">${galleryMedia(item)}<div><strong>${escHtml(item.title)}</strong><small>${escHtml(item.description)}</small></div></div><button class="btn btn-r btn-sm nja-gallery-delete" data-id="${item.id}">Delete</button></div>`).join("") || '<div class="nja-empty">No gallery media yet.</div>'; $("nja-gallery-list").querySelectorAll(".nja-gallery-delete").forEach((el) => el.addEventListener("click", async () => { await saveCollection("gallery", collection("gallery").filter((item) => item.id !== el.dataset.id)); renderGallery(); })); }
       function renderAll() { renderMembers(); renderList("njosaEvents", "nja-events-list", "event", "events"); renderList("njosaCareers", "nja-careers-list", "career", "career opportunities"); renderList("njosaLeaders", "nja-leaders-list", "leader", "leaders"); renderGallery(); $("nja-count-careers").textContent = collection("njosaCareers").filter((item) => item.status === "published").length; }
       function bindCrud(formId, key, prefix) { $(formId).addEventListener("submit", async (event) => { event.preventDefault(); const id = value(`nja-${prefix}-id`); const existing = id ? DB.getById(key, id) : null; const data = prefix === "event" ? { title:value("nja-event-title"), dateLabel:value("nja-event-date"), location:value("nja-event-location"), description:value("nja-event-description"), status:value("nja-event-status") } : prefix === "career" ? { title:value("nja-career-title"), type:value("nja-career-type"), deadline:value("nja-career-deadline"), contact:value("nja-career-contact"), description:value("nja-career-description"), status:value("nja-career-status") } : { name:value("nja-leader-name"), position:value("nja-leader-position"), bio:value("nja-leader-bio"), image:value("nja-leader-image"), status:value("nja-leader-status") }; const items = collection(key); if (existing) Object.assign(existing, data); else items.push({ ...data, id: crypto.randomUUID() }); await saveCollection(key, items); resetForm(prefix); renderAll(); }); }
@@ -105,13 +105,15 @@
         event.preventDefault();
         const message = $("nja-gallery-msg");
         const file = $("nja-gallery-file").files?.[0];
-        const isVideo = file && (file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name));
         let fileUrl = value("nja-gallery-image");
+        let thumbnail = "";
         if (file) {
           try {
-            if (isVideo && file.size > 50 * 1024 * 1024) throw new Error("Videos must be 50 MB or smaller.");
-            const uploaded = await DB.uploadSiteAsset?.(file, "gallery", { throwOnError: isVideo });
-            if (isVideo && !uploaded) throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
+            const isVideoFile = file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+            if (isVideoFile && file.size > 50 * 1024 * 1024) throw new Error("Videos must be 50 MB or smaller.");
+            if (isVideoFile) thumbnail = await DB.createVideoThumbnail(file);
+            const uploaded = await DB.uploadSiteAsset?.(file, "gallery", { throwOnError: isVideoFile });
+            if (isVideoFile && !uploaded) throw new Error("Video upload failed. Check cloud storage access, connection, and the 50 MB size limit.");
             fileUrl = uploaded || await new Promise((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result);
@@ -124,8 +126,9 @@
           }
         }
         if (!fileUrl) return;
+        const isVideo = /^data:video\//i.test(fileUrl) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(fileUrl);
         const items = collection("gallery");
-        items.push({ id:crypto.randomUUID(), title:value("nja-gallery-title"), image:fileUrl, mediaType:isVideo ? "video" : "image", description:value("nja-gallery-description"), category:"njosa", color:"linear-gradient(135deg,#0f766e,#2563eb)", status:"published" });
+        items.push({ id:crypto.randomUUID(), title:value("nja-gallery-title"), image:fileUrl, mediaType:isVideo ? "video" : "image", ...(thumbnail ? { thumbnail } : {}), description:value("nja-gallery-description"), category:"njosa", color:"linear-gradient(135deg,#0f766e,#2563eb)", status:"published" });
         const synced = await saveCollection("gallery", items);
         event.target.reset();
         message.textContent = synced === false ? "Added on this device, but cloud sync failed. Check the connection and try again." : "";

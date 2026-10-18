@@ -3726,12 +3726,27 @@
             return;
           }
         } else if (type === "gallery" || type === "njosaGallery") {
+          const mediaFile = document.getElementById("smf-file")?.files?.[0];
+          const image =
+            (await saMediaValue()) ||
+            '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>';
+          const isVideo =
+            /^data:video\//i.test(image) ||
+            /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(image);
           data = {
             title: gsmv("smf-title"),
             category: type === "njosaGallery" ? "njosa" : gsmv("smf-cat"),
-            image:
-              (await saMediaValue()) ||
-              '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
+            image,
+            mediaType: isVideo ? "video" : "image",
+            ...(mediaFile
+              ? {
+                  thumbnail:
+                    mediaFile.type.startsWith("video/") ||
+                    /\.(mp4|webm|ogg|mov)$/i.test(mediaFile.name)
+                      ? await DB.createVideoThumbnail(mediaFile)
+                      : "",
+                }
+              : {}),
             description: gsmv("smf-desc"),
             color: gsmv("smf-color") || "linear-gradient(135deg,#1e40af,#4f46e5)",
           };

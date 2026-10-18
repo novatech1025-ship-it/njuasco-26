@@ -145,10 +145,10 @@ function addLogoFallback(image) {
   });
 }
 
-function mediaMarkup(src, cls = "") {
+function mediaMarkup(src, cls = "", poster = "") {
   const priority = cls.split(/\s+/).includes("home-slide-priority");
   if (isVideoAsset(src)) {
-    return `<video class="media-video ${cls}" src="${esc(src)}" controls playsinline preload="${priority ? "metadata" : "none"}" onclick="event.stopPropagation()"></video>`;
+    return `<video class="media-video ${cls}" src="${esc(src)}"${poster ? ` poster="${esc(poster)}"` : ""} controls playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
   }
   if (isImageAsset(src)) {
     return `<img class="media-img ${cls}" src="${esc(src)}" alt="" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
@@ -1955,8 +1955,8 @@ function renderGallery(filter = "all") {
     items
       .map(
         (g) => `
-    <div class="gi" style="background:${g.color}" onclick="olb('${esc(g.image)}','${esc(g.title)}','${esc(g.description)}')">
-      ${mediaMarkup(g.image)}<div class="gov">${ico("search")}</div>
+    <div class="gi${isVideoAsset(g.image) ? " gi-video" : ""}" style="background:${g.color}" onclick="olb('${esc(g.image)}','${esc(g.title)}','${esc(g.description)}')">
+      ${mediaMarkup(g.image, "", g.thumbnail)}<div class="gov">${ico("search")}</div>
     </div>`,
       )
       .join("") ||
@@ -1980,7 +1980,7 @@ function renderNjosaGallery() {
   grid.innerHTML = items.length
     ? items.map((item, index) => `
       <article class="njosa-gallery-card rv rv${index % 3}" onclick="olb('${esc(item.image)}','${esc(item.title)}','${esc(item.description)}')">
-        <div class="njosa-gallery-image" style="background:${item.color || "linear-gradient(135deg,#0f766e,#2563eb)"}">${mediaMarkup(item.image)}<span class="njosa-gallery-open">${ico("search")}</span></div>
+        <div class="njosa-gallery-image${isVideoAsset(item.image) ? " video-gallery-image" : ""}" style="background:${item.color || "linear-gradient(135deg,#0f766e,#2563eb)"}">${mediaMarkup(item.image, "", item.thumbnail)}<span class="njosa-gallery-open">${ico("search")}</span></div>
         <div class="njosa-gallery-caption"><span>${esc(item.title || "NJOSA moment")}</span><small>${esc(item.description || "NJUASCO alumni community")}</small></div>
       </article>`).join("")
     : '<div class="njosa-gallery-empty"><span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span><strong>The album is ready for its first memory.</strong><span>NJOSA photos uploaded by an administrator will appear here.</span></div>';

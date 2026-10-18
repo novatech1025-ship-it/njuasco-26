@@ -3707,6 +3707,17 @@ body.has-fixed-header {
   overflow: hidden;
 }
 
+.gi.gi-video {
+  aspect-ratio: 16 / 9;
+}
+
+.gi .media-video {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+
 .gi:hover {
   transform: scale(1.02);
 }
@@ -4894,9 +4905,11 @@ body.has-fixed-header {
 
 .media-video {
   width: 100%;
-  height: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
   background: #0b1324;
 }
 
@@ -5173,6 +5186,18 @@ body.has-fixed-header {
   min-height: inherit;
   object-fit: cover;
   display: block;
+}
+
+.njosa-gallery-image.video-gallery-image,
+.njosa-gallery-card:nth-child(5n + 1) .njosa-gallery-image.video-gallery-image,
+.njosa-gallery-card:nth-child(5n + 2) .njosa-gallery-image.video-gallery-image {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+}
+
+.njosa-gallery-image.video-gallery-image video {
+  object-fit: contain;
+  background: #0b1324;
 }
 
 .njosa-gallery-card:hover .njosa-gallery-image img {
@@ -7148,5 +7173,4 @@ table {
     white-space: normal;
   }
 }
-
 

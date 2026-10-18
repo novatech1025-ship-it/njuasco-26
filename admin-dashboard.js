@@ -559,12 +559,22 @@
             return;
           }
         } else if (type === "gallery") {
+          const mediaFile = document.getElementById("mf-file")?.files?.[0];
+          const image =
+            (await mediaValue()) ||
+            '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>';
           data = {
             title: gv("mf-title"),
             category: gv("mf-cat"),
-            image:
-              (await mediaValue()) ||
-              '<span class="ico ico-image" data-ico="image" aria-hidden="true"></span>',
+            image,
+            mediaType: isVideoAsset(image) ? "video" : "image",
+            ...(mediaFile
+              ? {
+                  thumbnail: isVideoFile(mediaFile)
+                    ? await DB.createVideoThumbnail(mediaFile)
+                    : "",
+                }
+              : {}),
             description: gv("mf-desc"),
             color: gv("mf-color") || "linear-gradient(135deg,#1e40af,#4f46e5)",
           };
@@ -1882,7 +1892,7 @@
             .map(
               (g) => `
     <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
-      <div style="aspect-ratio:1;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;position:relative"><input class="admin-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image)}</div>
+      <div style="aspect-ratio:${isVideoAsset(g.image) ? "16 / 9" : "1"};background:${g.color};display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;position:relative"><input class="admin-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image, "", g.thumbnail)}</div>
       <div style="padding:12px">
         <div style="font-size:13px;font-weight:600;margin-bottom:4px">${esc(g.title)}</div>
         <div style="display:inline-block;padding:2px 8px;background:var(--g100);border-radius:100px;font-size:11px;color:var(--g500);margin-bottom:10px">${g.category}</div>
@@ -1900,7 +1910,7 @@
         if (!list) return;
         list.innerHTML = items.map((g) => `
           <div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
-            <div style="aspect-ratio:1;background:${g.color};display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;position:relative"><input class="admin-njosa-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image)}</div>
+            <div style="aspect-ratio:${isVideoAsset(g.image) ? "16 / 9" : "1"};background:${g.color};display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;position:relative"><input class="admin-njosa-gallery-select" type="checkbox" value="${g.id}" style="position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--b6);z-index:2">${mediaMarkup(g.image, "", g.thumbnail)}</div>
             <div style="padding:12px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">${esc(g.title)}</div><div style="font-size:11px;color:var(--g500);margin-bottom:10px">${esc(g.description || "NJOSA Alumni")}</div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-g" onclick="openModal('gallery','${g.id}')">Edit</button><button class="btn btn-sm btn-r" onclick="delItem('gallery','${g.id}','njosa-gallery-mgr')">Delete</button></div></div>
           </div>`).join("") || '<div style="padding:24px;text-align:center;color:var(--g400);grid-column:1/-1">No NJOSA photos yet.</div>';
       }
