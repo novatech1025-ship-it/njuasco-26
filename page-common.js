@@ -236,16 +236,18 @@ function applyTopBanner(info, schoolName) {
 function applyFooterContent() {
   const info = DB.getInfo();
   if (info.maintenanceMode && !location.pathname.endsWith("admin.html") && !location.pathname.endsWith("sub-admin.html")) {
-    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="NJUASCO logo"><div><strong>New Juaben Senior High</strong><span>NJUASCO · Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
+    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="NJUASCO logo"><div><strong>New Juaben S.H.S</strong><span>Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
     return;
   }
   const schoolName = info.name || "New Juaben Senior High School";
-  const shortName = info.shortName || "NJUASCO";
+  const headerSchoolName = schoolName
+    .replace(/\s+Senior High School$/i, " S.H.S")
+    .replace(/\s+Senior High$/i, " S.H.S")
+    .replace(/\s+School$/i, "");
+  const headerSubtitle = `Est. ${info.founded || "1953"}`;
   applyTopBanner(info, schoolName);
-  document.querySelectorAll(".sn").forEach((el) => (el.textContent = schoolName.replace(/\s+School$/i, "")));
-  document.querySelectorAll(".msn").forEach((el) => (el.textContent = schoolName.replace(/\s+School$/i, "")));
-  document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
-  document.querySelectorAll(".msc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
+  document.querySelectorAll(".sn, .msn").forEach((el) => (el.textContent = headerSchoolName));
+  document.querySelectorAll(".sc, .msc").forEach((el) => (el.textContent = headerSubtitle));
   document.querySelectorAll(".hbadge span").forEach((el) => {
     el.textContent = `Category ${info.category || "B"} School · Code: ${info.code || "0020103"}`;
   });
@@ -270,10 +272,6 @@ function applyFooterContent() {
       list.appendChild(li);
     }
   });
-  document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · NJB City · Est. ${info.founded || "1953"}`));
-  document.querySelectorAll(".msc").forEach((el) => (el.textContent = `${shortName} · NJB City · Est. ${info.founded || "1953"}`));
-  document.querySelectorAll(".sc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
-  document.querySelectorAll(".msc").forEach((el) => (el.textContent = `${shortName} · Est. ${info.founded || "1953"}`));
   initFooterStaffPortalShortcut();
   initAIChrome();
 }
