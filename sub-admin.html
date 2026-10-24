@@ -1,6 +1,11 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- SEO:START -->
+    <title>Sub-Admin | NJUASCO</title>
+    <meta name="description" content="Authorised staff workspace for New Juaben Senior High School." />
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- SEO:END -->
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -9,7 +14,6 @@
     <meta name="theme-color" content="#1e40af" />
     <link rel="icon" type="image/x-icon" href="njuasco-logo.ico" />
     <link rel="apple-touch-icon" href="njuasco-logo.png" />
-    <title>Sub-Admin Portal | NJUASCO</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap"
       rel="stylesheet"
@@ -1849,14 +1853,14 @@
           .replace(/'/g, "&#39;");
       }
 
-      function mediaMarkup(src) {
+      function mediaMarkup(src, alt = "") {
         const val = String(src || "").trim();
         if (!val) return "";
         if (/^data:video\//i.test(val) || /\.(mp4|webm|ogg|mov)(?:[?#].*)?$/i.test(val)) {
           return `<video src="${esc(val)}" controls playsinline preload="none" onclick="event.stopPropagation()" style="width:100%;height:100%;object-fit:cover;display:block"></video>`;
         }
         if (/^(data:image\/|https?:\/\/|\.?\/|[\w\s-]+\.(png|jpe?g|gif|webp|avif|svg))/i.test(val)) {
-          return `<img src="${esc(val)}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`;
+          return `<img src="${esc(val)}" alt="${esc(alt)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`;
         }
         return val;
       }
@@ -2955,7 +2959,7 @@
             .map(
               (t) => `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
-      <div style="width:56px;height:56px;border-radius:12px;background:${t.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(t.image)}</div>
+      <div style="width:56px;height:56px;border-radius:12px;background:${t.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(t.image, t.decorative ? "" : t.alt || t.name || t.title || "School team member")}</div>
       <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(t.name)}</div><div style="font-size:12px;color:var(--b6);font-weight:600">${esc(t.position)}</div><div style="font-size:12px;color:var(--g500)">${esc(t.department)} · ${esc(t.email)}</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('team','${t.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete staff member?'))saDelete('team','${t.id}','team')">Delete</button></div>
     </div>`,
@@ -2971,7 +2975,7 @@
             .map(
               (f) => `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
-      <div style="width:56px;height:56px;border-radius:12px;background:${f.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(f.image)}</div>
+      <div style="width:56px;height:56px;border-radius:12px;background:${f.color || "var(--gp)"};display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex-shrink:0">${mediaMarkup(f.image, f.decorative ? "" : f.alt || f.name || f.title || "School facility")}</div>
       <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(f.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc((f.description || "").slice(0, 140))}</div><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${(f.features || []).map((x) => `<span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px">${esc(x)}</span>`).join("")}</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('facility','${f.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete facility?'))saDelete('facilities','${f.id}','facilities')">Delete</button></div>
     </div>`,
@@ -2996,7 +3000,7 @@
               const personSection = personChips.length ? `<div style="display:grid;gap:2px;margin-top:6px">${personChips.join("")}</div>` : "";
               return `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
-      <div style="width:56px;height:56px;border-radius:12px;background:${d.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(d.image || '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>')}</div>
+      <div style="width:56px;height:56px;border-radius:12px;background:${d.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(d.image || '<span class="ico ico-book" data-ico="book" aria-hidden="true"></span>', d.decorative ? "" : d.alt || d.name || d.title || "School department")}</div>
       <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(d.name)}</div><div style="font-size:12px;color:var(--g500);margin-top:3px">${esc(d.description || "")}</div>${tags.length ? `<div style="font-size:11px;color:var(--g400);margin-top:4px">${esc(tags.join(", "))}</div>` : ""}${personSection}</div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('department','${d.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete department?'))saDelete('departments','${d.id}','departments')">Delete</button></div>
     </div>`;
@@ -3012,7 +3016,7 @@
             .map(
               (h) => `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);border-left:4px solid ${esc(h.color || "#2563eb")};display:flex;gap:14px;align-items:flex-start">
-      <div style="width:56px;height:56px;border-radius:12px;background:${esc(h.color || "#2563eb")}22;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(h.image || '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>')}</div>
+      <div style="width:56px;height:56px;border-radius:12px;background:${esc(h.color || "#2563eb")}22;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(h.image || '<span class="ico ico-home" data-ico="home" aria-hidden="true"></span>', h.decorative ? "" : h.alt || h.name || "School house")}</div>
       <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">${esc(h.name)} <span style="background:${esc(h.color || "#2563eb")}22;color:${esc(h.color || "#2563eb")};padding:2px 8px;border-radius:100px;font-size:11px">${esc(h.gender)}</span></div><div style="font-size:12px;color:var(--g500)">Master: ${esc(h.master || "Not set")}</div><div style="font-size:12px;color:var(--g500)">Assistant: ${esc(h.assistantMaster || "Not set")}</div><div style="font-size:12px;color:var(--g500);font-style:italic">${esc(h.motto)}</div><div style="font-size:11px;color:var(--g400);margin-top:4px">${(h.gallery || []).length} gallery image(s)</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('house','${h.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete house?'))saDelete('houses','${h.id}','houses')">Delete</button></div>
     </div>`,
@@ -3028,7 +3032,7 @@
             .map(
               (c) => `
     <div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--g100);display:flex;gap:14px;align-items:flex-start">
-      <div style="width:52px;height:52px;border-radius:12px;background:${c.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(c.image)}</div>
+      <div style="width:52px;height:52px;border-radius:12px;background:${c.color || "rgba(37,99,235,.1)"};display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0">${mediaMarkup(c.image, c.decorative ? "" : c.alt || c.name || c.title || "School club")}</div>
       <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">${esc(c.name)} <span style="background:var(--g100);padding:2px 8px;border-radius:100px;font-size:11px;color:var(--g500)">${esc(c.category)}</span></div><div style="font-size:12px;color:var(--g500)">Coordinator: ${esc(c.coordinator)} · ${esc(c.meetingDays)}</div></div>
       <div style="display:flex;gap:6px;flex-shrink:0"><button style="padding:6px 12px;background:var(--g100);border:1px solid var(--g200);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="saOpenModal('club','${c.id}')">Edit</button><button style="padding:6px 12px;background:rgba(220,38,38,.08);color:var(--r6);border:1px solid rgba(220,38,38,.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer" onclick="if(confirm('Delete club?'))saDelete('clubs','${c.id}','clubs')">Delete</button></div>
     </div>`,
@@ -3061,7 +3065,7 @@
               .map(
                 (n) => `
     <div style="background:#fff;border-radius:var(--r);padding:14px;display:flex;gap:14px;align-items:flex-start;border:1px solid var(--g100)">
-      <div style="width:52px;height:52px;border-radius:10px;background:${n.color};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden">${mediaMarkup(n.image)}</div>
+      <div style="width:52px;height:52px;border-radius:10px;background:${n.color};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden">${mediaMarkup(n.image, n.decorative ? "" : n.alt || n.title || "News or event image")}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.title}</div>
         <div style="font-size:12px;color:var(--g500);margin-top:3px">${n.category} · ${n.date} · <span style="color:${n.status === "published" ? "var(--gn)" : "var(--go)"}">${n.status}</span></div>
@@ -3244,7 +3248,7 @@
             .map(
               (m) => `
     <div style="background:#fff;border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh1);border:1px solid var(--g100)">
-      <div style="aspect-ratio:1;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">${mediaMarkup(m.image)}</div>
+      <div style="aspect-ratio:1;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">${mediaMarkup(m.image, m.decorative ? "" : m.alt || m.name || m.title || "NJUASCO merchandise")}</div>
       <div style="padding:14px">
         <div style="font-size:13px;font-weight:700;margin-bottom:3px">${m.name}</div>
         <div style="font-size:15px;font-weight:700;color:var(--b6);margin-bottom:4px">GHS ${m.price}</div>

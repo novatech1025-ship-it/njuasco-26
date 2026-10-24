@@ -741,7 +741,8 @@ const ICON_PATHS = {
           }
         },
         async saveRemoteContent(key, value) {
-          if (!this._siteContentKeys.includes(key)) return false;
+          if (!this._siteContentKeys.includes(key) && !["seo_pages", "seo_site"].includes(key)) return false;
+          if (["seo_pages", "seo_site"].includes(key) && !(await this.isSupabaseAuthenticated())) return false;
           try {
             const client = await this._ensureSupabase();
             const { error } = await client.from("site_content").upsert({ key, value }, { onConflict: "key" });
@@ -759,7 +760,8 @@ const ICON_PATHS = {
           }
           if (rows.length) {
             rows.forEach((row) => {
-              if (this._siteContentKeys.includes(row.key) && Array.isArray(row.value)) {
+              const seoObject = ["seo_pages", "seo_site"].includes(row.key) && row.value && typeof row.value === "object" && !Array.isArray(row.value);
+              if (this._siteContentKeys.includes(row.key) && (Array.isArray(row.value) || seoObject)) {
                 localStorage.setItem("nj_" + row.key, JSON.stringify(row.value));
                 this._notifyRemoteContentSubscribers(row.key, row.value);
               }
@@ -787,7 +789,8 @@ const ICON_PATHS = {
               .on("postgres_changes", { event: "*", schema: "public", table: "site_content" }, (payload) => {
                 const key = payload?.new?.key;
                 const value = payload?.new?.value;
-                if (this._siteContentKeys.includes(key) && Array.isArray(value)) {
+                const seoObject = ["seo_pages", "seo_site"].includes(key) && value && typeof value === "object" && !Array.isArray(value);
+                if (this._siteContentKeys.includes(key) && (Array.isArray(value) || seoObject)) {
                   localStorage.setItem("nj_" + key, JSON.stringify(value));
                   this._notifyRemoteContentSubscribers(key, value);
                 }

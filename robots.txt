@@ -1,0 +1,5 @@
+# On a GitHub Pages project site, crawlers only read robots.txt at the domain root.
+# This file takes effect after a custom domain is connected; until then submit sitemap.xml in Google Search Console.
+User-agent: *
+Allow: /
+Sitemap: https://novatech1025-ship-it.github.io/njuasco-26/sitemap.xml

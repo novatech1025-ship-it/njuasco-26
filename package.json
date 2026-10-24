@@ -3,6 +3,8 @@
     "start": "node server.js",
     "start:5500": "node server.js --port=5500",
     "start:3000": "node server.js --port=3000",
+    "seo:build": "node scripts/apply-seo.js",
+    "seo:check": "node scripts/check-seo.js",
     "deploy:sms": "npx supabase functions deploy checkout-otp --project-ref gkzuzugokctccfadzqwf",
     "deploy:paystack": "powershell -ExecutionPolicy Bypass -File .\\scripts\\deploy-paystack.ps1",
     "deploy:ai": "npx supabase secrets set GROQ_API_KEY=%GROQ_API_KEY% GROQ_MODEL=openai/gpt-oss-20b --project-ref gkzuzugokctccfadzqwf && npx supabase functions deploy njuasco-ai --project-ref gkzuzugokctccfadzqwf"

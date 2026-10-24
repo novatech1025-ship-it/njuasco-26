@@ -31,6 +31,55 @@ function setPublicPageHydrationState(isHydrating = true) {
   loader.style.width = isHydrating ? "70%" : "0";
 }
 
+function applySeoOverrides() {
+  const filename = location.pathname.split("/").pop() || "index.html";
+  const siteContent = DB?._get?.("seo_pages");
+  const pageOverride = siteContent && typeof siteContent === "object" && !Array.isArray(siteContent) ? siteContent[filename] : null;
+  if (!pageOverride) return;
+  const updateMeta = (selector, value, attribute = "content") => {
+    if (!value) return;
+    const element = document.querySelector(selector);
+    if (element) element.setAttribute(attribute, value);
+  };
+  if (pageOverride.title) document.title = pageOverride.title;
+  const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute("href");
+  if (pageOverride.indexable === false && canonical && !document.querySelector('meta[name="robots"]')?.getAttribute("content")?.includes("noindex")) {
+    const isPrivate = document.querySelector('meta[name="robots"]')?.getAttribute("content") === "noindex, nofollow";
+    if (!isPrivate) document.querySelector('meta[name="robots"]')?.setAttribute("content", "noindex, nofollow");
+  }
+  updateMeta('meta[name="description"]', pageOverride.description);
+  updateMeta('meta[property="og:title"]', pageOverride.title);
+  updateMeta('meta[property="og:description"]', pageOverride.description);
+  updateMeta('meta[property="og:image"]', pageOverride.ogImage);
+  updateMeta('meta[property="og:image:alt"]', pageOverride.ogImageAlt);
+  updateMeta('meta[name="twitter:title"]', pageOverride.title);
+  updateMeta('meta[name="twitter:description"]', pageOverride.description);
+  updateMeta('meta[name="twitter:image"]', pageOverride.ogImage);
+}
+
+function applySchoolJsonLd(info = {}) {
+  const block = document.querySelector('script[type="application/ld+json"]');
+  if (!block || !location.pathname.endsWith("index.html") && location.pathname !== "/") return;
+  try {
+    const data = JSON.parse(block.textContent || "{}");
+    const school = data["@graph"]?.find((entry) => entry["@type"] === "HighSchool");
+    if (!school) return;
+    const valid = (value) => {
+      const text = String(value || "").trim();
+      return text && !/(?:xx|placeholder|example|not set|unknown)/i.test(text) ? text : "";
+    };
+    const email = valid(info.email);
+    const phone = valid(info.phone);
+    const address = valid(info.address);
+    if (email) school.email = email; else delete school.email;
+    if (phone) school.telephone = phone; else delete school.telephone;
+    if (address) school.address.streetAddress = address;
+    const sameAs = [info.facebook, info.twitter, info.instagram].map(valid).filter(Boolean);
+    if (sameAs.length) school.sameAs = sameAs; else delete school.sameAs;
+    block.textContent = JSON.stringify(data);
+  } catch (_) {}
+}
+
 async function waitForPublicPageHydration() {
   // Do not make visitors wait for private admissions data before drawing a
   // public page.  On a new device the browser has no local cache, so showing
@@ -145,13 +194,13 @@ function addLogoFallback(image) {
   });
 }
 
-function mediaMarkup(src, cls = "", poster = "") {
+function mediaMarkup(src, cls = "", poster = "", alt = "") {
   const priority = cls.split(/\s+/).includes("home-slide-priority");
   if (isVideoAsset(src)) {
     return `<video class="media-video ${cls}" src="${esc(src)}"${poster ? ` poster="${esc(poster)}"` : ""} controls playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
   }
   if (isImageAsset(src)) {
-    return `<img class="media-img ${cls}" src="${esc(src)}" alt="" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
+    return `<img class="media-img ${cls}" src="${esc(src)}" alt="${esc(alt)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
   }
   return src || "";
 }
@@ -1923,7 +1972,7 @@ function renderNews(filter = "all") {
       .map(
         (n) => `
     <article class="nc">
-      <div class="nci" style="background:${n.color}">${mediaMarkup(n.image)}</div>
+      <div class="nci" style="background:${n.color}">${mediaMarkup(n.image, "", "", n.decorative ? "" : n.alt || n.title || n.caption || "News and event photo")}</div>
       <div class="ncb">
         <div class="ncm"><span class="bdg ${catClass(n.category)}">${n.category}</span><span class="nd">${newsDateLabel(n)}</span></div>
         <h3 class="nt">${esc(n.title)}</h3>
@@ -1954,7 +2003,7 @@ function renderGallery(filter = "all") {
       .map(
         (g) => `
     <div class="gi${isVideoAsset(g.image) ? " gi-video" : ""}" style="background:${g.color}" onclick="olb('${esc(g.image)}','${esc(g.title)}','${esc(g.description)}')">
-      ${mediaMarkup(g.image, "", g.thumbnail)}<div class="gov">${ico("search")}</div>
+      ${mediaMarkup(g.image, "", g.thumbnail, g.decorative ? "" : g.alt || g.title || g.description || "School gallery media")}<div class="gov">${ico("search")}</div>
     </div>`,
       )
       .join("") ||
@@ -1978,7 +2027,7 @@ function renderNjosaGallery() {
   grid.innerHTML = items.length
     ? items.map((item, index) => `
       <article class="njosa-gallery-card rv rv${index % 3}" onclick="olb('${esc(item.image)}','${esc(item.title)}','${esc(item.description)}')">
-        <div class="njosa-gallery-image${isVideoAsset(item.image) ? " video-gallery-image" : ""}" style="background:${item.color || "linear-gradient(135deg,#0f766e,#2563eb)"}">${mediaMarkup(item.image, "", item.thumbnail)}<span class="njosa-gallery-open">${ico("search")}</span></div>
+        <div class="njosa-gallery-image${isVideoAsset(item.image) ? " video-gallery-image" : ""}" style="background:${item.color || "linear-gradient(135deg,#0f766e,#2563eb)"}">${mediaMarkup(item.image, "", item.thumbnail, item.decorative ? "" : item.alt || item.title || item.description || "NJOSA alumni gallery media")}<span class="njosa-gallery-open">${ico("search")}</span></div>
         <div class="njosa-gallery-caption"><span>${esc(item.title || "NJOSA moment")}</span><small>${esc(item.description || "NJUASCO alumni community")}</small></div>
       </article>`).join("")
     : '<div class="njosa-gallery-empty"><span class="ico ico-camera" data-ico="camera" aria-hidden="true"></span><strong>The album is ready for its first memory.</strong><span>NJOSA photos uploaded by an administrator will appear here.</span></div>';
@@ -1995,7 +2044,7 @@ function renderFacilities() {
     .map(
       (f) => `
     <div class="facc rv">
-      <div class="faci" style="background:${f.color}">${mediaMarkup(f.image)}</div>
+      <div class="faci" style="background:${f.color}">${mediaMarkup(f.image, "", "", f.decorative ? "" : f.alt || f.title || f.name || "School facility")}</div>
       <div class="facb">
         <div class="facat">${esc(f.category)}</div>
         <div class="facn">${esc(f.name)}</div>
@@ -2018,7 +2067,7 @@ function renderClubs() {
       (c) => `
     <div class="clubc rv">
       <div class="clubh">
-        <div class="clubic" style="background:${c.color}">${mediaMarkup(c.image)}</div>
+      <div class="clubic" style="background:${c.color}">${mediaMarkup(c.image, "", "", c.decorative ? "" : c.alt || c.title || c.name || "School club")}</div>
         <div><div class="clubn">${esc(c.name)}</div><span class="clubcat" style="background:${c.color};color:${c.colorText}">${esc(c.category)}</span></div>
       </div>
       <div class="clubd">${esc(c.description)}</div>
@@ -2035,7 +2084,7 @@ function houseBannerMarkup(image, name = "") {
   if (image && isImageAsset(image)) {
     return `<div class="hbanner-media"><img class="hbanner-cover" src="${esc(image)}" alt="${esc(name)}" loading="lazy" decoding="async"></div><div class="hbanner-shade" aria-hidden="true"></div>`;
   }
-  return `<div class="hbanner-icon">${image ? mediaMarkup(image) : ico("home")}</div>`;
+  return `<div class="hbanner-icon">${image ? mediaMarkup(image, "", "", house.decorative ? "" : house.alt || house.name || "School house") : ico("home")}</div>`;
 }
 
 function renderAboutHouses() {
@@ -2086,7 +2135,7 @@ function openHouseDetails(id) {
           h.image && isImageAsset(h.image)
             ? `<div class="house-detail-hero-media"><img src="${esc(h.image)}" alt="${esc(h.name)}" loading="lazy" decoding="async"></div><div class="house-detail-hero-shade" aria-hidden="true"></div>`
             : h.image
-              ? mediaMarkup(h.image)
+              ? mediaMarkup(h.image, "", "", h.decorative ? "" : h.alt || h.name || "School house")
               : ico("home")
         }
       </div>
@@ -2105,7 +2154,7 @@ function openHouseDetails(id) {
             ? `<div class="house-detail-gallery-label">Gallery</div><div class="house-detail-gallery">${gallery
                 .map(
                   (img, i) =>
-                    `<button type="button" class="house-gallery-thumb${i === 0 ? " active" : ""}" data-house-gallery="${galleryId}" data-index="${i}" onclick="openHouseGallery('${galleryId}', ${i})">${mediaMarkup(img)}</button>`,
+                    `<button type="button" class="house-gallery-thumb${i === 0 ? " active" : ""}" data-house-gallery="${galleryId}" data-index="${i}" onclick="openHouseGallery('${galleryId}', ${i})">${mediaMarkup(typeof img === "string" ? img : img.image, "", "", typeof img === "string" ? h.name || "School house gallery" : img.decorative ? "" : img.alt || img.title || h.name || "School house gallery")}</button>`,
                 )
                 .join("")}</div>`
             : ""
@@ -2182,7 +2231,7 @@ function renderHouseGalleryThumbs() {
   wrap.innerHTML = _houseGallery.images
     .map(
       (src, i) =>
-        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View media ${i + 1}">${isVideoAsset(src) ? '<span aria-hidden="true">▶</span>' : isImageAsset(src) ? `<img src="${esc(src)}" alt="">` : mediaMarkup(src)}</button>`,
+        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View media ${i + 1}">${isVideoAsset(src) ? '<span aria-hidden="true">▶</span>' : isImageAsset(src) ? `<img src="${esc(src)}" alt="${esc(_houseGallery.images[i]?.alt || _houseGallery.images[i]?.title || "School house gallery")}">` : mediaMarkup(src)}</button>`,
     )
     .join("");
 }
@@ -2194,7 +2243,7 @@ function setHouseGallerySlide(index, animate = true) {
   if (!media) return;
   const apply = () => {
     _houseGallery.index = next;
-    media.innerHTML = mediaMarkup(_houseGallery.images[next], "house-gallery-img");
+    media.innerHTML = mediaMarkup(_houseGallery.images[next], "house-gallery-img", "", _houseGallery.images[next]?.alt || _houseGallery.images[next]?.title || "School house gallery");
     const player = media.querySelector("video");
     const image = media.querySelector("img");
     if (image) image.alt = `${_houseGallery.title} photo ${next + 1}`;
@@ -2240,7 +2289,7 @@ function renderAboutTeam() {
     .map(
       (t) => `
     <div class="tcard rv">
-      <div class="tcimg" style="background:${t.color}">${mediaMarkup(t.image)}</div>
+      <div class="tcimg" style="background:${t.color}">${mediaMarkup(t.image, "", "", t.decorative ? "" : t.alt || t.name || t.title || "School team member")}</div>
       <div class="tcbody">
         <div class="tcname">${esc(t.name)}</div>
         <div class="tcpos">${esc(t.position)}</div>
@@ -2287,7 +2336,7 @@ function renderAcademicDepartments() {
       }
       return `
     <div class="dcard rv${i ? ` rv${Math.min(i, 2)}` : ""}">
-      <div class="dic" style="${d.color ? `background:${esc(d.color)};color:#fff` : ""}">${mediaMarkup(d.image || "")}</div>
+      <div class="dic" style="${d.color ? `background:${esc(d.color)};color:#fff` : ""}">${mediaMarkup(d.image || "", "", "", d.decorative ? "" : d.alt || d.name || d.title || "School department")}</div>
       <div class="dn">${esc(d.name)}</div>
       <div class="dd">${esc(d.description)}</div>
       ${tags.length ? `<div class="dtags">${tags.map((tag) => `<span class="stag">${esc(tag)}</span>`).join("")}</div>` : ""}
@@ -2463,7 +2512,7 @@ function renderHomePage() {
     .map(
       (n) => `
     <article class="nc rv" onclick="window.location.href='news.html'" style="cursor:pointer">
-      <div class="nci" style="background:${n.color}">${mediaMarkup(n.image)}</div>
+      <div class="nci" style="background:${n.color}">${mediaMarkup(n.image, "", "", n.decorative ? "" : n.alt || n.title || n.caption || "NJOSA alumni news and event photo")}</div>
       <div class="ncb">
         <div class="ncm"><span class="bdg ${catClass(n.category)}">${n.category}</span><span class="nd">${fmtDate(n.date)}</span></div>
         <h3 class="nt">${esc(n.title)}</h3>
@@ -2525,7 +2574,7 @@ function renderHomeSlides() {
     .map(
       (s, i) =>
         `<div class="slide-container" data-slide-index="${i}">
-          ${mediaMarkup(s.image, `wimg ${i === 0 ? "active home-slide-priority" : ""}`)}
+          ${mediaMarkup(s.image, `wimg ${i === 0 ? "active home-slide-priority" : ""}`, "", s.decorative ? "" : s.alt || s.title || s.name || "New Juaben Senior High School")}
           ${s.showText && s.overlayText ? `<div class="slide-overlay"><div class="slide-text">${esc(s.overlayText)}</div></div>` : ""}
         </div>`,
     )
@@ -2626,7 +2675,7 @@ function renderShopPage(cat = "all") {
       .map(
         (m) => `
     <div class="shopcard rv">
-      <div class="shopimg" role="button" tabindex="0" aria-label="View ${esc(m.name)} image" onclick="openShopItem('${esc(m.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openShopItem('${esc(m.id)}')}">${mediaMarkup(m.image)}<span class="shopimg-view">${ico("search")}</span></div>
+      <div class="shopimg" role="button" tabindex="0" aria-label="View ${esc(m.name)} image" onclick="openShopItem('${esc(m.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openShopItem('${esc(m.id)}')}">${mediaMarkup(m.image, "", "", m.decorative ? "" : m.alt || m.name || m.title || "NJUASCO merchandise") }<span class="shopimg-view">${ico("search")}</span></div>
       <div class="shopb">
         <div class="shopn">${esc(m.name)}</div>
         <div class="shopp">${m.currency || "GHS"} ${m.price}</div>
@@ -2983,6 +3032,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     showFirstVisitWelcome();
   };
   renderCurrentPage();
+  applySeoOverrides();
+  applySchoolJsonLd(DB?.getInfo?.() || {});
   setPublicPageHydrationState(false);
   if (DB?.syncRemoteAll) {
     DB.syncRemoteAll().then(renderCurrentPage).catch(() => {
@@ -2992,6 +3043,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (DB?.subscribeRemoteInfo) {
     DB.subscribeRemoteInfo(() => {
       LIVE_SITE_CONTEXT = null;
+      applySchoolJsonLd(DB?.getInfo?.() || {});
       renderCurrentPage();
     });
   }
