@@ -313,7 +313,7 @@ function applyFooterContent() {
     const element = document.getElementById(id);
     if (element) element.textContent = value;
   });
-  if (info.maintenanceMode && !location.pathname.endsWith("admin.html") && !location.pathname.endsWith("sub-admin.html")) {
+  if (info.maintenanceMode && !location.pathname.endsWith("admin-panel-8d3f2a91c6b7.html") && !location.pathname.endsWith("staff-workspace-71e4c9a2b5d8.html")) {
     document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="New Juaben Senior High School (NJUASCO) logo"><div><strong>New Juaben S.H.S</strong><span>Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
     return;
   }
@@ -943,7 +943,7 @@ async function alogin() {
     const ao = document.getElementById("admin-ov");
     if (ao) ao.classList.remove("show");
     toast("Access granted. Opening Admin Dashboard...");
-    window.location.href = "admin.html";
+    window.location.href = "admin-panel-8d3f2a91c6b7.html";
   } catch (error) {
     toast(error?.message || "Could not sign in to the admin dashboard.");
   } finally {

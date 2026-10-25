@@ -106,7 +106,7 @@ function go(pg) {
     shop: "shop.html",
     cart: "cart.html",
     checkout: "checkout.html",
-    "sub-admin": "sub-admin.html",
+    "sub-admin": "staff-workspace-71e4c9a2b5d8.html",
     staff: "staff.html",
   };
   const url = map[pg];
@@ -126,4 +126,3 @@ function updateCartBadge() {
 }
 
 document.addEventListener("DOMContentLoaded", updateCartBadge);
-
