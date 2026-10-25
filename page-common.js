@@ -34,8 +34,9 @@ function setPublicPageHydrationState(isHydrating = true) {
 function applySeoOverrides() {
   const filename = location.pathname.split("/").pop() || "index.html";
   const siteContent = DB?._get?.("seo_pages");
-  const pageOverride = siteContent && typeof siteContent === "object" && !Array.isArray(siteContent) ? siteContent[filename] : null;
-  if (!pageOverride) return;
+  const pageOverride = (siteContent && typeof siteContent === "object" && !Array.isArray(siteContent) ? siteContent[filename] : null) || {};
+  const seoSite = DB?._get?.("seo_site") || {};
+  if (!document.querySelector('link[rel="canonical"]')) return;
   const updateMeta = (selector, value, attribute = "content") => {
     if (!value) return;
     const element = document.querySelector(selector);
@@ -43,18 +44,21 @@ function applySeoOverrides() {
   };
   if (pageOverride.title) document.title = pageOverride.title;
   const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute("href");
-  if (pageOverride.indexable === false && canonical && !document.querySelector('meta[name="robots"]')?.getAttribute("content")?.includes("noindex")) {
-    const isPrivate = document.querySelector('meta[name="robots"]')?.getAttribute("content") === "noindex, nofollow";
-    if (!isPrivate) document.querySelector('meta[name="robots"]')?.setAttribute("content", "noindex, nofollow");
-  }
+  if (canonical && pageOverride.indexable === false) document.querySelector('meta[name="robots"]')?.setAttribute("content", "noindex, nofollow");
+  else if (canonical && pageOverride.indexable === true) document.querySelector('meta[name="robots"]')?.setAttribute("content", "index, follow, max-image-preview:large");
   updateMeta('meta[name="description"]', pageOverride.description);
   updateMeta('meta[property="og:title"]', pageOverride.title);
   updateMeta('meta[property="og:description"]', pageOverride.description);
-  updateMeta('meta[property="og:image"]', pageOverride.ogImage);
+  updateMeta('meta[property="og:site_name"]', seoSite.siteName);
+  const image = pageOverride.ogImage || seoSite.defaultShareImage;
+  if (image) {
+    const absoluteImage = /^(https?:|data:)/i.test(image) ? image : new URL(image, location.href).href;
+    updateMeta('meta[property="og:image"]', absoluteImage);
+    updateMeta('meta[name="twitter:image"]', absoluteImage);
+  }
   updateMeta('meta[property="og:image:alt"]', pageOverride.ogImageAlt);
   updateMeta('meta[name="twitter:title"]', pageOverride.title);
   updateMeta('meta[name="twitter:description"]', pageOverride.description);
-  updateMeta('meta[name="twitter:image"]', pageOverride.ogImage);
 }
 
 function applySchoolJsonLd(info = {}) {
@@ -64,6 +68,11 @@ function applySchoolJsonLd(info = {}) {
     const data = JSON.parse(block.textContent || "{}");
     const school = data["@graph"]?.find((entry) => entry["@type"] === "HighSchool");
     if (!school) return;
+    const website = data["@graph"]?.find((entry) => entry["@type"] === "WebSite");
+    const seoSite = DB?._get?.("seo_site") || {};
+    const pageDescription = document.querySelector('meta[name="description"]')?.getAttribute("content");
+    if (website && seoSite.siteName) website.name = seoSite.siteName;
+    if (pageDescription) school.description = pageDescription;
     const valid = (value) => {
       const text = String(value || "").trim();
       return text && !/(?:xx|placeholder|example|not set|unknown)/i.test(text) ? text : "";
@@ -71,13 +80,17 @@ function applySchoolJsonLd(info = {}) {
     const email = valid(info.email);
     const phone = valid(info.phone);
     const address = valid(info.address);
-    if (email) school.email = email; else delete school.email;
+    if (email) school.email = email;
     if (phone) school.telephone = phone; else delete school.telephone;
     if (address) school.address.streetAddress = address;
-    const sameAs = [info.facebook, info.twitter, info.instagram].map(valid).filter(Boolean);
+    const sameAs = [info.facebook, info.twitter, info.instagram, info.linkedin]
+      .map(valid)
+      .filter((value) => /^https?:\/\//i.test(value));
     if (sameAs.length) school.sameAs = sameAs; else delete school.sameAs;
     block.textContent = JSON.stringify(data);
-  } catch (_) {}
+  } catch (error) {
+    console.error("Unable to update the school structured data from site settings.", error);
+  }
 }
 
 async function waitForPublicPageHydration() {
@@ -194,13 +207,13 @@ function addLogoFallback(image) {
   });
 }
 
-function mediaMarkup(src, cls = "", poster = "", alt = "") {
+function mediaMarkup(src, cls = "", poster = "", alt = null) {
   const priority = cls.split(/\s+/).includes("home-slide-priority");
   if (isVideoAsset(src)) {
     return `<video class="media-video ${cls}" src="${esc(src)}"${poster ? ` poster="${esc(poster)}"` : ""} controls playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
   }
   if (isImageAsset(src)) {
-    return `<img class="media-img ${cls}" src="${esc(src)}" alt="${esc(alt)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
+    return `<img class="media-img ${cls}" src="${esc(src)}" alt="${esc(alt === null ? "School media" : alt)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""}>`;
   }
   return src || "";
 }
@@ -284,8 +297,24 @@ function applyTopBanner(info, schoolName) {
 
 function applyFooterContent() {
   const info = DB.getInfo();
+  const usableContactValue = (value) => {
+    const text = String(value || "").trim();
+    return text && !/(?:xx|placeholder|example|not set|unknown|^#|^n\/?a$|^none$)/i.test(text) ? text : "";
+  };
+  const contactDetails = {
+    "c-address": usableContactValue(info.address) || "Kassadjan Road, Koforidua, Eastern Region, Ghana",
+    "f-address": usableContactValue(info.address) || "Kassadjan Road, Koforidua, Eastern Region, Ghana",
+    "c-phone": usableContactValue(info.phone),
+    "f-phone": usableContactValue(info.phone),
+    "c-email": usableContactValue(info.email) || "info@njuasco.edu.gh",
+    "f-email": usableContactValue(info.email) || "info@njuasco.edu.gh",
+  };
+  Object.entries(contactDetails).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
   if (info.maintenanceMode && !location.pathname.endsWith("admin.html") && !location.pathname.endsWith("sub-admin.html")) {
-    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="NJUASCO logo"><div><strong>New Juaben S.H.S</strong><span>Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
+    document.body.innerHTML = `<main class="maintenance-page"><div class="maintenance-shell"><div class="maintenance-brand"><img src="njuasco-logo.png" alt="New Juaben Senior High School (NJUASCO) logo"><div><strong>New Juaben S.H.S</strong><span>Est. 1953</span></div></div><div class="maintenance-card"><span class="maintenance-badge">Maintenance</span><h1>${esc(info.maintenanceTitle || "Website maintenance in progress")}</h1><p>${esc(info.maintenanceMessage || "We are updating the NJUASCO website. Please check back shortly.")}</p><div class="maintenance-actions"><a href="mailto:info@njuasco.edu.gh">info@njuasco.edu.gh</a><a href="admissions.html">Admissions</a></div></div></div></main>`;
     return;
   }
   const schoolName = info.name || "New Juaben Senior High School";
@@ -311,7 +340,7 @@ function applyFooterContent() {
     info.footerCopyright ||
     "© 2025 New Juaben Senior High School. All rights reserved.";
   document.querySelectorAll(".fbot").forEach((footer) => {
-    footer.innerHTML = `<span>${esc(copyright)}</span><span style="color: rgba(255, 255, 255, 0.25)">Created by <a class="creator-link creator-nova" href="${esc(safeHref(info.novaTechUrl))}" target="_blank" rel="noopener">${esc(info.novaTechName || "NOVATech")}</a> & <a class="creator-link creator-galaxy" href="${esc(safeHref(info.galaxyUrl))}" target="_blank" rel="noopener">${esc(info.galaxyName || "Galaxy Design Studio")}</a></span>`;
+    footer.innerHTML = `<span>${esc(copyright)}</span><span style="color: rgba(255, 255, 255, 0.25)">Created by <a class="creator-link creator-nova" href="${esc(safeHref(info.novaTechUrl))}" target="_blank" rel="noopener noreferrer">${esc(info.novaTechName || "NOVATech")}</a> & <a class="creator-link creator-galaxy" href="${esc(safeHref(info.galaxyUrl))}" target="_blank" rel="noopener noreferrer">${esc(info.galaxyName || "Galaxy Design Studio")}</a></span>`;
   });
   document.querySelectorAll(".flinks").forEach((list) => {
     if (!list.querySelector('[data-footer-documents="1"]') && list.textContent.includes("Photo Gallery")) {
@@ -830,9 +859,9 @@ function showFirstVisitWelcome() {
         <span class="ico ico-x" data-ico="x" aria-hidden="true"></span>
       </button>
       <div class="njb-welcome-media">
-        <img class="njb-welcome-photo" src="${esc(welcome.image || "njb.png")}" alt="New Juaben Senior High School campus" />
+        <img class="njb-welcome-photo" src="${esc(welcome.image || "njb.png")}" alt="${esc(welcome.decorative ? "" : welcome.alt || "New Juaben Senior High School campus")}" />
         <div class="njb-welcome-shine"></div>
-        <img class="njb-welcome-logo" src="${esc(welcome.logo || "njuasco-logo.png")}" alt="NJUASCO logo" />
+        <img class="njb-welcome-logo" src="${esc(welcome.logo || "njuasco-logo.png")}" alt="New Juaben Senior High School (NJUASCO) logo" />
       </div>
       <div class="njb-welcome-body">
         <div class="njb-welcome-kicker">${esc(welcome.kicker || "New Juaben Senior High School")}</div>
@@ -1762,8 +1791,19 @@ function getFallbackResponse(msg) {
     return "NJOSA (New Juaben Old Students Association) connects 10,000+ alumni worldwide. Benefits include networking events, job opportunities, mentorship, and annual homecoming reunions.";
   if (/facilit|lab|library|ict|sport|cafet/.test(msg))
     return "NJUASCO facilities include: Library with 10,000+ books, Science Labs (Biology/Chemistry/Physics), ICT Centre with 100+ computers, Sports Complex, 60+ classrooms, and a 1,000-capacity cafeteria.";
-  if (/contact|phone|email|address|location/.test(msg))
-    return "New Juaben, Koforidua, Eastern Region, Ghana\n+233 XX XXX XXXX\ninfo@njuasco.edu.gh\nMon-Fri: 8:00 AM - 4:00 PM";
+  if (/contact|phone|email|address|location/.test(msg)) {
+    const info = DB.getInfo?.() || {};
+    const validContact = (value) => {
+      const text = String(value || "").trim();
+      return text && !/(?:xx|placeholder|example|not set|unknown)/i.test(text) ? text : "";
+    };
+    return [
+      validContact(info.address) || "Kassadjan Road, Koforidua, Eastern Region, Ghana",
+      validContact(info.phone),
+      validContact(info.email) || "info@njuasco.edu.gh",
+      validContact(info.officeHours),
+    ].filter(Boolean).join("\n");
+  }
   if (/motto|war cry|daasebre|slogan/.test(msg))
     return 'NJUASCO\'s motto is "HARDWORK". The school war cry is DAASEBRE MMA!';
   if (/house|red|blue|gold|green/.test(msg)) {
@@ -1919,7 +1959,7 @@ function renderNjosaPage() {
   const leaderMarkup = leaders
     .map((item) => {
       const initials = esc(String(item.name || "NJ").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase());
-      const portrait = isImageAsset(item.image) ? `<img src="${esc(item.image)}" alt="${esc(item.name)}">` : `<div class="njosa-leader-avatar">${initials}</div>`;
+      const portrait = isImageAsset(item.image) ? `<img src="${esc(item.image)}" alt="${esc(item.name || "NJUASCO alumni leader")}" loading="lazy" decoding="async">` : `<div class="njosa-leader-avatar">${initials}</div>`;
       return `<article class="njosa-leader-card">${portrait}<h3>${esc(item.name)}</h3><p>${esc(item.position)}</p><small>${esc(item.bio || "")}</small></article>`;
     })
     .join("");
@@ -2231,7 +2271,7 @@ function renderHouseGalleryThumbs() {
   wrap.innerHTML = _houseGallery.images
     .map(
       (src, i) =>
-        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View media ${i + 1}">${isVideoAsset(src) ? '<span aria-hidden="true">▶</span>' : isImageAsset(src) ? `<img src="${esc(src)}" alt="${esc(_houseGallery.images[i]?.alt || _houseGallery.images[i]?.title || "School house gallery")}">` : mediaMarkup(src)}</button>`,
+        `<button type="button" class="house-gallery-mini${i === _houseGallery.index ? " active" : ""}" onclick="setHouseGallerySlide(${i})" aria-label="View media ${i + 1}">${isVideoAsset(src) ? '<span aria-hidden="true">▶</span>' : isImageAsset(src) ? `<img src="${esc(src)}" alt="${esc(_houseGallery.images[i]?.decorative ? "" : _houseGallery.images[i]?.alt || _houseGallery.images[i]?.title || "School house gallery")}" loading="lazy" decoding="async">` : mediaMarkup(src)}</button>`,
     )
     .join("");
 }
@@ -2553,7 +2593,7 @@ function renderDocumentsPage() {
       <div class="document-meta">${esc(d.category || "School Document")}</div>
       <h2>${esc(d.title)}</h2>
       <p>${esc(d.description || "")}</p>
-      <a class="document-link" href="${esc(safeHref(d.file))}" ${safeHref(d.file) === "#" ? "" : 'target="_blank" rel="noopener"'}>View Document ${ico("arrowRight")}</a>
+      <a class="document-link" href="${esc(safeHref(d.file))}" ${safeHref(d.file) === "#" ? "" : 'target="_blank" rel="noopener noreferrer"'}>View Document ${ico("arrowRight")}</a>
     </article>`,
       )
       .join("") ||
@@ -2642,23 +2682,27 @@ function renderPortalAnn() {
 // ── CONTACT PAGE ───────────────────────────────────────────────
 function loadContactInfo() {
   const info = DB.getInfo();
+  const valid = (value) => {
+    const text = String(value || "").trim();
+    return text && !/(?:xx|placeholder|example|not set|unknown|^#|^n\/?a$|^none$)/i.test(text) ? text : "";
+  };
   ["address", "phone", "email", "hours"].forEach((k) => {
     const el = document.getElementById("c-" + k);
-    if (el && info[k]) el.textContent = info[k];
+    if (el && valid(info[k])) el.textContent = valid(info[k]);
   });
-  if (info.facebook) {
+  if (/^https?:\/\//i.test(valid(info.facebook))) {
     const el = document.getElementById("c-fb");
     if (el) el.href = info.facebook;
   }
-  if (info.twitter) {
+  if (/^https?:\/\//i.test(valid(info.twitter))) {
     const el = document.getElementById("c-tw");
     if (el) el.href = info.twitter;
   }
-  if (info.linkedin) {
+  if (/^https?:\/\//i.test(valid(info.linkedin))) {
     const el = document.getElementById("c-li");
     if (el) el.href = info.linkedin;
   }
-  if (info.instagram) {
+  if (/^https?:\/\//i.test(valid(info.instagram))) {
     const el = document.getElementById("c-ig");
     if (el) el.href = info.instagram;
   }
@@ -3048,8 +3092,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
   if (DB?.subscribeRemoteContent) {
-    DB.subscribeRemoteContent(() => {
+    DB.subscribeRemoteContent((key) => {
       LIVE_SITE_CONTEXT = null;
+      if (key === "seo_pages" || key === "seo_site") {
+        applySeoOverrides();
+        applySchoolJsonLd(DB?.getInfo?.() || {});
+      }
       renderCurrentPage();
     });
   }

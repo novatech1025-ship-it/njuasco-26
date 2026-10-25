@@ -167,10 +167,17 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
       }
       return;
     }
+    const altField = document.getElementById(`${input.id}-alt`);
+    const altValues = String(altField?.value || "")
+      .split(/\r?\n/)
+      .map((value) => value.trim().slice(0, 125));
+    const decorative = document.getElementById(`${input.id}-decorative`)?.checked === true;
     const base = {
       title: fileTitle(file),
       name: fileTitle(file),
       image: src,
+      alt: altValues[index] || "",
+      decorative,
       mediaType: isVideoFile(file) ? "video" : "image",
       thumbnail,
       file: src,
@@ -191,13 +198,15 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
         order: base.order,
       });
     } else if (key === "homepageSlides") {
-      DB.add(key, { title: base.title, image: base.image, status: "active", order: base.order });
+      DB.add(key, { title: base.title, image: base.image, alt: base.alt, decorative: base.decorative, status: "active", order: base.order });
     } else if (key === "facilities") {
       DB.add(key, {
         name: base.name,
         category: "other",
         description: "",
         image: base.image,
+        alt: base.alt,
+        decorative: base.decorative,
         color: base.color,
         features: [],
         order: base.order,
@@ -212,7 +221,9 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
         achievements: "",
         story: "",
         image: base.image,
-        gallery: [base.image],
+        alt: base.alt,
+        decorative: base.decorative,
+        gallery: [{ image: base.image, alt: base.alt, decorative: base.decorative }],
         order: base.order,
       });
     } else {
@@ -220,15 +231,21 @@ async function bulkUploadMedia(input, key, reload, extra = {}) {
     }
   }
   if (input) input.value = "";
+  if (altField) altField.value = "";
+  const decorativeField = document.getElementById(`${input.id}-decorative`);
+  if (decorativeField) decorativeField.checked = false;
   const contentSynced = await DB.forceSyncContentKey?.(key);
   const synced =
     contentSynced !== false &&
     (typeof flushRemoteSync === "function" ? await flushRemoteSync() : false);
   loadPage(reload);
+  const altReminder = ["gallery", "homepageSlides", "facilities", "houses", "news", "team", "departments", "clubs", "merchandise"].includes(key)
+    ? " Add one alt description per upload above the bulk upload button, or mark the images decorative."
+    : "";
   toast(
     synced
-      ? `${files.length} item${files.length === 1 ? "" : "s"} uploaded and synced to the public site`
-      : `${files.length} item${files.length === 1 ? "" : "s"} saved on this device, but cloud sync failed`,
+      ? `${files.length} item${files.length === 1 ? "" : "s"} uploaded and synced to the public site.${altReminder}`
+      : `${files.length} item${files.length === 1 ? "" : "s"} saved on this device, but cloud sync failed.${altReminder}`,
   );
 }
 

@@ -213,7 +213,9 @@ const ICON_PATHS = {
         ],
         _get(k) {
           try {
-            return JSON.parse(localStorage.getItem("nj_" + k)) || [];
+            const value = JSON.parse(localStorage.getItem("nj_" + k));
+            if (value !== null && value !== undefined) return value;
+            return ["seo_pages", "seo_site"].includes(k) ? {} : [];
           } catch {
             return [];
           }
@@ -743,6 +745,7 @@ const ICON_PATHS = {
         async saveRemoteContent(key, value) {
           if (!this._siteContentKeys.includes(key) && !["seo_pages", "seo_site"].includes(key)) return false;
           if (["seo_pages", "seo_site"].includes(key) && !(await this.isSupabaseAuthenticated())) return false;
+          if (["seo_pages", "seo_site"].includes(key) && (!value || typeof value !== "object" || Array.isArray(value))) return false;
           try {
             const client = await this._ensureSupabase();
             const { error } = await client.from("site_content").upsert({ key, value }, { onConflict: "key" });

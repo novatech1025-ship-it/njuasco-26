@@ -7,15 +7,55 @@ const root = path.resolve(__dirname, "..");
 const configPath = path.join(__dirname, "seo-pages.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const today = new Date().toISOString().slice(0, 10);
-function readOverrides() {
+async function readOverrides() {
   if (!process.argv.includes("--from-supabase")) return { pages: {}, site: {} };
-  if (!process.env.SUPABASE_ANON_KEY) throw new Error("Set SUPABASE_ANON_KEY to the public anon key before requesting a Supabase sync.");
-  if (!process.env.SUPABASE_ACCESS_TOKEN) throw new Error("Set SUPABASE_ACCESS_TOKEN to an authenticated admin access token; an anon key cannot write site_content.");
-  throw new Error("An authenticated site_content sync adapter is not configured. Static build mode is available with npm run seo:build.");
+  const clientSource = fs.readFileSync(path.join(root, "page-common.js"), "utf8");
+  const url = process.env.SUPABASE_URL || clientSource.match(/\burl:\s*["'](https:\/\/[^"']+)["']/)?.[1];
+  const anonKey = process.env.SUPABASE_ANON_KEY || clientSource.match(/\banonKey:\s*["']([^"']+)["']/)?.[1];
+  if (!url || !anonKey || anonKey === "******") {
+    throw new Error("Could not read the public Supabase URL and anon key from page-common.js.");
+  }
+  const seoEndpoint = new URL("/rest/v1/site_content", url);
+  seoEndpoint.search = new URLSearchParams({
+    select: "key,value",
+    key: 'in.("seo_pages","seo_site")',
+  }).toString();
+  const settingsEndpoint = new URL("/rest/v1/site_settings", url);
+  settingsEndpoint.search = new URLSearchParams({ select: "value", key: "eq.site_info" }).toString();
+  const headers = { apikey: anonKey, Authorization: `Bearer ${anonKey}` };
+  const [seoResponse, settingsResponse] = await Promise.all([
+    fetch(seoEndpoint, { headers }),
+    fetch(settingsEndpoint, { headers }),
+  ]);
+  if (!seoResponse.ok) {
+    throw new Error(`Supabase SEO read failed (${seoResponse.status}): ${await seoResponse.text()}`);
+  }
+  if (!settingsResponse.ok) {
+    throw new Error(`Supabase site settings read failed (${settingsResponse.status}): ${await settingsResponse.text()}`);
+  }
+  const rows = await seoResponse.json();
+  const settingsRows = await settingsResponse.json();
+  const result = { pages: {}, site: {} };
+  for (const row of rows) {
+    if (row.key === "seo_pages" && row.value && typeof row.value === "object" && !Array.isArray(row.value)) result.pages = row.value;
+    if (row.key === "seo_site" && row.value && typeof row.value === "object" && !Array.isArray(row.value)) result.site = row.value;
+  }
+  if (!Object.keys(result.pages).length || !Object.keys(result.site).length) {
+    throw new Error("Supabase returned no SEO settings. Sync was stopped so static defaults cannot overwrite Admin-managed values.");
+  }
+  const siteInfo = settingsRows[0]?.value;
+  if (siteInfo && typeof siteInfo === "object" && !Array.isArray(siteInfo)) {
+    result.site = { ...siteInfo, ...result.site };
+  }
+  return result;
 }
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+function cleanText(value, maxLength) {
+  return String(value ?? "").replace(/<[^>]*>/g, "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
 function jsonLd(value) {
@@ -23,10 +63,10 @@ function jsonLd(value) {
 }
 
 function makeSeoBlock(page, values, imagePath, siteValues = {}) {
-  const title = values.title || page.title;
-  const description = values.description || page.description;
+  const title = cleanText(values.title || page.title, page.robots === "noindex" ? 100 : 70);
+  const description = cleanText(values.description || page.description, page.robots === "noindex" ? 200 : 200);
   const canonical = page.file === "index.html" ? config.baseUrl : new URL(page.file, config.baseUrl).href;
-  if (page.robots === "noindex") {
+  if (page.robots === "noindex" || values.indexable === false) {
     return [
       `    <title>${escapeHtml(title)}</title>`,
       `    <meta name="description" content="${escapeHtml(description)}" />`,
@@ -39,7 +79,7 @@ function makeSeoBlock(page, values, imagePath, siteValues = {}) {
   const tags = [
     `    <title>${escapeHtml(title)}</title>`,
     `    <meta name="description" content="${escapeHtml(description)}" />`,
-    '    <meta name="robots" content="index, follow, max-image-preview:large" />',
+    `    <meta name="robots" content="${values.indexable === false ? "noindex, nofollow" : "index, follow, max-image-preview:large"}" />`,
     `    <link rel="canonical" href="${escapeHtml(canonical)}" />`,
     '    <meta property="og:type" content="website" />',
     `    <meta property="og:site_name" content="${escapeHtml(siteValues.siteName || config.siteName)}" />`,
@@ -85,7 +125,7 @@ function makeSeoBlock(page, values, imagePath, siteValues = {}) {
     if (address) schoolEntity.address.streetAddress = address;
     const sameAs = [siteValues.facebook, siteValues.twitter, siteValues.instagram].map(valid).filter(Boolean);
     if (sameAs.length) schoolEntity.sameAs = sameAs;
-    const webSite = { "@type": "WebSite", name: config.siteName, url: canonical };
+    const webSite = { "@type": "WebSite", name: cleanText(siteValues.siteName || config.siteName, 100), url: canonical };
     const school = {
       "@context": "https://schema.org",
       "@graph": [schoolEntity, webSite],
@@ -109,12 +149,13 @@ function makeSeoBlock(page, values, imagePath, siteValues = {}) {
   return tags.join("\n");
 }
 
-function apply() {
-  const overrides = readOverrides();
+async function apply() {
+  const overrides = await readOverrides();
   const defaultImageExists = fs.existsSync(path.join(root, config.defaultOgImage));
   const imagePath = defaultImageExists ? config.defaultOgImage : "njuasco-logo.png";
   if (!defaultImageExists) console.warn(`SEO warning: ${config.defaultOgImage} is missing; using njuasco-logo.png until og-school.jpg is provided.`);
   let errors = 0;
+  const changedPages = new Set();
   for (const page of config.pages) {
     const filePath = path.join(root, page.file);
     if (!fs.existsSync(filePath)) {
@@ -135,17 +176,32 @@ function apply() {
     if (page.robots === "index" && !output.includes("<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"")) {
       output = output.replace("<!-- SEO:START -->", '<link rel="preconnect" href="https://fonts.googleapis.com" />\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n    <!-- SEO:START -->');
     }
-    fs.writeFileSync(filePath, output);
+    if (output !== html) {
+      fs.writeFileSync(filePath, output);
+      changedPages.add(page.file);
+    }
   }
-  const sitemapUrls = config.pages.filter((page) => page.robots === "index").map((page) => `  <url>\n    <loc>${escapeHtml(page.file === "index.html" ? config.baseUrl : new URL(page.file, config.baseUrl).href)}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`).join("\n");
-  fs.writeFileSync(path.join(root, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls}\n</urlset>\n`);
-  fs.writeFileSync(path.join(root, "robots.txt"), `# On a GitHub Pages project site, crawlers only read robots.txt at the domain root.\n# This file takes effect after a custom domain is connected; until then submit sitemap.xml in Google Search Console.\nUser-agent: *\nAllow: /\nSitemap: ${new URL("sitemap.xml", config.baseUrl).href}\n`);
+  const sitemapPath = path.join(root, "sitemap.xml");
+  const oldSitemap = fs.existsSync(sitemapPath) ? fs.readFileSync(sitemapPath, "utf8") : "";
+  const oldLastmod = new Map([...oldSitemap.matchAll(/<url>\s*<loc>([^<]+)<\/loc>\s*<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>\s*<\/url>/g)].map((match) => [match[1], match[2]]));
+  const sitemapUrls = config.pages.filter((page) => {
+    if (page.robots !== "index") return false;
+    const override = overrides.pages[page.file];
+    return override?.indexable !== false;
+  }).map((page) => {
+    const url = page.file === "index.html" ? config.baseUrl : new URL(page.file, config.baseUrl).href;
+    const lastmod = changedPages.has(page.file) || !oldLastmod.has(url) ? today : oldLastmod.get(url);
+    return `  <url>\n    <loc>${escapeHtml(url)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
+  }).join("\n");
+  const newSitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls}\n</urlset>\n`;
+  if (newSitemap !== oldSitemap) fs.writeFileSync(sitemapPath, newSitemap);
+  const robotsPath = path.join(root, "robots.txt");
+  const robots = `# On a GitHub Pages project site, crawlers only read robots.txt at the domain root.\n# This file takes effect after a custom domain is connected; until then submit sitemap.xml in Google Search Console.\nUser-agent: *\nAllow: /\nSitemap: ${new URL("sitemap.xml", config.baseUrl).href}\n`;
+  if (!fs.existsSync(robotsPath) || fs.readFileSync(robotsPath, "utf8") !== robots) fs.writeFileSync(robotsPath, robots);
   if (errors) process.exitCode = 1;
 }
 
-try {
-  apply();
-} catch (error) {
+apply().catch((error) => {
   console.error(`SEO build error: ${error.message}`);
   process.exitCode = 1;
-}
+});

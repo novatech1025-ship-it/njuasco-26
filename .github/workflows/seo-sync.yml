@@ -1,0 +1,32 @@
+name: Sync static SEO
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Sync Admin SEO metadata
+        run: node scripts/apply-seo.js --from-supabase
+      - name: Validate generated SEO
+        run: npm run seo:check
+      - name: Commit generated changes
+        run: |
+          git add -u -- '*.html' sitemap.xml robots.txt
+          if git diff --cached --quiet; then
+            echo "No SEO changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(seo): sync Admin metadata" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"

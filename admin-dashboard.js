@@ -119,6 +119,7 @@
         "logs-mgr": "Activity Logs",
         "settings-mgr": "Settings",
         "subadmins-mgr": "Sub-Admin Management",
+        "seo-mgr": "SEO & Sharing",
       };
 
       let currentPageId = "dashboard";
@@ -180,6 +181,12 @@
         else if (id === "logs-mgr") renderLogs();
         else if (id === "settings-mgr") loadSettings();
         else if (id === "subadmins-mgr") renderSubAdmins();
+        else if (id === "seo-mgr") initSeoAdminPanel({
+          containerId: "seo-editor",
+          canEdit: () => !!DB.isFullAdminEmail?.(window.__njuascoAdminUser?.email),
+          toast,
+          openPage: (section) => showPage(section, document.querySelector(`.sb-item[onclick*="${section}"]`)),
+        });
         hydrateIcons(document);
       }
 
@@ -278,6 +285,12 @@
 
       function getModalForm(type, d) {
         const v = (f, def = "") => esc(d?.[f] ?? def);
+        const houseGalleryFields = (d?.gallery || []).map((entry, index) => {
+          const image = typeof entry === "string" ? entry : entry?.image || "";
+          const alt = typeof entry === "string" ? "" : entry?.alt || "";
+          const decorative = typeof entry === "string" ? false : entry?.decorative === true;
+          return `<div class="fg"><label class="flbl" for="mf-gallery-alt-${index}">Gallery image ${index + 1} alt text</label><input class="finp" id="mf-gallery-alt-${index}" maxlength="125" value="${esc(alt)}" placeholder="Describe this gallery image"><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--g600)"><input type="checkbox" id="mf-gallery-decorative-${index}" ${decorative ? "checked" : ""}> Decorative image</label><small style="color:var(--g500)">${esc(image)}</small></div>`;
+        }).join("");
         const mediaField = (label, def) => `
     <div class="fg media-field">
       <label class="flbl">${label}</label>
@@ -285,6 +298,9 @@
       <input class="finp" id="mf-file" type="file" accept="image/*,video/*">
       <small style="color:var(--g500)">Upload MP4, WebM, or OGG video (50 MB max), or use an image.</small>
       <input class="finp" id="mf-image" value="${v("image", def)}" placeholder="Optional emoji, image URL, or direct video URL">
+      <label class="flbl" for="mf-alt">Alt text (image description)</label>
+      <input class="finp" id="mf-alt" maxlength="125" value="${v("alt")}" placeholder="Describe what this image shows">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--g600)"><input type="checkbox" id="mf-decorative" ${d?.decorative ? "checked" : ""}> Decorative image</label>
     </div>`;
         if (type === "news")
           return `<div style="display:flex;flex-direction:column;gap:14px">
@@ -365,6 +381,8 @@
     <div class="fg"><label class="flbl">Motto</label><input class="finp" id="mf-motto" value="${v("motto")}" placeholder="House motto"></div>
     <div class="fg"><label class="flbl">House Story</label><textarea class="finp fta" id="mf-story" placeholder="History, story, and important details">${v("story")}</textarea></div>
     <div class="fg"><label class="flbl">Add House Gallery Images or Videos</label><input class="finp" id="mf-gallery-files" type="file" accept="image/*,video/*" multiple></div>
+    ${houseGalleryFields}
+    <div class="fg"><label class="flbl" for="mf-gallery-alt-new">Alt text for new gallery files (one per line, in file order)</label><textarea class="finp fta" id="mf-gallery-alt-new" maxlength="12500" placeholder="Add one image description per line"></textarea><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--g600)"><input type="checkbox" id="mf-gallery-decorative-new"> New gallery files are decorative</label></div>
     <div class="fg"><label class="flbl">Achievements</label><textarea class="finp fta" id="mf-achievements" placeholder="List achievements…">${v("achievements")}</textarea></div>
   </div>`;
         if (type === "club")
@@ -454,6 +472,7 @@
               '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span> Merchandise',
             orders:
               '<span class="ico ico-cart" data-ico="cart" aria-hidden="true"></span> Orders',
+            seo: "SEO & Sharing",
           };
           const existingPerms = d?.permissions || [];
           return `<div style="display:flex;flex-direction:column;gap:16px">
@@ -496,6 +515,7 @@
       async function saveModalData(type) {
         const id = _editId;
         let data = {};
+        let missingGalleryAltText = false;
         if (type === "news") {
           data = {
             title: gv("mf-title"),
@@ -630,9 +650,22 @@
         } else if (type === "house") {
           const existingHouse = id ? DB.getById("houses", id) : null;
           const galleryFiles = Array.from(document.getElementById("mf-gallery-files")?.files || []);
-          const gallery = Array.isArray(existingHouse?.gallery) ? [...existingHouse.gallery] : [];
-          for (const file of galleryFiles) {
-            gallery.push(await uploadImageAsset(file, "houses"));
+          const gallery = Array.isArray(existingHouse?.gallery)
+            ? existingHouse.gallery.map((entry, index) => {
+                const item = typeof entry === "string" ? { image: entry, alt: "", decorative: false } : { ...entry };
+                item.alt = gv(`mf-gallery-alt-${index}`).slice(0, 125);
+                item.decorative = document.getElementById(`mf-gallery-decorative-${index}`)?.checked === true;
+                missingGalleryAltText ||= !item.decorative && isImageAsset(item.image) && !item.alt;
+                return item;
+              })
+            : [];
+          const newGalleryAlt = gv("mf-gallery-alt-new").split(/\r?\n/).map((alt) => alt.trim().slice(0, 125));
+          const newGalleryDecorative = document.getElementById("mf-gallery-decorative-new")?.checked === true;
+          for (const [index, file] of galleryFiles.entries()) {
+            const image = await uploadImageAsset(file, "houses");
+            const alt = newGalleryAlt[index] || "";
+            gallery.push({ image, alt, decorative: newGalleryDecorative });
+            missingGalleryAltText ||= !newGalleryDecorative && !alt;
           }
           data = {
             name: gv("mf-name"),
@@ -773,6 +806,7 @@
             "students",
             "merchandise",
             "orders",
+            "seo",
           ];
           const perms = allPermKeys.filter(
             (k) => document.getElementById("perm-" + k)?.checked,
@@ -850,6 +884,13 @@
             return;
           }
         }
+        const mediaTypes = ["news", "team", "department", "gallery", "slide", "facility", "house", "club", "merch"];
+        let missingAltText = false;
+        if (mediaTypes.includes(type)) {
+          data.alt = gv("mf-alt").slice(0, 125);
+          data.decorative = document.getElementById("mf-decorative")?.checked === true;
+          missingAltText = missingGalleryAltText || (!data.decorative && (isImageAsset(data.image) || isVideoAsset(data.image)) && !data.alt);
+        }
         const dbKey = {
           news: "news",
           team: "team",
@@ -868,7 +909,11 @@
         }[type];
         if (id) DB.update(dbKey, id, data);
         else DB.add(dbKey, data);
-        toast('<span class="ico ico-check" data-ico="check" aria-hidden="true"></span> Saved!');
+        toast(
+          missingAltText
+            ? "Saved. Add alt text to this image in the SEO &amp; Sharing panel."
+            : '<span class="ico ico-check" data-ico="check" aria-hidden="true"></span> Saved!',
+        );
         cmodal();
         loadPage(
           {
@@ -1386,18 +1431,23 @@
           const el = document.getElementById(id);
           if (el && val) el.value = val;
         };
+        const setContactUrl = (id, value) => {
+          const el = document.getElementById(id);
+          const text = String(value || "").trim();
+          if (el) el.value = /^(?:#|n\/?a|none|placeholder)$/i.test(text) ? "" : text;
+        };
         set("si-name", i.name);
         set("si-short", i.shortName);
         set("si-code", i.code);
         set("si-cat", i.category);
-        set("si-phone", i.phone);
-        set("si-email", i.email);
-        set("si-address", i.address);
+        setContactUrl("si-phone", i.phone);
+        setContactUrl("si-email", i.email);
+        setContactUrl("si-address", i.address);
         set("si-hours", i.hours);
-        set("si-fb", i.facebook);
-        set("si-tw", i.twitter);
-        set("si-ig", i.instagram);
-        set("si-li", i.linkedin);
+        setContactUrl("si-fb", i.facebook);
+        setContactUrl("si-tw", i.twitter);
+        setContactUrl("si-ig", i.instagram);
+        setContactUrl("si-li", i.linkedin);
         set("si-motto", i.motto);
         set("si-warcry", i.warCry);
         set("si-top-banner", i.topBannerMessage || "");
@@ -1432,6 +1482,9 @@
         set("si-first-welcome-text", firstWelcome.text || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.");
         set("si-first-welcome-button", firstWelcome.buttonText || "Enter NJB City");
         set("si-first-welcome-image", firstWelcome.image || "njb.png");
+        set("si-first-welcome-alt", firstWelcome.alt || "");
+        const firstWelcomeDecorative = document.getElementById("si-first-welcome-decorative");
+        if (firstWelcomeDecorative) firstWelcomeDecorative.checked = firstWelcome.decorative === true;
         set("si-first-welcome-logo", firstWelcome.logo || "njuasco-logo.png");
         set("si-footer-copy", i.footerCopyright);
         set("si-nova-name", i.novaTechName || "NOVATech");
@@ -1486,6 +1539,10 @@
       }
       async function saveSchoolInfo() {
         const g = (id) => document.getElementById(id)?.value || "";
+        const contactValue = (id) => {
+          const value = g(id).trim();
+          return /^(?:#|n\/?a|none|placeholder)$/i.test(value) ? "" : value;
+        };
         const heroFile = document.getElementById("si-hero-file")?.files?.[0];
         const firstWelcomeFile = document.getElementById("si-first-welcome-file")?.files?.[0];
         const firstWelcomeImage = firstWelcomeFile
@@ -1497,14 +1554,14 @@
           shortName: g("si-short"),
           code: g("si-code"),
           category: g("si-cat"),
-          phone: g("si-phone"),
-          email: g("si-email"),
-          address: g("si-address"),
-          hours: g("si-hours"),
-          facebook: g("si-fb"),
-          twitter: g("si-tw"),
-          instagram: g("si-ig"),
-          linkedin: g("si-li"),
+          phone: contactValue("si-phone"),
+          email: contactValue("si-email"),
+          address: contactValue("si-address"),
+          hours: contactValue("si-hours"),
+          facebook: contactValue("si-fb"),
+          twitter: contactValue("si-tw"),
+          instagram: contactValue("si-ig"),
+          linkedin: contactValue("si-li"),
           motto: g("si-motto"),
           warCry: g("si-warcry"),
           topBannerEnabled: document.getElementById("si-top-banner-enabled")?.checked === true,
@@ -1525,6 +1582,8 @@
             text: g("si-first-welcome-text") || "Home of excellence, discipline, creativity, clubs, culture, and the proud NJUASCO spirit.",
             buttonText: g("si-first-welcome-button") || "Enter NJB City",
             image: firstWelcomeImage || "njb.png",
+            alt: g("si-first-welcome-alt").slice(0, 125),
+            decorative: document.getElementById("si-first-welcome-decorative")?.checked === true,
             logo: g("si-first-welcome-logo") || "njuasco-logo.png",
           },
           footerCopyright: g("si-footer-copy"),
@@ -1542,6 +1601,9 @@
           heroClubsManual: document.getElementById("si-clubs-manual")?.value || "",
         };
         await persistSiteInfo(info, "School information saved!");
+        if (!info.firstVisitWelcome.decorative && isImageAsset(info.firstVisitWelcome.image) && !info.firstVisitWelcome.alt) {
+          toast("Saved. Add alt text for the welcome image in School Information.");
+        }
       }
 
       function loadAboutPage() {
@@ -1933,7 +1995,7 @@
           (items
             .map(
               (d) =>
-                `<tr><td><input class="admin-doc-select" type="checkbox" value="${d.id}" style="accent-color:var(--b6)"></td><td style="font-weight:600">${esc(d.title)}</td><td>${esc(d.category || "General")}</td><td><span class="tag ${d.status === "draft" ? "tag-y" : "tag-g"}">${esc(d.status || "published")}</span></td><td>${esc(d.order || "")}</td><td><a class="btn btn-sm btn-g" href="${esc(d.file || "#")}" target="_blank" rel="noopener">View</a> <button class="btn btn-sm btn-g" onclick="openModal('doc','${d.id}')">Edit</button> <button class="btn btn-sm btn-r" onclick="delItem('documents','${d.id}','docs-mgr')">Delete</button></td></tr>`,
+                `<tr><td><input class="admin-doc-select" type="checkbox" value="${d.id}" style="accent-color:var(--b6)"></td><td style="font-weight:600">${esc(d.title)}</td><td>${esc(d.category || "General")}</td><td><span class="tag ${d.status === "draft" ? "tag-y" : "tag-g"}">${esc(d.status || "published")}</span></td><td>${esc(d.order || "")}</td><td><a class="btn btn-sm btn-g" href="${esc(d.file || "#")}" target="_blank" rel="noopener noreferrer">View</a> <button class="btn btn-sm btn-g" onclick="openModal('doc','${d.id}')">Edit</button> <button class="btn btn-sm btn-r" onclick="delItem('documents','${d.id}','docs-mgr')">Delete</button></td></tr>`,
             )
             .join("") ||
             '<tr><td colspan="6" style="text-align:center;color:var(--g400);padding:24px">No documents yet.</td></tr>') +
@@ -2111,7 +2173,7 @@
         return docs
           .map((d) => {
             const size = d.size ? `${Math.round(d.size / 1024)} KB` : "";
-            return `<a href="${d.data || "#"}" download="${esc(d.name || d.label || "document")}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--g100);border-radius:10px;text-decoration:none;color:var(--g800);background:#fff;margin-bottom:8px">
+            return `<a href="${d.data || "#"}" download="${esc(d.name || d.label || "document")}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--g100);border-radius:10px;text-decoration:none;color:var(--g800);background:#fff;margin-bottom:8px">
               <span><strong style="font-size:13px">${esc(d.label || "Document")}</strong><br><span style="font-size:11px;color:var(--g500)">${esc(d.name || "")} ${size ? "· " + size : ""}</span></span>
               <span class="tag tag-b">View</span>
             </a>`;
@@ -2704,6 +2766,7 @@
             '<span class="ico ico-shop" data-ico="shop" aria-hidden="true"></span> Merchandise',
           orders:
             '<span class="ico ico-cart" data-ico="cart" aria-hidden="true"></span> Orders',
+          seo: "SEO & Sharing",
         };
         const el = document.getElementById("sa-list");
         if (!el) return;
@@ -2874,6 +2937,7 @@
           return;
         }
         DB.refreshPortalSession?.("admin", user.email);
+        window.__njuascoAdminUser = user;
         DB.runLocalMigrations?.();
         refreshAdminPage();
         hydrateIcons(document);

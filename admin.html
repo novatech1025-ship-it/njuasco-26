@@ -1416,6 +1416,7 @@
     </style>
   </head>
   <body>
+    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Admin dashboard</h1>
     <!-- DB ENGINE (same as main site) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="nova-tech-knowledge.js"></script>
@@ -1433,6 +1434,11 @@
         <div class="confirm-msg" id="confirm-msg">
           This action cannot be undone.
         </div>
+        <div class="card" style="margin-bottom:14px">
+          <label class="flbl" for="slides-bulk-files-alt">Bulk slide alt text (one description per file, in selection order)</label>
+          <textarea class="finp fta" id="slides-bulk-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="slides-bulk-files-decorative"> Mark all selected slides decorative</label>
+        </div>
         <div class="confirm-acts">
           <button
             class="btn btn-g"
@@ -1444,6 +1450,16 @@
           </button>
           <button class="btn btn-r" id="confirm-ok">Delete</button>
         </div>
+        <div class="card" style="margin-bottom:14px">
+          <label class="flbl" for="fac-bulk-files-alt">Bulk facility image alt text (one description per file, in selection order)</label>
+          <textarea class="finp fta" id="fac-bulk-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="fac-bulk-files-decorative"> Mark all selected facility images decorative</label>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <label class="flbl" for="house-bulk-files-alt">Bulk house image alt text (one description per file, in selection order)</label>
+        <textarea class="finp fta" id="house-bulk-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="house-bulk-files-decorative"> Mark all selected house images decorative</label>
       </div>
     </div>
 
@@ -1466,7 +1482,7 @@
       <aside class="sb" id="sidebar">
         <div class="sb-brand">
           <div class="sb-logo">
-            <img src="njuasco-logo.png" alt="NJUASCO logo" />
+            <img src="njuasco-logo.png" alt="New Juaben Senior High School (NJUASCO) logo" />
           </div>
           <div class="sb-name">NJUASCO Admin</div>
           <div class="sb-sub">Management System</div>
@@ -1671,6 +1687,7 @@
           <div class="sb-item" onclick="showPage('subadmins-mgr', this)">
             <span class="sb-ic">🛡️</span>Sub-Admins
           </div>
+          <div class="sb-item" onclick="showPage('seo-mgr', this)"><span class="sb-ic">SEO</span>SEO &amp; Sharing</div>
           <div class="sb-item" onclick="showPage('settings-mgr', this)">
             <span class="sb-ic">⚙️</span>Settings
           </div>
@@ -1724,6 +1741,7 @@
             <a
               href="sub-admin.html"
               target="_blank"
+              rel="noopener noreferrer"
               class="back-btn"
               style="
                 background: rgba(147, 51, 234, 0.08);
@@ -1950,7 +1968,7 @@
               <div class="form-grid">
                 <div class="fg">
                   <label class="flbl">Phone</label
-                  ><input class="finp" id="si-phone" value="+233 XX XXX XXXX" />
+                  ><input class="finp" id="si-phone" value="" placeholder="Enter the official school phone number" />
                 </div>
                 <div class="fg">
                   <label class="flbl">Email</label
@@ -1965,7 +1983,7 @@
                   ><input
                     class="finp"
                     id="si-address"
-                    value="New Juaben, Koforidua, Eastern Region, Ghana"
+                    value="Kassadjan Road, Koforidua, Eastern Region, Ghana"
                   />
                 </div>
                 <div class="fg">
@@ -1978,19 +1996,19 @@
                 </div>
                 <div class="fg">
                   <label class="flbl">Facebook URL</label
-                  ><input class="finp" id="si-fb" value="#" />
+                  ><input class="finp" id="si-fb" value="" placeholder="Facebook profile URL" />
                 </div>
                 <div class="fg">
                   <label class="flbl">Twitter/X URL</label
-                  ><input class="finp" id="si-tw" value="#" />
+                  ><input class="finp" id="si-tw" value="" placeholder="Twitter/X profile URL" />
                 </div>
                 <div class="fg">
                   <label class="flbl">Instagram URL</label
-                  ><input class="finp" id="si-ig" value="#" />
+                  ><input class="finp" id="si-ig" value="" placeholder="Instagram profile URL" />
                 </div>
                 <div class="fg">
                   <label class="flbl">LinkedIn URL</label
-                  ><input class="finp" id="si-li" value="#" />
+                  ><input class="finp" id="si-li" value="" placeholder="LinkedIn profile URL" />
                 </div>
               </div>
             </div>
@@ -2047,6 +2065,7 @@
                   <div class="media-preview" id="si-hero-preview"></div>
                   <input class="finp" id="si-hero-file" type="file" accept="image/*" />
                   <input class="finp" id="si-hero-image" placeholder="Optional image URL" />
+                  <small class="hint-text">This image is a CSS background behind the hero text and is treated as decorative.</small>
                 </div>
                 <div class="fg">
                   <label class="flbl">Welcome Text (Homepage intro)</label
@@ -2078,6 +2097,9 @@
                   <label class="flbl">Popup Image</label>
                   <input class="finp" id="si-first-welcome-file" type="file" accept="image/*" />
                   <input class="finp" id="si-first-welcome-image" placeholder="njb.png or image URL" />
+                  <label class="flbl" for="si-first-welcome-alt">Alt text (image description)</label>
+                  <input class="finp" id="si-first-welcome-alt" maxlength="125" placeholder="Describe the popup image" />
+                  <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="si-first-welcome-decorative" /> Decorative image</label>
                 </div>
                 <div class="fg">
                   <label class="flbl">Popup Logo</label>
@@ -2326,6 +2348,14 @@
                 </button>
               </div>
             </div>
+            <div class="card" style="margin-bottom:14px">
+              <label class="flbl" for="gallery-bulk-files-alt">Bulk gallery alt text (one description per file, in selection order)</label>
+              <textarea class="finp fta" id="gallery-bulk-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+              <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="gallery-bulk-files-decorative"> Mark all selected gallery images decorative</label>
+              <label class="flbl" for="njosa-gallery-bulk-files-alt" style="margin-top:12px">Bulk NJOSA gallery alt text (one description per file, in selection order)</label>
+              <textarea class="finp fta" id="njosa-gallery-bulk-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+              <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="njosa-gallery-bulk-files-decorative"> Mark all selected NJOSA gallery images decorative</label>
+            </div>
             <div
               style="
                 display: grid;
@@ -2350,6 +2380,11 @@
               </div>
             </div>
             <p style="margin:-8px 0 18px;color:var(--g500);font-size:13px">Manage the memories shown on the separate NJOSA Gallery page.</p>
+            <div class="card" style="margin-bottom:14px">
+              <label class="flbl" for="admin-njosa-gallery-files-alt">Bulk NJOSA gallery alt text (one description per file, in selection order)</label>
+              <textarea class="finp fta" id="admin-njosa-gallery-files-alt" maxlength="12500" placeholder="Describe each image on a separate line"></textarea>
+              <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="admin-njosa-gallery-files-decorative"> Mark all selected gallery images decorative</label>
+            </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px" id="njosa-gallery-list"></div>
           </div>
 
@@ -2638,6 +2673,9 @@
             </div>
           </div>
 
+          <!-- SEO & SHARING -->
+          <div class="apage" id="pg-seo-mgr"><div id="seo-editor"></div></div>
+
           <!-- ACTIVITY LOGS -->
           <div class="apage" id="pg-logs-mgr">
             <div class="sec-hdr">
@@ -2867,10 +2905,10 @@
                 footer logo on the homepage.
               </p>
               <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <a href="staff.html" target="_blank" class="btn btn-p"
+                <a href="staff.html" target="_blank" rel="noopener noreferrer" class="btn btn-p"
                   >Open Staff Portal →</a
                 >
-                <a href="sub-admin.html" target="_blank" class="btn btn-g"
+                <a href="sub-admin.html" target="_blank" rel="noopener noreferrer" class="btn btn-g"
                   >Google Sign-In Shortcut →</a
                 >
               </div>
@@ -2893,6 +2931,7 @@
     </div>
     <!-- layout -->
 
+    <script src="scripts/seo-admin-panel.js"></script>
     <script src="admin-dashboard.js"></script>
   </body>
 </html>
